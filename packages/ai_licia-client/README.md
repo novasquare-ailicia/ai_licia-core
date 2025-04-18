@@ -1,6 +1,6 @@
 # ai_licia Client
 
-A TypeScript/JavaScript client library for interacting with the ai_licia API.
+A TypeScript/JavaScript client library for interacting with with [ai_licia AI Co-Host](https://www.getailicia.com) API.
 
 ## Installation
 
