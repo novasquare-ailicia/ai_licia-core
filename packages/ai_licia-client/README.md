@@ -161,13 +161,13 @@ Are you a game developer, app creator, or platform looking to build a deeper int
 
 ### Getting Started
 
-To discuss partnership opportunities, join our [Discord community](https://discord.gg/ailicia) and message in the #partnerships channel, or email us at partnerships@getailicia.com.
+To discuss partnership opportunities, join our [Discord community](https://discord.gg/Pbh7bYPJKt) and message in the #general channel.
 
 We're particularly interested in integrations that create unique interactive experiences for streamers and their audience!
 
 ## Need Help?
 
-If you need help or have questions, please check the [ai_licia documentation](https://docs.getailicia.com) or visit our [Discord community](https://discord.gg/ailicia).
+If you need help or have questions, please check the [ai_licia documentation](https://docs.getailicia.com) or visit our [Discord community](https://discord.gg/Pbh7bYPJKt).
 
 ## Development
 
