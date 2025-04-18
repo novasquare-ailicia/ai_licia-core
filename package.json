@@ -1,0 +1,33 @@
+{
+  "name": "ai_licia-monorepo",
+  "version": "1.0.0",
+  "description": "Monorepo for ai_licia integrations",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "build:client": "npm run build --workspace=packages/ai_licia-client",
+    "build:aitum": "npm run build --workspace=packages/ai_licia-aitum",
+    "test": "npm run test --workspaces",
+    "clean": "rm -rf packages/*/dist",
+    "setup:aitum": "cd packages/ai_licia-aitum && npm run setup",
+    "start:aitum": "cd packages/ai_licia-aitum && npm run start"
+  },
+  "keywords": [
+    "ai_licia",
+    "aitum",
+    "twitch",
+    "ai"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.11.16",
+    "typescript": "^5.3.3"
+  },
+  "overrides": {
+    "aitum.js": "github:Aitum/aitum.js"
+  }
+} 

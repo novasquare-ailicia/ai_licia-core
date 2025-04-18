@@ -1,0 +1,36 @@
+name: Publish ai_licia-client to NPM
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16.x'
+          registry-url: 'https://registry.npmjs.org'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build all packages
+        run: npm run build
+      
+      - name: Get version from release tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+      
+      - name: Update version in package.json
+        run: |
+          cd packages/ai_licia-client
+          npm version $VERSION --no-git-tag-version
+          echo "Publishing version $VERSION to NPM"
+      
+      - name: Publish ai_licia-client package
+        run: npm publish --workspace=packages/ai_licia-client
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} 

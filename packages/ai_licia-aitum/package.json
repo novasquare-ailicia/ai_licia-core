@@ -1,0 +1,36 @@
+{
+  "name": "ai_licia-aitum",
+  "version": "1.0.0",
+  "description": "Aitum Custom Code integration for AI Licia",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "start": "ts-node src/index",
+    "build": "tsc",
+    "setup": "ts-node src/setup",
+    "watch": "tsc -w",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Aitum/aitum-cc.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Aitum/aitum-cc/issues"
+  },
+  "homepage": "https://github.com/Aitum/aitum-cc#readme",
+  "dependencies": {
+    "ai_licia-client": "^1.0.0",
+    "dotenv": "^16.0.3",
+    "ts-node": "^10.9.2"
+  },
+  "devDependencies": {
+    "@types/node": "^18.11.10",
+    "typescript": "^4.9.3"
+  }
+}
