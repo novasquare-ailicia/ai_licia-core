@@ -74,7 +74,17 @@ Sends contextual information to ai_licia that will be stored in her memory and u
 ```typescript
 // Examples
 await client.sendEvent('Current song: "Never Gonna Give You Up" by Rick Astley');
-await client.sendEvent('Chess board: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+await client.sendEvent(`Chess board: 
+♜♞♝♛♚♝♞♜
+♟♟♟♟♟♟♟♟
+□■□■□■□■
+■□■□■□■□
+□■□■□■□■
+■□■□■□■□
+♙♙♙♙♙♙♙♙
+♖♘♗♕♔♗♘♖
+White turn
+`);
 await client.sendEvent('Player stats: Health: 75/100, Mana: 30/100, Position: Forest of Doom');
 ```
 
