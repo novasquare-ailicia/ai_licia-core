@@ -94,9 +94,9 @@ Triggers ai_licia to generate an immediate response to a specific event or momen
 
 ```typescript
 // Examples
-const response = await client.triggerGeneration('Player just pulled a legendary sword from the stone!');
-const response = await client.triggerGeneration('Viewer "GameMaster42" redeemed points for an ai_licia roast');
-const response = await client.triggerGeneration('Plane crashed into the mountain. Total damage: $2.5M');
+await client.triggerGeneration('Player just pulled a legendary sword from the stone!');
+await client.triggerGeneration('Viewer "GameMaster42" redeemed points for an ai_licia roast');
+await client.triggerGeneration('Plane crashed into the mountain. Total damage: $2.5M');
 ```
 
 
