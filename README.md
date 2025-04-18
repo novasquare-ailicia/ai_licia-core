@@ -1,6 +1,6 @@
 # ai_licia Integrations
 
-This monorepo contains libraries for integrating with the [ai_licia Twitch AI Companion](https://www.getailicia.com) API.
+This monorepo contains libraries for integrating with [ai_licia AI Co-Host](https://www.getailicia.com) API.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
