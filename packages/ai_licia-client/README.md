@@ -180,11 +180,11 @@ If you need help or have questions, please check the [ai_licia documentation](ht
 
 1. Clone the repo
    ```
-   git clone https://github.com/YOUR_USERNAME/ai_licia-monorepo.git
+   git clone git@github.com:novasquare-ailicia/ai_licia-core.git
    ```
 2. Install dependencies
    ```
-   cd ai_licia-monorepo
+   cd ai_licia-core
    npm install
    ```
 3. Build the package
