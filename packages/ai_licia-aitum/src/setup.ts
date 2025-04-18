@@ -7,7 +7,7 @@ import fs from 'fs';
 import path from 'path';
 import readline from 'readline';
 
-console.log('Setting up AI Licia Aitum Integration...');
+console.log('Setting up ai_licia Aitum Integration...');
 
 // Create settings.env file
 const envPath = path.join(__dirname, '..', 'settings.env');
@@ -24,9 +24,9 @@ const rl = readline.createInterface({
 });
 
 // Ask for configuration
-rl.question('Enter your API key for AI Licia (if available): ', (apiKey) => {
-  rl.question('Enter your channel name for AI Licia: ', (channelName) => {
-    const settings = `# AI Licia settings
+rl.question('Enter your API key for ai_licia (if available): ', (apiKey) => {
+  rl.question('Enter your channel name for ai_licia: ', (channelName) => {
+    const settings = `# ai_licia settings
 AI_LICIA_API_URL=https://api.getailicia.com
 AI_LICIA_API_KEY=${apiKey || ''}
 AI_LICIA_CHANNEL=${channelName || ''}

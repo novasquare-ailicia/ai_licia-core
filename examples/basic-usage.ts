@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 /**
- * Basic usage example of the AILiciaClient
+ * Basic usage example of the AiliciaClient
  */
 async function main() {
   // Check for required environment variables
@@ -29,8 +29,8 @@ async function main() {
   });
 
   try {
-    // Send contextual data to AI Licia
-    console.log('Sending event to AI Licia...');
+    // Send contextual data to ai_licia
+    console.log('Sending event to ai_licia...');
     await client.sendEvent('The player entered a haunted forest filled with mysterious sounds');
     console.log('Event sent successfully!');
 
@@ -38,8 +38,8 @@ async function main() {
     console.log('Waiting for 2 seconds...');
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    // Trigger a reaction from AI Licia
-    console.log('Triggering a generation from AI Licia...');
+    // Trigger a reaction from ai_licia
+    console.log('Triggering a generation from ai_licia...');
     await client.triggerGeneration(
       'A ghostly figure appeared between the trees'
     );

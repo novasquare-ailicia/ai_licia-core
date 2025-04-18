@@ -85,7 +85,7 @@ aitumCC.setEnv(
   process.env.API_KEY as string
 );
 
-// Register AI Licia actions
+// Register ai_licia actions
 aitumCC.registerAction(AiliciaActions.SendContextEvent);
 aitumCC.registerAction(AiliciaActions.TriggerDirectGeneration);
 

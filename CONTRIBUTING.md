@@ -1,4 +1,4 @@
-# Contributing to AI Licia Integrations
+# Contributing to ai_licia Integrations
 
 Thank you for considering contributing to this project! Your help is essential for making these integrations better for everyone.
 

@@ -21,17 +21,17 @@ async function main() {
   }
 
   // Initialize the Aitum CC library
-  const lib = new AitumCC('AI Licia Integration Example');
+  const lib = new AitumCC('ai_licia Integration Example');
   
-  // Register the AI Licia actions with Aitum CC
-  console.log('Registering AI Licia actions...');
+  // Register the ai_licia actions with Aitum CC
+  console.log('Registering ai_licia actions...');
   Object.values(AiliciaActions).forEach(action => {
     lib.registerAction(action);
   });
   
   console.log('Successfully registered the following actions:');
-  console.log('1. Send AI Licia Event');
-  console.log('2. Trigger AI Licia Generation');
+  console.log('1. Send ai_licia Event');
+  console.log('2. Trigger ai_licia Generation');
   
   console.log('\nThese actions can now be used in your Aitum Custom Code flows!');
   console.log('Make sure to set AILICIA_API_KEY and AILICIA_CHANNEL_NAME in your env variables.');

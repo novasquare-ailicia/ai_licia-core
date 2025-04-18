@@ -210,4 +210,4 @@ Distributed under the MIT License. See [LICENSE](../../LICENSE) for more informa
 
 ## Related
 
-- [ai_licia-aitum](../ai_licia-aitum) - Aitum Custom Code integration for AI Licia 
+- [ai_licia-aitum](../ai_licia-aitum) - Aitum Custom Code integration for ai_licia 

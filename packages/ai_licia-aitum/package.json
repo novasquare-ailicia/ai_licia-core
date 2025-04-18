@@ -1,7 +1,7 @@
 {
   "name": "ai_licia-aitum",
   "version": "1.0.0",
-  "description": "Aitum Custom Code integration for AI Licia",
+  "description": "Aitum Custom Code integration for ai_licia",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [

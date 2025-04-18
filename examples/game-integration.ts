@@ -5,13 +5,13 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 /**
- * This example shows how to integrate AI Licia with a game.
+ * This example shows how to integrate ai_licia with a game.
  * 
- * It simulates a game sending player position and event data to AI Licia,
+ * It simulates a game sending player position and event data to ai_licia,
  * then triggers a reaction when a specific event occurs.
  */
 
-// Initialize the AI Licia client
+// Initialize the ai_licia client
 const client = AiliciaClient.getInstance({
   apiKey: process.env.AILICIA_API_KEY || '',
   channelName: process.env.AILICIA_CHANNEL_NAME || ''
@@ -24,9 +24,9 @@ async function updatePlayerPosition(x: number, y: number, z: number) {
   const content = `Player position: x=${x}, y=${y}, z=${z}`;
   
   try {
-    // Send the position data to AI Licia with a TTL of 30 seconds
+    // Send the position data to ai_licia with a TTL of 30 seconds
     await client.sendEvent(content, 30);
-    console.log('Position updated in AI Licia context');
+    console.log('Position updated in ai_licia context');
   } catch (error) {
     console.error('Failed to update position:', error);
   }
@@ -39,24 +39,24 @@ async function sendGameEvent(eventName: string, eventDetails: string) {
   const content = `${eventName}: ${eventDetails}`;
   
   try {
-    // Send the event data to AI Licia
+    // Send the event data to ai_licia
     await client.sendEvent(content);
-    console.log('Game event sent to AI Licia context');
+    console.log('Game event sent to ai_licia context');
   } catch (error) {
     console.error('Failed to send game event:', error);
   }
 }
 
 /**
- * Example function to trigger AI Licia to react to an event
+ * Example function to trigger ai_licia to react to an event
  */
-async function triggerAILiciaReaction(event: string) {
+async function triggerAiliciaReaction(event: string) {
   try {
-    // Trigger a reaction from AI Licia
+    // Trigger a reaction from ai_licia
     const response = await client.triggerGeneration(event);
-    console.log('AI Licia reaction:', response);
+    console.log('ai_licia reaction:', response);
   } catch (error) {
-    console.error('Failed to trigger AI Licia reaction:', error);
+    console.error('Failed to trigger ai_licia reaction:', error);
   }
 }
 
@@ -71,8 +71,8 @@ async function runExample() {
   // Simulate player finding an item
   await sendGameEvent('Item Found', 'Player found a Legendary Sword');
   
-  // Trigger AI Licia to react to the player finding the sword
-  await triggerAILiciaReaction('The player found a legendary sword that glows with mystical energy!');
+  // Trigger ai_licia to react to the player finding the sword
+  await triggerAiliciaReaction('The player found a legendary sword that glows with mystical energy!');
 }
 
 // Run the example
