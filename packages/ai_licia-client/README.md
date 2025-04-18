@@ -100,7 +100,6 @@ const response = await client.triggerGeneration('Plane crashed into the mountain
 ```
 
 
-
 ## Error Handling
 
 The client throws descriptive errors when API calls fail. You can catch these errors to handle them gracefully:
@@ -141,6 +140,30 @@ const client = new AiliciaClient();
 
 // Now you can use client.sendEvent() and client.triggerGeneration()
 ```
+
+## Official Integrations & Partnerships
+
+Are you a game developer, app creator, or platform looking to build a deeper integration with ai_licia? We welcome partnerships to create official, branded integrations that enhance the streaming experience!
+
+### Who Should Reach Out
+
+- **Game Studios**: Create direct integrations that allow ai_licia to react to in-game events in real time
+- **App Developers**: Integrate ai_licia into your streaming tools, bots, or community platforms
+- **Hardware Manufacturers**: Connect physical devices, alerts, or hardware state to ai_licia
+- **Platform Creators**: Build ai_licia capabilities into your streaming or content creation platform
+
+### Partnership Benefits
+
+- **Co-Marketing**: Joint promotion of your integration to the ai_licia community
+- **Technical Support**: Direct access to our development team
+- **API Enhancements**: Potential for custom endpoints to support your specific needs
+- **Featured Integration**: Highlighted placement in our documentation and website
+
+### Getting Started
+
+To discuss partnership opportunities, join our [Discord community](https://discord.gg/ailicia) and message in the #partnerships channel, or email us at partnerships@getailicia.com.
+
+We're particularly interested in integrations that create unique interactive experiences for streamers and their audience!
 
 ## Need Help?
 

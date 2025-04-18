@@ -1,12 +1,21 @@
 {
   "name": "ai_licia-client",
   "version": "0.9.1",
-  "description": "Client library for AI Licia Twitch Companion API",
+  "description": "Client library for ai_licia Twitch Co-Host API",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/novasquare-ailicia/ai_licia-core.git",
+    "directory": "packages/ai_licia-client"
+  },
+  "homepage": "https://www.getailicia.com",
+  "bugs": {
+    "url": "https://github.com/novasquare-ailicia/ai_licia-core/issues"
+  },
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
