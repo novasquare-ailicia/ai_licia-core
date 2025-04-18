@@ -1,6 +1,6 @@
 # ai_licia Client
 
-A TypeScript/JavaScript client library for interacting with with [ai_licia AI Co-Host](https://www.getailicia.com) API.
+A TypeScript/JavaScript client library for interacting with with [ai_licia AI Co-Host](https://www.getailicia.com) API, allowing you to send context data and trigger reactions from ai_licia in your Twitch stream.
 
 ## Installation
 
@@ -13,7 +13,7 @@ npm install ai_licia-client
 You can configure the client using environment variables:
 
 ```
-AI_LICIA_API_URL=http://your-ailicia-api-url.com
+AI_LICIA_API_URL=https://api.getailicia.com/v1
 AI_LICIA_API_KEY=your-api-key
 AI_LICIA_CHANNEL=your-channel-name
 ```
@@ -31,40 +31,21 @@ import { AiliciaClient } from 'ai_licia-client';
 const client = new AiliciaClient(
   'your-api-key',    // Optional, will use environment variable if not provided
   'your-channel',    // Optional, will use environment variable if not provided
-  'https://api.url'  // Optional, will use environment variable if not provided
+  'https://api.getailicia.com/v1'  // Optional, will use environment variable or the default if not provided
 );
 
-// Send an event to ai_licia
-await client.sendEvent('GAME_EVENT', { 
-  message: 'Player entered the room'
-});
+// Send contextual information to ai_licia (max 700 characters)
+await client.sendEvent('Player health: 85%, Position: X:145 Y:230, Kills: 12');
 
-// Trigger a generation
-const response = await client.triggerGeneration('How are you today?');
-console.log(response.content); // The response from ai_licia
-```
-
-### Advanced Usage
-
-You can also use the client to create more complex interactions:
-
-```typescript
-// Trigger a generation with customization
-const options = {
-  promptOverride: 'What is the meaning of life?',
-  useMemory: true,
-  additionalContext: 'The user is a philosopher',
-  voiceOnly: false
-};
-
-const response = await client.generateResponse(options);
+// Trigger an immediate reaction from ai_licia (max 300 characters)
+const response = await client.triggerGeneration('Player just defeated the final boss!');
 ```
 
 ## API Reference
 
 ### `AiliciaClient`
 
-The main class for interacting with the ai_licia API.
+The main class for interacting with the ai_licia API. ([Official Documentation](https://docs.getailicia.com/publicevents.html))
 
 #### Constructor
 
@@ -76,51 +57,49 @@ new AiliciaClient(apiKey?: string, channelName?: string, baseUrl?: string)
 
 ##### `sendEvent(content: string, ttl?: number): Promise<void>`
 
-Sends an event to ai_licia, which will be added to her context.
+Sends contextual information to ai_licia that will be stored in her memory and used for future interactions. This doesn't trigger an immediate response but enriches ai_licia's understanding of what's happening in your stream.
 
-- `content`: The content of the event
-- `ttl`: (Optional) Time-to-live in seconds
+**Use cases:**
+- Stream game state (health, position, inventory)
+- Current music playing
+- Chess board state in ASCII
+- Player statistics, progress, or achievements
+- Stream milestones
+- Your setup state (lights colour, fan active or off, etc)
+
+**Parameters:**
+- `content`: The information to send (max 700 characters)
+- `ttl`: (Optional) Time-to-live in seconds - how long this information stays relevant
+
+```typescript
+// Examples
+await client.sendEvent('Current song: "Never Gonna Give You Up" by Rick Astley');
+await client.sendEvent('Chess board: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+await client.sendEvent('Player stats: Health: 75/100, Mana: 30/100, Position: Forest of Doom');
+```
 
 ##### `triggerGeneration(content: string): Promise<GenerationResponse>`
 
-Triggers ai_licia to generate a response based on the provided content.
+Triggers ai_licia to generate an immediate response to a specific event or moment. This creates a one-off reaction from ai_licia that will appear in your stream.
 
-- `content`: The content to trigger a generation for
+**Use cases:**
+- Player just defeated a boss
+- Viewer redeemed channel points for ai_licia to roast them
+- Plane crash in a simulator
+- Reaching a milestone in-game
+- Reaction to a funny/epic moment
 
-##### `generateResponse(options: GenerationOptions): Promise<GenerationResponse>`
-
-Generates a response with more control over the generation process.
-
-- `options`: Options for the generation including:
-  - `promptOverride`: Override the default prompt
-  - `useMemory`: Whether to use chat memory
-  - `additionalContext`: Additional context to provide
-  - `voiceOnly`: Whether to generate only voice without text
-
-## Types
-
-### `GenerationResponse`
+**Parameters:**
+- `content`: What ai_licia should react to (max 300 characters)
 
 ```typescript
-interface GenerationResponse {
-  id: string;
-  content: string;
-  createdAt: string;
-  status: 'completed' | 'processing' | 'failed';
-  audioPath?: string;
-}
+// Examples
+const response = await client.triggerGeneration('Player just pulled a legendary sword from the stone!');
+const response = await client.triggerGeneration('Viewer "GameMaster42" redeemed points for an ai_licia roast');
+const response = await client.triggerGeneration('Plane crashed into the mountain. Total damage: $2.5M');
 ```
 
-### `GenerationOptions`
 
-```typescript
-interface GenerationOptions {
-  promptOverride?: string;
-  useMemory?: boolean;
-  additionalContext?: string;
-  voiceOnly?: boolean;
-}
-```
 
 ## Error Handling
 
@@ -128,15 +107,16 @@ The client throws descriptive errors when API calls fail. You can catch these er
 
 ```typescript
 try {
-  await client.sendEvent('GAME_EVENT', { message: 'Player entered the room' });
+  await client.sendEvent('Player entered the final dungeon');
 } catch (error) {
   console.error('Failed to send event:', error.message);
 }
 ```
 
-## Need Help?
-
-If you need help or have questions, please check the [ai_licia documentation](https://ai-licia.com/docs) or visit our [Discord community](https://discord.gg/ailicia).
+Common errors:
+- Content length exceeding limits (700 chars for events, 300 chars for generations)
+- API key authorization issues
+- Rate limiting (too many requests)
 
 ## Environment Setup
 
@@ -144,7 +124,7 @@ You can use environment variables with dotenv by creating a `.env` file:
 
 ```
 AI_LICIA_API_KEY=your_api_key_here
-AI_LICIA_CHANNEL_NAME=your_twitch_channel_name
+AI_LICIA_CHANNEL=your_twitch_channel_name
 ```
 
 Then in your code:
@@ -156,12 +136,15 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
-// Create client from environment variables
-const client = AiliciaClient.getInstance({
-  apiKey: process.env.AI_LICIA_API_KEY || '',
-  channelName: process.env.AI_LICIA_CHANNEL_NAME || ''
-});
+// Create client using environment variables
+const client = new AiliciaClient();
+
+// Now you can use client.sendEvent() and client.triggerGeneration()
 ```
+
+## Need Help?
+
+If you need help or have questions, please check the [ai_licia documentation](https://docs.getailicia.com) or visit our [Discord community](https://discord.gg/ailicia).
 
 ## Development
 
@@ -194,10 +177,10 @@ npm test
 
 ## Contributing
 
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+Contributions are what make the open source community such an amazing place to learn, inspire, and create. 
+Any contributions you make are **greatly appreciated**.
 
 Please check out the [contributing guidelines](../../CONTRIBUTING.md) for more information.
-
 ## License
 
 Distributed under the MIT License. See [LICENSE](../../LICENSE) for more information.
