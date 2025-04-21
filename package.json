@@ -26,8 +26,5 @@
   "devDependencies": {
     "@types/node": "^20.11.16",
     "typescript": "^5.3.3"
-  },
-  "overrides": {
-    "aitum.js": "github:Aitum/aitum.js"
   }
 } 

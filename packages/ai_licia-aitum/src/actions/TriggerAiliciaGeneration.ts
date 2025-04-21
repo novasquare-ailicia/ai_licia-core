@@ -1,20 +1,10 @@
-// Basic interface for action inputs
-interface ActionInput {
-  type: string;
-  label: string;
-  required: boolean;
-}
+import { ICCActionInputs, ICustomCode } from 'aitum.js/lib/interfaces';
+import { StringInput } from 'aitum.js/lib/inputs';
 
-// String input type
-class StringInput implements ActionInput {
-  type = 'string';
-  required: boolean;
-  
-  constructor(public label: string, public options: { required: boolean }) {
-    this.required = options.required;
-  }
-}
+// Removed: AitumCC and DeviceType imports as they are not used in this specific action
+// Removed: Custom StringInput class definition
 
+/*********** CONFIG ***********/
 /**
  * Trigger ai_licia Direct Generation
  * 
@@ -32,13 +22,13 @@ class StringInput implements ActionInput {
 // The custom code action name
 const name: string = 'Trigger ai_licia Direct Generation';
 
-// The custom code inputs - matching the API specification
-const inputs = {
+// The custom code inputs - using aitum.js StringInput
+const inputs: ICCActionInputs = {
   content: new StringInput('Content (what should ai_licia react to? max 300 chars)', { required: true })
 };
 
-// The code executed when the action is triggered
-async function method(inputs: { [key: string]: any }) {
+// The code executed when the action is triggered - updated signature
+async function method(inputs: { [key: string]: string | number | boolean | string[] }) {
   console.log('Triggering ai_licia direct generation');
   
   const content = inputs.content as string;
@@ -46,37 +36,40 @@ async function method(inputs: { [key: string]: any }) {
   // Check for content length limit (API has 300 char limit)
   if (content.length > 300) {
     console.error('Content exceeds the 300-character limit');
-    return { 
-      success: false, 
-      error: 'Content exceeds the 300-character limit'
-    };
+    // Aitum actions typically don't return values like this, logging error is sufficient
+    // return { 
+    //   success: false, 
+    //   error: 'Content exceeds the 300-character limit'
+    // };
+    return; // Stop execution
   }
   
   try {
-    // Import the ai_licia client
+    // Import the ai_licia client dynamically as before
     const { AiliciaClient } = require('ai_licia-client');
     const client = new AiliciaClient();
     
     // Trigger ai_licia to generate a response
-    // Uses the /events/generations endpoint with GAME_EVENT type
     const result = await client.triggerGeneration(content);
     
     console.log('ai_licia direct generation triggered successfully');
-    console.log('Response:', result);
+    console.log('Response content (first 100 chars):', result.content?.substring(0, 100)); // Log response details
     
-    return {
-      success: true,
-      response: result,
-      content: result.content
-    };
+    // No explicit return value needed for success in Aitum actions
+    // return {
+    //   success: true,
+    //   response: result,
+    //   content: result.content
+    // };
   } catch (error) {
     console.error('Error triggering ai_licia direct generation:', error);
-    return {
-      success: false,
-      error: String(error)
-    };
+    // No explicit return value needed for failure
+    // return {
+    //   success: false,
+    //   error: String(error)
+    // };
   }
 }
 
-// Export the action
-export default { name, inputs, method }; 
+/*********** DON'T EDIT BELOW ***********/
+export default { name, inputs, method } as ICustomCode; 

@@ -1,30 +1,10 @@
-// Basic interface for action inputs
-interface ActionInput {
-  type: string;
-  label: string;
-  required: boolean;
-}
+import { ICCActionInputs, ICustomCode } from 'aitum.js/lib/interfaces';
+import { StringInput, IntInput } from 'aitum.js/lib/inputs';
 
-// String input type
-class StringInput implements ActionInput {
-  type = 'string';
-  required: boolean;
-  
-  constructor(public label: string, public options: { required: boolean }) {
-    this.required = options.required;
-  }
-}
+// Removed: AitumCC and DeviceType imports as they are not used in this specific action
+// Removed: Custom StringInput and NumberInput class definitions
 
-// Number input type for TTL
-class NumberInput implements ActionInput {
-  type = 'number';
-  required: boolean;
-  
-  constructor(public label: string, public options: { required: boolean }) {
-    this.required = options.required;
-  }
-}
-
+/*********** CONFIG ***********/
 /**
  * Send ai_licia Context Event
  * 
@@ -42,47 +22,49 @@ class NumberInput implements ActionInput {
 // The custom code action name
 const name: string = 'Send ai_licia Context Event';
 
-// The custom code inputs - matching the API specification
-const inputs = {
+// The custom code inputs - using aitum.js inputs
+const inputs: ICCActionInputs = {
   content: new StringInput('Content (max 700 chars)', { required: true }),
-  ttl: new NumberInput('Time-to-Live in seconds (optional)', { required: false })
+  ttl: new IntInput('Time-to-Live in seconds (optional, 0=infinite)', { required: false })
 };
 
-// The code executed when the action is triggered
-async function method(inputs: { [key: string]: any }) {
+// The code executed when the action is triggered - updated signature
+async function method(inputs: { [key: string]: string | number | boolean | string[] }) {
   console.log('Sending context event to ai_licia');
   
   const content = inputs.content as string;
+  // Use IntInput which provides a number type
   const ttl = inputs.ttl as number | undefined;
   
   // Check for content length limit (API has 700 char limit)
   if (content.length > 700) {
     console.error('Content exceeds the 700-character limit');
-    return { 
-      success: false, 
-      error: 'Content exceeds the 700-character limit'
-    };
+    // return { 
+    //   success: false, 
+    //   error: 'Content exceeds the 700-character limit'
+    // };
+    return; // Stop execution
   }
   
   try {
-    // Import the ai_licia client
+    // Import the ai_licia client dynamically
     const { AiliciaClient } = require('ai_licia-client');
     const client = new AiliciaClient();
     
     // Send the event to ai_licia API
-    // Uses the /events endpoint with GAME_EVENT type
+    // Pass TTL directly (client handles undefined)
     await client.sendEvent(content, ttl);
     
     console.log('Context event sent successfully to ai_licia');
-    return { success: true };
+    // return { success: true };
   } catch (error) {
     console.error('Error sending context event to ai_licia:', error);
-    return { 
-      success: false, 
-      error: String(error)
-    };
+    // return { 
+    //   success: false, 
+    //   error: String(error)
+    // };
   }
 }
 
-// Export the action
-export default { name, inputs, method }; 
+/*********** DON'T EDIT BELOW ***********/
+export default { name, inputs, method } as ICustomCode; 

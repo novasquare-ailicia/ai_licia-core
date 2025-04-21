@@ -6,6 +6,8 @@
 import fs from 'fs';
 import path from 'path';
 import readline from 'readline';
+import {hostname} from 'os';
+import {v4 as uuidv4} from 'uuid';
 
 console.log('Setting up ai_licia Aitum Integration...');
 
@@ -26,15 +28,20 @@ const rl = readline.createInterface({
 // Ask for configuration
 rl.question('Enter your API key for ai_licia (if available): ', (apiKey) => {
   rl.question('Enter your channel name for ai_licia: ', (channelName) => {
-    const settings = `# ai_licia settings
+    rl.question('Enter your Aitum API Key: ', (aitumApiKey) => {
+      const settings = `# ai_licia settings
 AI_LICIA_API_URL=https://api.getailicia.com
 AI_LICIA_API_KEY=${apiKey || ''}
 AI_LICIA_CHANNEL=${channelName || ''}
+AITUM_CC_ID=${uuidv4()}
+AITUM_CC_HOST=ai_licia
+API_KEY=${aitumApiKey}
 `;
 
-    fs.writeFileSync(envPath, settings);
-    console.log(`settings.env created successfully at ${envPath}`);
+      fs.writeFileSync(envPath, settings);
+      console.log(`settings.env created successfully at ${envPath}`);
 
-    rl.close();
+      rl.close();
+    });
   });
 });
