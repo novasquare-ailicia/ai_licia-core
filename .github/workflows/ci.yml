@@ -19,10 +19,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build packages
-        # Use --workspaces to explicitly build all packages
-        # Use --if-present to avoid errors if a package lacks a build script
-        run: npm run build --workspaces --if-present
+      - name: Build ai_licia-client package (Dependency first)
+        run: npm run build --workspace=packages/ai_licia-client --if-present
+
+      - name: Build ai_licia-aitum package 
+        run: npm run build --workspace=packages/ai_licia-aitum --if-present
 
       # Optional: Add steps for linting or testing here if needed
       # - name: Run linter
