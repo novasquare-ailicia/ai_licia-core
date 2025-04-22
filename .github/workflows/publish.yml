@@ -32,6 +32,7 @@ jobs:
           cd packages/ai_licia-client
           npm version $VERSION --no-git-tag-version --allow-same-version
           echo "Updated ai_licia-client to version $VERSION"
+          cd ../..
 
       - name: Update version in ai_licia-aitum package.json and dependency
         run: |
