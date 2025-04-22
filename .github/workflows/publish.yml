@@ -1,36 +1,50 @@
-name: Publish ai_licia-client to NPM
+name: Publish Packages to NPM
 
 on:
   release:
     types: [created]
 
 jobs:
-  build:
+  build-and-publish: # Renamed job for clarity
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: '16.x'
+          node-version: '16.x' # Consider updating Node version later if needed
           registry-url: 'https://registry.npmjs.org'
-      
+
       - name: Install dependencies
-        run: npm ci
-      
+        run: npm ci # Installs dependencies for the entire workspace
+
       - name: Build all packages
-        run: npm run build
-      
+        run: npm run build # Assumes this builds both client and aitum
+
       - name: Get version from release tag
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
-      
-      - name: Update version in package.json
+
+      - name: Update version in ai_licia-client package.json
         run: |
           cd packages/ai_licia-client
-          npm version $VERSION --no-git-tag-version
-          echo "Publishing version $VERSION to NPM"
-      
+          npm version $VERSION --no-git-tag-version --allow-same-version
+          echo "Updated ai_licia-client to version $VERSION"
+
+      - name: Update version in ai_licia-aitum package.json and dependency
+        run: |
+          cd packages/ai_licia-aitum
+          # Update package version
+          npm version $VERSION --no-git-tag-version --allow-same-version
+          # Update dependency on ai_licia-client to the exact released version
+          npm install ai_licia-client@$VERSION --save-exact --workspace=packages/ai_licia-aitum
+          echo "Updated ai_licia-aitum to version $VERSION and set ai_licia-client dependency to $VERSION"
+        
       - name: Publish ai_licia-client package
-        run: npm publish --workspace=packages/ai_licia-client
+        run: npm publish --workspace=packages/ai_licia-client --access public # Ensure public access
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish ai_licia-aitum package
+        run: npm publish --workspace=packages/ai_licia-aitum --access public # Ensure public access
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} 

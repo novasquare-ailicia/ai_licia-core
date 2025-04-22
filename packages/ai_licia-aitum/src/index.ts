@@ -37,3 +37,6 @@ const lib = AitumCC.get();
   // Connect after a second
   setTimeout(async () => await lib.connect(), 1e3);
 })();
+
+// Export the main connector class
+export { AitumAiliciaConnector, AitumAiliciaConnectorOptions } from './AitumAiliciaConnector';

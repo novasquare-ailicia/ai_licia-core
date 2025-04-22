@@ -1,5 +1,6 @@
 import { ICCActionInputs, ICustomCode } from 'aitum.js/lib/interfaces';
 import { StringInput } from 'aitum.js/lib/inputs';
+import { createAiliciaClient } from './config'; // Import the factory function
 
 // Removed: AitumCC and DeviceType imports as they are not used in this specific action
 // Removed: Custom StringInput class definition
@@ -45,9 +46,8 @@ async function method(inputs: { [key: string]: string | number | boolean | strin
   }
   
   try {
-    // Import the ai_licia client dynamically as before
-    const { AiliciaClient } = require('ai_licia-client');
-    const client = new AiliciaClient();
+    // Use the factory function to create the client
+    const client = createAiliciaClient();
     
     // Trigger ai_licia to generate a response
     const result = await client.triggerGeneration(content);
@@ -62,7 +62,12 @@ async function method(inputs: { [key: string]: string | number | boolean | strin
     //   content: result.content
     // };
   } catch (error) {
-    console.error('Error triggering ai_licia direct generation:', error);
+    // Log the error appropriately
+    if (error instanceof Error) {
+      console.error('Error triggering ai_licia direct generation:', error.message);
+    } else {
+      console.error('Unknown error triggering ai_licia direct generation:', error);
+    }
     // No explicit return value needed for failure
     // return {
     //   success: false,
