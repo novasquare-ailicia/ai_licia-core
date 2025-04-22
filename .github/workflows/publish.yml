@@ -5,7 +5,7 @@ on:
     types: [created]
 
 jobs:
-  build-and-publish: # Renamed job for clarity
+  build-and-publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -17,8 +17,11 @@ jobs:
       - name: Install dependencies
         run: npm ci # Installs dependencies for the entire workspace
 
-      - name: Build all packages
-        run: npm run build # Assumes this builds both client and aitum
+      - name: Build ai_licia-client package (Dependency first)
+        run: npm run build --workspace=packages/ai_licia-client --if-present
+        
+      - name: Build ai_licia-aitum package 
+        run: npm run build --workspace=packages/ai_licia-aitum --if-present
 
       - name: Get version from release tag
         id: get_version
