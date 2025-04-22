@@ -1,6 +1,6 @@
 import { ICCActionInputs, ICustomCode } from 'aitum.js/lib/interfaces';
 import { StringInput } from 'aitum.js/lib/inputs';
-import { createAiliciaClient } from './config'; // Import the factory function
+import { createAiliciaClient } from '../config'; // Import the factory function
 
 // Removed: AitumCC and DeviceType imports as they are not used in this specific action
 // Removed: Custom StringInput class definition
