@@ -1,0 +1,31 @@
+name: Continuous Integration
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16.x' # Or your preferred/required Node version
+          cache: 'npm' # Enable caching for npm dependencies
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build packages
+        # Use --workspaces to explicitly build all packages
+        # Use --if-present to avoid errors if a package lacks a build script
+        run: npm run build --workspaces --if-present
+
+      # Optional: Add steps for linting or testing here if needed
+      # - name: Run linter
+      #   run: npm run lint --workspaces --if-present
+      # - name: Run tests
+      #   run: npm run test --workspaces --if-present 
