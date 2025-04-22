@@ -25,6 +25,17 @@ jobs:
       - name: Build ai_licia-aitum package 
         run: npm run build --workspace=packages/ai_licia-aitum --if-present
 
+      - name: Update version in ai_licia-aitum package.json and dependency
+        run: |
+          # Run install command from root FIRST to update dependency
+          npm install ai_licia-client@$VERSION --save-exact --workspace=packages/ai_licia-aitum
+          echo "Set ai_licia-client dependency to $VERSION in ai_licia-aitum package.json"
+          
+          # Now cd into the package to update its version
+          cd packages/ai_licia-aitum
+          npm version $VERSION --no-git-tag-version --allow-same-version
+          echo "Updated ai_licia-aitum package version to $VERSION"
+
       # Optional: Add steps for linting or testing here if needed
       # - name: Run linter
       #   run: npm run lint --workspaces --if-present
