@@ -1,5 +1,11 @@
 # ai_licia Client
 
+<p align="center">
+    <a href="https://www.npmjs.com/package/aitum.js">
+        <img alt="npm" src="https://img.shields.io/npm/v/ai_licia-client?style=flat-square">
+    </a>
+</p>
+
 A TypeScript/JavaScript client library for interacting with with [ai_licia AI Co-Host](https://www.getailicia.com) API, allowing you to send context data and trigger reactions from ai_licia in your Twitch stream.
 
 ## Installation
