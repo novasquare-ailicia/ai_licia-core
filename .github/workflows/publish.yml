@@ -32,16 +32,18 @@ jobs:
           cd packages/ai_licia-client
           npm version $VERSION --no-git-tag-version --allow-same-version
           echo "Updated ai_licia-client to version $VERSION"
-          cd ../..
+          # cd ../.. # No longer needed here if the next step runs from root first
 
       - name: Update version in ai_licia-aitum package.json and dependency
         run: |
-          cd packages/ai_licia-aitum
-          # Update package version
-          npm version $VERSION --no-git-tag-version --allow-same-version
-          # Update dependency on ai_licia-client to the exact released version
+          # Run install command from root FIRST to update dependency
           npm install ai_licia-client@$VERSION --save-exact --workspace=packages/ai_licia-aitum
-          echo "Updated ai_licia-aitum to version $VERSION and set ai_licia-client dependency to $VERSION"
+          echo "Set ai_licia-client dependency to $VERSION in ai_licia-aitum package.json"
+          
+          # Now cd into the package to update its version
+          cd packages/ai_licia-aitum
+          npm version $VERSION --no-git-tag-version --allow-same-version
+          echo "Updated ai_licia-aitum package version to $VERSION"
         
       - name: Publish ai_licia-client package
         run: npm publish --workspace=packages/ai_licia-client --access public # Ensure public access
