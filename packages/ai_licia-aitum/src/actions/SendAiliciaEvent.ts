@@ -1,5 +1,6 @@
 import { ICCActionInputs, ICustomCode } from 'aitum.js/lib/interfaces';
 import { StringInput, IntInput } from 'aitum.js/lib/inputs';
+import { createAiliciaClient } from '../config'; // Import the factory function
 
 // Removed: AitumCC and DeviceType imports as they are not used in this specific action
 // Removed: Custom StringInput and NumberInput class definitions
@@ -39,30 +40,25 @@ async function method(inputs: { [key: string]: string | number | boolean | strin
   // Check for content length limit (API has 700 char limit)
   if (content.length > 700) {
     console.error('Content exceeds the 700-character limit');
-    // return { 
-    //   success: false, 
-    //   error: 'Content exceeds the 700-character limit'
-    // };
     return; // Stop execution
   }
   
   try {
-    // Import the ai_licia client dynamically
-    const { AiliciaClient } = require('ai_licia-client');
-    const client = new AiliciaClient();
+    // Use the factory function to create the client
+    const client = createAiliciaClient();
     
     // Send the event to ai_licia API
     // Pass TTL directly (client handles undefined)
     await client.sendEvent(content, ttl);
     
     console.log('Context event sent successfully to ai_licia');
-    // return { success: true };
   } catch (error) {
-    console.error('Error sending context event to ai_licia:', error);
-    // return { 
-    //   success: false, 
-    //   error: String(error)
-    // };
+    // Log the error appropriately
+    if (error instanceof Error) {
+      console.error('Error sending context event to ai_licia:', error.message);
+    } else {
+      console.error('Unknown error sending context event to ai_licia:', error);
+    }
   }
 }
 
