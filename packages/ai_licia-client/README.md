@@ -45,6 +45,18 @@ await client.sendEvent('Player health: 85%, Position: X:145 Y:230, Kills: 12');
 
 // Trigger an immediate reaction from ai_licia (max 300 characters)
 const response = await client.triggerGeneration('Player just defeated the final boss!');
+
+// Listen to the live message stream
+const messageStream = client.streamPublicChatMessages({
+  roles: ['AI', 'Streamer'],
+  onOpen: () => console.log('Listening to ai_licia and the streamer'),
+  onMessage: (message) => console.log(`${message.role}: ${message.content}`),
+  onError: (error) => console.error('Stream error', error),
+  onClose: () => console.log('Stream closed')
+});
+
+// Stop streaming whenever you need to
+messageStream.close();
 ```
 
 ## API Reference
@@ -113,6 +125,32 @@ Triggers ai_licia to generate an immediate response to a specific event or momen
 await client.triggerGeneration('Player just pulled a legendary sword from the stone!');
 await client.triggerGeneration('Viewer "GameMaster42" redeemed points for an ai_licia roast');
 await client.triggerGeneration('Plane crashed into the mountain. Total damage: $2.5M');
+```
+
+##### `streamPublicChatMessages(options: ChatMessageStreamOptions): ChatMessageStream`
+
+Connects to the public chat message stream (Server-Sent Events) so you can react to realtime chat data within your tooling.
+
+**Parameters:**
+- `roles` *(optional)*: Filter the stream for specific roles (`'Mod' | 'VIP' | 'AI' | 'Viewer' | 'Streamer'`)
+- `onMessage`: Required callback invoked with the parsed `PublicChatMessage`
+- `onOpen`, `onError`, `onClose`: Optional lifecycle callbacks
+
+```typescript
+const stream = client.streamPublicChatMessages({
+  roles: ['AI'],
+  onOpen: () => console.log('Connected to ai_licia chat stream'),
+  onMessage: (message) => {
+    if (message.role === 'AI') {
+      console.log(`ai_licia: ${message.content}`);
+    }
+  },
+  onError: (error) => console.error('Stream error:', error.message),
+  onClose: () => console.log('Stream closed')
+});
+
+// Later, when you want to disconnect:
+stream.close();
 ```
 
 

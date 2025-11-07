@@ -46,4 +46,27 @@ export interface GenerationOptions {
   useMemory?: boolean;
   additionalContext?: string;
   voiceOnly?: boolean;
-} 
+}
+
+export type PublicChatRole = 'Mod' | 'VIP' | 'AI' | 'Viewer' | 'Streamer';
+
+export interface PublicChatMessage {
+  id?: string;
+  username: string;
+  content: string;
+  role: PublicChatRole;
+  isSub: boolean;
+  sentDateTime: string;
+}
+
+export interface ChatMessageStreamOptions {
+  roles?: PublicChatRole[];
+  onMessage: (message: PublicChatMessage) => void;
+  onError?: (error: Error) => void;
+  onOpen?: () => void;
+  onClose?: () => void;
+}
+
+export interface ChatMessageStream {
+  close: () => void;
+}

@@ -1,4 +1,6 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
+import http, { IncomingMessage } from 'http';
+import https from 'https';
 import { 
   AiliciaConfig, 
   Event, 
@@ -7,7 +9,10 @@ import {
   EventGeneration, 
   EventType,
   GenerationOptions,
-  GenerationResponse
+  GenerationResponse,
+  ChatMessageStreamOptions,
+  ChatMessageStream,
+  PublicChatMessage
 } from './interfaces';
 
 /**
@@ -17,6 +22,7 @@ export class AiliciaClient {
   private apiKey: string;
   private channelName: string;
   private client: AxiosInstance;
+  private baseUrl: string;
   private static instance: AiliciaClient;
 
   /**
@@ -30,9 +36,10 @@ export class AiliciaClient {
     this.apiKey = apiKey || process.env.AI_LICIA_API_KEY || '';
     this.channelName = channelName || process.env.AI_LICIA_CHANNEL || '';
     const apiUrl = baseUrl || process.env.AI_LICIA_API_URL || 'https://api.getailicia.com/v1';
+    this.baseUrl = apiUrl.replace(/\/$/, '');
     
     this.client = axios.create({
-      baseURL: apiUrl,
+      baseURL: this.baseUrl,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': this.apiKey
@@ -152,4 +159,152 @@ export class AiliciaClient {
       throw error;
     }
   }
-} 
+
+  /**
+   * Listens to the public chat message stream via Server-Sent Events.
+   * Returns a handle that can be closed to stop streaming.
+   *
+   * @param options - Roles filter and callbacks for stream lifecycle events
+   */
+  public streamPublicChatMessages(options: ChatMessageStreamOptions): ChatMessageStream {
+    const { onMessage } = options;
+    if (typeof onMessage !== 'function') {
+      throw new Error('onMessage callback is required to consume chat messages.');
+    }
+
+    const normalizedBase = this.baseUrl.endsWith('/') ? this.baseUrl : `${this.baseUrl}/`;
+    const query = options.roles && options.roles.length > 0
+      ? `?${options.roles.map(role => `roles=${encodeURIComponent(role)}`).join('&')}`
+      : '';
+    const streamUrl = new URL(`events/chat/messages/stream${query}`, normalizedBase);
+
+    const headers = {
+      'Accept': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Authorization': this.apiKey
+    };
+
+    const transport = streamUrl.protocol === 'http:' ? http : https;
+    let currentResponse: IncomingMessage | undefined;
+    let closed = false;
+
+    const finalize = () => {
+      if (closed) {
+        return;
+      }
+      closed = true;
+      currentResponse?.removeAllListeners();
+      currentResponse?.destroy();
+      options.onClose?.();
+    };
+
+    const req = transport.request(streamUrl, { method: 'GET', headers }, (res: IncomingMessage) => {
+      currentResponse = res;
+
+      if ((res.statusCode ?? 0) >= 400) {
+        const error = new Error(`Failed to connect to chat stream: HTTP ${res.statusCode}`);
+        options.onError?.(error);
+        res.resume();
+        finalize();
+        return;
+      }
+
+      options.onOpen?.();
+
+      let buffer = '';
+      res.setEncoding('utf8');
+
+      res.on('data', (chunk: string) => {
+        buffer += chunk;
+        let delimiterIndex = buffer.indexOf('\n\n');
+
+        while (delimiterIndex !== -1) {
+          const rawEvent = buffer.slice(0, delimiterIndex);
+          buffer = buffer.slice(delimiterIndex + 2);
+          delimiterIndex = buffer.indexOf('\n\n');
+
+          const trimmedEvent = rawEvent.trim();
+          if (!trimmedEvent || trimmedEvent.startsWith(':')) {
+            continue;
+          }
+
+          const parsed = this.parseSseEvent(trimmedEvent);
+          if (parsed.event && parsed.event !== 'message') {
+            continue;
+          }
+
+          if (!parsed.data) {
+            continue;
+          }
+
+          try {
+            const payload = JSON.parse(parsed.data) as PublicChatMessage;
+            const message: PublicChatMessage = {
+              ...payload,
+              id: payload.id ?? parsed.id
+            };
+            onMessage(message);
+          } catch (error) {
+            options.onError?.(error instanceof Error ? error : new Error(String(error)));
+          }
+        }
+      });
+
+      res.on('end', finalize);
+      res.on('error', (error: Error) => {
+        if (closed) {
+          return;
+        }
+        options.onError?.(error);
+        finalize();
+      });
+    });
+
+    req.on('error', (error: Error) => {
+      if (closed) {
+        return;
+      }
+      options.onError?.(error);
+      finalize();
+    });
+
+    req.end();
+
+    return {
+      close: () => {
+        if (closed) {
+          return;
+        }
+        closed = true;
+        req.destroy();
+        currentResponse?.destroy();
+        options.onClose?.();
+      }
+    };
+  }
+
+  private parseSseEvent(rawEvent: string): { id?: string; event?: string; data?: string } {
+    const event: { id?: string; event?: string; data?: string } = {};
+    const dataParts: string[] = [];
+
+    for (const line of rawEvent.split(/\r?\n/)) {
+      if (line.startsWith('id:')) {
+        event.id = line.slice(3).trim();
+      } else if (line.startsWith('event:')) {
+        event.event = line.slice(6).trim();
+      } else if (line.startsWith('data:')) {
+        let value = line.slice(5);
+        if (value.startsWith(' ')) {
+          value = value.slice(1);
+        }
+        dataParts.push(value);
+      }
+    }
+
+    if (dataParts.length > 0) {
+      event.data = dataParts.join('\n');
+    }
+
+    return event;
+  }
+}

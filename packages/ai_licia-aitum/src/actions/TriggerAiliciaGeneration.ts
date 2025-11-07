@@ -37,11 +37,6 @@ async function method(inputs: { [key: string]: string | number | boolean | strin
   // Check for content length limit (API has 300 char limit)
   if (content.length > 300) {
     console.error('Content exceeds the 300-character limit');
-    // Aitum actions typically don't return values like this, logging error is sufficient
-    // return { 
-    //   success: false, 
-    //   error: 'Content exceeds the 300-character limit'
-    // };
     return; // Stop execution
   }
   
@@ -50,17 +45,9 @@ async function method(inputs: { [key: string]: string | number | boolean | strin
     const client = createAiliciaClient();
     
     // Trigger ai_licia to generate a response
-    const result = await client.triggerGeneration(content);
+    await client.triggerGeneration(content);
     
     console.log('ai_licia direct generation triggered successfully');
-    console.log('Response content (first 100 chars):', result.content?.substring(0, 100)); // Log response details
-    
-    // No explicit return value needed for success in Aitum actions
-    // return {
-    //   success: true,
-    //   response: result,
-    //   content: result.content
-    // };
   } catch (error) {
     // Log the error appropriately
     if (error instanceof Error) {
@@ -68,11 +55,6 @@ async function method(inputs: { [key: string]: string | number | boolean | strin
     } else {
       console.error('Unknown error triggering ai_licia direct generation:', error);
     }
-    // No explicit return value needed for failure
-    // return {
-    //   success: false,
-    //   error: String(error)
-    // };
   }
 }
 
