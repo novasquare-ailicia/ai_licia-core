@@ -4,6 +4,7 @@ node_modules/
 # Build output
 dist/
 lib/
+!examples/overlays/src/lib/
 
 # Environment variables
 .env
