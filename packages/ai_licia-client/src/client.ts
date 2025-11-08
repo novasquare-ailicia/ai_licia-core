@@ -1,6 +1,4 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
-import http, { IncomingMessage } from 'http';
-import https from 'https';
 import { 
   AiliciaConfig, 
   Event, 
@@ -14,6 +12,11 @@ import {
   ChatMessageStream,
   PublicChatMessage
 } from './interfaces';
+
+type StreamReader = {
+  read: () => Promise<{ value?: Uint8Array; done: boolean }>;
+  cancel: (reason?: unknown) => Promise<void>;
+};
 
 /**
  * AiliciaClient to interact with the ai_licia API
@@ -178,107 +181,97 @@ export class AiliciaClient {
       : '';
     const streamUrl = new URL(`events/chat/messages/stream${query}`, normalizedBase);
 
-    const headers = {
+    const headers: Record<string, string> = {
       'Accept': 'text/event-stream',
       'Cache-Control': 'no-cache',
-      'Authorization': this.apiKey
+      'Authorization': `Bearer ${this.apiKey}`
     };
 
-    const transport = streamUrl.protocol === 'http:' ? http : https;
-    let currentResponse: IncomingMessage | undefined;
+    const controller = new AbortController();
+    const decoder = new TextDecoder();
+    let reader: StreamReader | null = null;
     let closed = false;
+    let buffer = '';
 
     const finalize = () => {
       if (closed) {
         return;
       }
       closed = true;
-      currentResponse?.removeAllListeners();
-      currentResponse?.destroy();
+      reader?.cancel().catch(() => {});
+      controller.abort();
       options.onClose?.();
     };
 
-    const req = transport.request(streamUrl, { method: 'GET', headers }, (res: IncomingMessage) => {
-      currentResponse = res;
+    const pump = async () => {
+      try {
+        const response = await fetch(streamUrl.toString(), {
+          method: 'GET',
+          headers,
+          signal: controller.signal
+        });
 
-      if ((res.statusCode ?? 0) >= 400) {
-        const error = new Error(`Failed to connect to chat stream: HTTP ${res.statusCode}`);
-        options.onError?.(error);
-        res.resume();
-        finalize();
-        return;
-      }
+        if (!response.ok || !response.body) {
+          throw new Error(`Failed to connect to chat stream: HTTP ${response.status}`);
+        }
 
-      options.onOpen?.();
+        options.onOpen?.();
+        reader = response.body.getReader();
 
-      let buffer = '';
-      res.setEncoding('utf8');
-
-      res.on('data', (chunk: string) => {
-        buffer += chunk;
-        let delimiterIndex = buffer.indexOf('\n\n');
-
-        while (delimiterIndex !== -1) {
-          const rawEvent = buffer.slice(0, delimiterIndex);
-          buffer = buffer.slice(delimiterIndex + 2);
-          delimiterIndex = buffer.indexOf('\n\n');
-
-          const trimmedEvent = rawEvent.trim();
-          if (!trimmedEvent || trimmedEvent.startsWith(':')) {
-            continue;
+        while (!closed) {
+          const { value, done } = await reader.read();
+          if (done) {
+            break;
           }
+          if (value) {
+            buffer += decoder.decode(value, { stream: true });
+            let delimiterIndex = buffer.indexOf('\n\n');
 
-          const parsed = this.parseSseEvent(trimmedEvent);
-          if (parsed.event && parsed.event !== 'message') {
-            continue;
-          }
+            while (delimiterIndex !== -1) {
+              const rawEvent = buffer.slice(0, delimiterIndex);
+              buffer = buffer.slice(delimiterIndex + 2);
+              delimiterIndex = buffer.indexOf('\n\n');
 
-          if (!parsed.data) {
-            continue;
-          }
+              const trimmedEvent = rawEvent.trim();
+              if (!trimmedEvent || trimmedEvent.startsWith(':')) {
+                continue;
+              }
 
-          try {
-            const payload = JSON.parse(parsed.data) as PublicChatMessage;
-            const message: PublicChatMessage = {
-              ...payload,
-              id: payload.id ?? parsed.id
-            };
-            onMessage(message);
-          } catch (error) {
-            options.onError?.(error instanceof Error ? error : new Error(String(error)));
+              const parsed = this.parseSseEvent(trimmedEvent);
+              if (parsed.event && parsed.event !== 'message') {
+                continue;
+              }
+              if (!parsed.data) {
+                continue;
+              }
+
+              try {
+                const payload = JSON.parse(parsed.data) as PublicChatMessage;
+                const message: PublicChatMessage = {
+                  ...payload,
+                  id: payload.id ?? parsed.id
+                };
+                onMessage(message);
+              } catch (error) {
+                options.onError?.(error instanceof Error ? error : new Error(String(error)));
+              }
+            }
           }
         }
-      });
-
-      res.on('end', finalize);
-      res.on('error', (error: Error) => {
-        if (closed) {
-          return;
+      } catch (error) {
+        if (!closed) {
+          options.onError?.(error instanceof Error ? error : new Error(String(error)));
         }
-        options.onError?.(error);
+      } finally {
         finalize();
-      });
-    });
-
-    req.on('error', (error: Error) => {
-      if (closed) {
-        return;
       }
-      options.onError?.(error);
-      finalize();
-    });
+    };
 
-    req.end();
+    pump();
 
     return {
       close: () => {
-        if (closed) {
-          return;
-        }
-        closed = true;
-        req.destroy();
-        currentResponse?.destroy();
-        options.onClose?.();
+        finalize();
       }
     };
   }

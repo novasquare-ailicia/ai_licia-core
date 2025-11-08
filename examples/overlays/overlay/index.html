@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Top Chatters Overlay</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <main class="overlay">
+        <section class="controls glass-panel">
+            <div class="control-group">
+                <label for="apiKey">API Key</label>
+                <input id="apiKey" type="password" placeholder="Paste your API key" autocomplete="off" />
+            </div>
+            <div class="control-group">
+                <label for="baseUrl">API Base URL</label>
+                <input id="baseUrl" type="url" placeholder="https://api.getailicia.com" value="https://api.getailicia.com" />
+            </div>
+            <div class="control-group">
+                <label>Roles</label>
+                <div class="role-filter" id="roleFilter"></div>
+            </div>
+            <div class="control-group">
+                <label for="excluded">Exclude Usernames</label>
+                <input id="excluded" type="text" placeholder="Comma separated usernames" />
+            </div>
+            <div class="control-group control-actions">
+                <button id="connectBtn">Connect</button>
+                <button id="resetBtn" class="ghost">Reset Counters</button>
+            </div>
+            <p class="status" id="status">Disconnected</p>
+        </section>
+
+        <section class="leaderboard">
+            <h1 class="title">Top Chatters</h1>
+            <div class="cards" id="leaderboardCards">
+                <!-- Cards will be injected by JS -->
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
