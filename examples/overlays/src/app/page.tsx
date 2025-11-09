@@ -7,6 +7,10 @@ import FunnelSection from "@/components/landing/FunnelSection";
 import IntegrationSection from "@/components/landing/IntegrationSection";
 import CTASection from "@/components/landing/CTASection";
 
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://overlays.getailicia.com";
+const SHARE_IMAGE = `${SITE_URL}/logo.png`;
+
 export const metadata: Metadata = {
   title: "ai_licia® overlays | Live leaderboard & chat pulse widgets",
   description:
@@ -21,16 +25,27 @@ export const metadata: Metadata = {
     "obs overlay",
     "streaming overlay",
   ],
+  metadataBase: new URL(SITE_URL),
   openGraph: {
     title: "ai_licia overlays",
     description:
       "Modern, AI-powered overlays that spotlight top chatters and the live message pulse across Twitch, TikTok, and OBS.",
+    url: SITE_URL,
+    images: [
+      {
+        url: SHARE_IMAGE,
+        width: 1200,
+        height: 630,
+        alt: "ai_licia overlays preview",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "ai_licia overlays",
     description:
       "Launch chat leaderboards and msg/min cards powered by ai_licia® for Twitch, TikTok, and OBS.",
+    images: [SHARE_IMAGE],
   },
 };
 
@@ -51,7 +66,9 @@ const structuredData = {
     price: "0",
     priceCurrency: "USD",
   },
-  url: "https://getailicia.com/overlays",
+  url: SITE_URL,
+  image: SHARE_IMAGE,
+  logo: `${SITE_URL}/logo-icon-purple.svg`,
 };
 
 export default function Home() {
