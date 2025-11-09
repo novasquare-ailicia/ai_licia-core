@@ -142,15 +142,16 @@ const OverlayView = ({
 
   const hasCards = cardSlots.length > 0;
   const shouldRenderCards = renderCards && hasCards;
-  const showFooter = variant !== "standalone";
+  const isOverlayEmpty = renderCards && !hasCards && !showStatusOverlay;
+  const showFooter = true;
   const showTotals =
-    showTotalRateCard && (hasCards || mode === "total-rate" || variant !== "standalone");
+    showTotalRateCard && (hasCards || mode === "total-rate" || variant === "preview");
 
   return (
     <section
       className={`${styles.overlay} ${wrapperClass}`}
       style={styleVars}
-      data-empty={renderCards && !hasCards}
+      data-empty={isOverlayEmpty}
       data-connection={connectionAttrValue}
     >
       {shouldRenderCards && (

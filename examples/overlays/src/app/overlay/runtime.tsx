@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import OverlayView from "@/components/overlay/OverlayView";
 import { parseOverlaySettings } from "@/lib/overlay";
 
@@ -10,22 +10,20 @@ interface RuntimeProps {
 }
 
 const OverlayRuntime = ({ initialParams = {}, mode = "full" }: RuntimeProps) => {
-  const [clientParams, setClientParams] = useState<
-    Record<string, string | string[] | undefined>
-  >(() => initialParams);
-
-  useEffect(() => {
-    const searchParams =
-      typeof window !== "undefined"
-        ? new URLSearchParams(window.location.search)
-        : null;
-    if (!searchParams) return;
+  const clientParams = useMemo(() => {
+    if (typeof window === "undefined") {
+      return initialParams;
+    }
+    const searchParams = new URLSearchParams(window.location.search);
+    if (!searchParams.size) {
+      return initialParams;
+    }
     const next: Record<string, string> = {};
     searchParams.forEach((value, key) => {
       next[key] = value;
     });
-    setClientParams(next);
-  }, []);
+    return next;
+  }, [initialParams]);
 
   const settings = useMemo(
     () => parseOverlaySettings(clientParams),
