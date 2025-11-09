@@ -18,7 +18,14 @@ const sanitizeBasePath = (value?: string) => {
 };
 
 const explicitBasePath = sanitizeBasePath(process.env.NEXT_PUBLIC_BASE_PATH);
-const inferredBasePath = isGithubPages ? `/${repoName}` : undefined;
+const hasCustomDomain = Boolean(
+  process.env.NEXT_PUBLIC_CUSTOM_DOMAIN ?? process.env.OVERLAYS_CUSTOM_DOMAIN
+);
+const inferredBasePath = hasCustomDomain
+  ? undefined
+  : isGithubPages
+  ? `/${repoName}`
+  : undefined;
 const basePath = explicitBasePath ?? inferredBasePath;
 
 const nextConfig = {
