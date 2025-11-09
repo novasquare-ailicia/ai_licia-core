@@ -1,0 +1,16 @@
+.wrapper {
+  margin: 1.5rem 0 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.compact {
+  margin: 0;
+}
+
+.caption {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}

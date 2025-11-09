@@ -88,6 +88,19 @@ export const DEFAULT_THEME: OverlayThemeId = "aurora";
 export const DEFAULT_LAYOUT: OverlayLayout = "vertical";
 export const DEFAULT_SHOW_RATES = true;
 export const DEFAULT_SHOW_TOTAL_RATE = false;
+export const DEFAULT_PULSE_GLOW = {
+  enabled: true,
+  minRate: 1,
+  maxRate: 8,
+  color: "#29ffc6",
+};
+
+export interface PulseGlowSettings {
+  enabled: boolean;
+  minRate: number;
+  maxRate: number;
+  color: string;
+}
 
 export interface OverlaySettings {
   apiKey: string;
@@ -101,6 +114,7 @@ export interface OverlaySettings {
   layout: OverlayLayout;
   showRates: boolean;
   showTotalRateCard: boolean;
+  pulseGlow: PulseGlowSettings;
 }
 
 export const normalizeBaseUrl = (value?: string) => {
@@ -154,6 +168,10 @@ export const parseOverlaySettings = (
   const layoutParam = pull("layout");
   const showRatesParam = pull("showRates");
   const showTotalParam = pull("showTotalRates");
+  const glowParam = pull("glow");
+  const glowMinParam = pull("glowMin");
+  const glowMaxParam = pull("glowMax");
+  const glowColorParam = pull("glowColor");
 
   const roles =
     rolesParam
@@ -192,6 +210,20 @@ export const parseOverlaySettings = (
       ? showTotalParam === "1" || showTotalParam.toLowerCase() === "true"
       : DEFAULT_SHOW_TOTAL_RATE;
 
+  const minRate = Math.max(0, Number(glowMinParam) || DEFAULT_PULSE_GLOW.minRate);
+  const maxRate = Math.max(
+    minRate + 0.5,
+    Number(glowMaxParam) || DEFAULT_PULSE_GLOW.maxRate
+  );
+
+  const pulseGlow: PulseGlowSettings = {
+    enabled: glowParam
+      ? glowParam === "1" || glowParam.toLowerCase() === "true"
+      : DEFAULT_PULSE_GLOW.enabled,
+    minRate,
+    maxRate,
+    color: sanitizeHex(glowColorParam) ?? DEFAULT_PULSE_GLOW.color,
+  };
   return {
     apiKey: pull("apiKey"),
     channelName: pull("channel"),
@@ -206,6 +238,7 @@ export const parseOverlaySettings = (
     layout,
     showRates,
     showTotalRateCard,
+    pulseGlow,
   };
 };
 
@@ -232,6 +265,18 @@ export const buildOverlayQuery = (settings: OverlaySettings) => {
   }
   if (settings.showTotalRateCard) {
     params.set("showTotalRates", "1");
+  }
+  if (
+    settings.pulseGlow &&
+    (settings.pulseGlow.enabled !== DEFAULT_PULSE_GLOW.enabled ||
+      settings.pulseGlow.minRate !== DEFAULT_PULSE_GLOW.minRate ||
+      settings.pulseGlow.maxRate !== DEFAULT_PULSE_GLOW.maxRate ||
+      settings.pulseGlow.color !== DEFAULT_PULSE_GLOW.color)
+  ) {
+    params.set("glow", settings.pulseGlow.enabled ? "1" : "0");
+    params.set("glowMin", `${settings.pulseGlow.minRate}`);
+    params.set("glowMax", `${settings.pulseGlow.maxRate}`);
+    params.set("glowColor", settings.pulseGlow.color);
   }
 
   (["rank1", "rank2", "rank3"] as RankKey[]).forEach((rank) => {

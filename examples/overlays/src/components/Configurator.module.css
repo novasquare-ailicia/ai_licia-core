@@ -43,20 +43,6 @@
   color: rgba(255, 255, 255, 0.6);
 }
 
-.demoSection {
-  margin: 1.5rem 0 2rem;
-}
-
-.demoSection :global(.cards) {
-  justify-content: center;
-}
-
-.demoCaption {
-  margin-top: 0.75rem;
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.7);
-}
-
 .field {
   display: flex;
   flex-direction: column;

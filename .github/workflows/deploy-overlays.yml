@@ -19,6 +19,9 @@ jobs:
   build:
     name: Build static overlay export
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_BASE_PATH: ${{ vars.OVERLAYS_BASE_PATH }}
+      OVERLAYS_CUSTOM_DOMAIN: ${{ vars.OVERLAYS_CUSTOM_DOMAIN }}
     defaults:
       run:
         working-directory: examples/overlays
@@ -44,6 +47,12 @@ jobs:
 
       - name: Build overlay bundle
         run: pnpm run build
+
+      - name: Add custom domain CNAME file
+        if: ${{ env.OVERLAYS_CUSTOM_DOMAIN != '' }}
+        run: |
+          echo "$OVERLAYS_CUSTOM_DOMAIN" > out/CNAME
+          echo "Wrote CNAME for $OVERLAYS_CUSTOM_DOMAIN"
 
       - name: Upload static site artifact
         uses: actions/upload-pages-artifact@v3

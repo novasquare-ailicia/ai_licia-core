@@ -1,6 +1,6 @@
 'use client';
 
-import { CSSProperties, useMemo } from "react";
+import { CSSProperties } from "react";
 import {
   OverlaySettings,
   DEFAULT_THEME,
@@ -9,6 +9,7 @@ import {
   DEFAULT_LAYOUT,
   DEFAULT_SHOW_RATES,
   DEFAULT_SHOW_TOTAL_RATE,
+  DEFAULT_PULSE_GLOW,
 } from "@/lib/overlay";
 import { useLeaderboardStream } from "./useLeaderboardStream";
 import { useCardTransitions } from "./useCardTransitions";
@@ -16,6 +17,31 @@ import LeaderboardCard from "./LeaderboardCard";
 import TotalRateCard from "./TotalRateCard";
 import type { LeaderboardEntry, StreamStatus } from "./types";
 import styles from "./OverlayView.module.css";
+
+const PLACEHOLDER_REFERENCE = Date.now();
+const PLACEHOLDER_CARDS: LeaderboardEntry[] = [
+  {
+    username: "waiting on activity",
+    role: "configure your api",
+    count: 12,
+    firstSeenAt: PLACEHOLDER_REFERENCE,
+    messagesPerMinute: 0.5,
+  },
+  {
+    username: "top chatter slot",
+    role: "stays ready",
+    count: 10,
+    firstSeenAt: PLACEHOLDER_REFERENCE - 30000,
+    messagesPerMinute: 0.4,
+  },
+  {
+    username: "third place glow",
+    role: "warming up",
+    count: 6,
+    firstSeenAt: PLACEHOLDER_REFERENCE - 60000,
+    messagesPerMinute: 0.3,
+  },
+];
 
 type OverlayMode = "full" | "total-rate";
 
@@ -48,12 +74,24 @@ const OverlayView = ({
       : settings.showTotalRateCard ?? DEFAULT_SHOW_TOTAL_RATE;
   const renderCards = mode === "full";
 
-  const { leaders, totalRate } = useLeaderboardStream({
+  const { leaders, totalRate, status, statusMessage } = useLeaderboardStream({
     settings,
     disabled: disableStream,
     initialLeaders,
     onStatusChange,
   });
+
+  const isConnected = status === "connected";
+  const isConnecting = status === "connecting";
+  const connectionState = isConnected
+    ? "connected"
+    : isConnecting
+      ? "connecting"
+      : "disconnected";
+  const connectionUiEnabled = variant === "standalone";
+  const connectionAttrValue = connectionUiEnabled ? connectionState : "connected";
+  const showStatusOverlay = connectionUiEnabled && connectionState !== "connected";
+  const statusBadgeLabel = isConnecting ? "connecting…" : "disconnected";
 
   const gradientVar = (rank: RankKey) => {
     const gradient =
@@ -76,32 +114,7 @@ const OverlayView = ({
   const wrapperClass =
     variant === "preview" ? styles.previewWrapper : styles.fullWrapper;
 
-  const placeholderCards = useMemo<LeaderboardEntry[]>(() => {
-    const now = Date.now();
-    return [
-      {
-        username: "waiting on activity",
-        role: "configure your api",
-        count: 12,
-        firstSeenAt: now,
-        messagesPerMinute: 0.5,
-      },
-      {
-        username: "top chatter slot",
-        role: "stays ready",
-        count: 10,
-        firstSeenAt: now,
-        messagesPerMinute: 0.4,
-      },
-      {
-        username: "third place glow",
-        role: "warming up",
-        count: 6,
-        firstSeenAt: now,
-        messagesPerMinute: 0.3,
-      },
-    ];
-  }, []);
+  const placeholderCards = PLACEHOLDER_CARDS;
 
   const placeholdersActive =
     renderCards &&
@@ -138,6 +151,7 @@ const OverlayView = ({
       className={`${styles.overlay} ${wrapperClass}`}
       style={styleVars}
       data-empty={renderCards && !hasCards}
+      data-connection={connectionAttrValue}
     >
       {shouldRenderCards && (
         <div className={cardsClassName} data-layout={layout}>
@@ -153,12 +167,30 @@ const OverlayView = ({
         </div>
       )}
 
-      {showTotals && <TotalRateCard totalRate={totalRate} />}
+      {showTotals && (
+        <TotalRateCard
+          totalRate={totalRate}
+          pulseGlow={settings.pulseGlow ?? DEFAULT_PULSE_GLOW}
+        />
+      )}
 
       {showFooter && (
         <footer className={styles.footer}>
           <span className={styles.brand}>powered by ai_licia®</span>
         </footer>
+      )}
+
+      {showStatusOverlay && (
+        <div
+          className={styles.connectionOverlay}
+          role="status"
+          aria-live="polite"
+        >
+          <div className={styles.connectionBadge}>{statusBadgeLabel}</div>
+          {statusMessage && (
+            <p className={styles.connectionMessage}>{statusMessage}</p>
+          )}
+        </div>
       )}
     </section>
   );

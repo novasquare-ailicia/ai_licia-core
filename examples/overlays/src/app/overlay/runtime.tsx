@@ -13,13 +13,6 @@ interface RuntimeProps {
 const OverlayRuntime = ({ initialParams, mode = "full" }: RuntimeProps) => {
   const params = useSearchParams();
 
-  useEffect(() => {
-    if (typeof document !== "undefined") {
-      document.body.classList.add("overlay-mode");
-      return () => document.body.classList.remove("overlay-mode");
-    }
-  }, []);
-
   const mergedParams = useMemo(() => {
     const current: Record<string, string | string[] | undefined> = {};
     params.forEach((value, key) => {
@@ -32,6 +25,16 @@ const OverlayRuntime = ({ initialParams, mode = "full" }: RuntimeProps) => {
     () => parseOverlaySettings(mergedParams),
     [mergedParams]
   );
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.body.classList.add("overlay-mode");
+    document.documentElement.classList.add("overlay-mode");
+    return () => {
+      document.body.classList.remove("overlay-mode");
+      document.documentElement.classList.remove("overlay-mode");
+    };
+  }, []);
 
   return (
     <div className="overlay-page">

@@ -11,6 +11,29 @@ import {
 import type { LeaderboardEntry, StreamStatus } from "./types";
 
 const RANKS: RankKey[] = ["rank1", "rank2", "rank3"];
+const ROLLING_WINDOW_MS = 60_000;
+const MIN_SAMPLE_MS = 1_000;
+const RATE_REFRESH_INTERVAL_MS = 1_000;
+
+const leaderboardsEqual = (
+  next: LeaderboardEntry[],
+  prev: LeaderboardEntry[]
+) => {
+  if (next.length !== prev.length) return false;
+  for (let i = 0; i < next.length; i += 1) {
+    const a = next[i];
+    const b = prev[i];
+    if (
+      a.username !== b.username ||
+      a.count !== b.count ||
+      a.role !== b.role ||
+      (a.messagesPerMinute ?? 0) !== (b.messagesPerMinute ?? 0)
+    ) {
+      return false;
+    }
+  }
+  return true;
+};
 
 interface LeaderboardHookOptions {
   settings: OverlaySettings;
@@ -45,6 +68,7 @@ export const useLeaderboardStream = ({
   const clientRef = useRef<AiliciaClient | null>(null);
   const lastContextSyncRef = useRef(0);
   const contextInFlightRef = useRef(false);
+  const rateRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const hasCredentials = Boolean(settings.apiKey && settings.channelName);
   const streamingEnabled = hasCredentials && !disabled;
@@ -60,15 +84,34 @@ export const useLeaderboardStream = ({
 
   const snapshotLeaderboard = useCallback(() => {
     const now = Date.now();
-    const snapshot = Array.from(countsRef.current.values())
-      .filter((entry) => !excludedRef.current.has(entry.username.toLowerCase()))
-      .map((entry) => {
-        const minutes = Math.max(1 / 60, (now - entry.firstSeenAt) / 60000);
+    const windowStart = now - ROLLING_WINDOW_MS;
+    const snapshot = Array.from(countsRef.current.entries())
+      .map(([key, entry]) => {
+        const normalizedKey = entry.username.toLowerCase();
+        if (excludedRef.current.has(normalizedKey)) {
+          return null;
+        }
+
+        const existing = entry.recentMessages ?? [];
+        const recent = existing.filter((timestamp) => timestamp >= windowStart);
+
+        if (recent.length !== existing.length) {
+          countsRef.current.set(key, { ...entry, recentMessages: recent });
+        }
+
+        const updatedEntry = countsRef.current.get(key)!;
+        const spanMs = Math.min(
+          ROLLING_WINDOW_MS,
+          Math.max(now - (recent[0] ?? now), MIN_SAMPLE_MS)
+        );
+        const messagesPerMinute = (recent.length / spanMs) * 60_000;
+
         return {
-          ...entry,
-          messagesPerMinute: entry.count / minutes,
+          ...updatedEntry,
+          messagesPerMinute,
         };
       })
+      .filter((entry): entry is LeaderboardEntry => Boolean(entry))
       .sort((a, b) => {
         if (b.count === a.count) {
           return a.username.localeCompare(b.username);
@@ -77,7 +120,9 @@ export const useLeaderboardStream = ({
       })
       .slice(0, RANKS.length);
 
-    setLeaders(snapshot);
+    setLeaders((prev) =>
+      leaderboardsEqual(snapshot, prev) ? prev : snapshot
+    );
     return snapshot;
   }, []);
 
@@ -199,16 +244,26 @@ export const useLeaderboardStream = ({
 
     const processEvent = (payload: PublicChatMessage) => {
       if (!payload?.username) return;
+      const now = Date.now();
       const key = toKey(payload.username);
       const current =
         countsRef.current.get(key) ?? {
           username: payload.username,
           count: 0,
           role: payload.role,
-          firstSeenAt: Date.now(),
+          firstSeenAt: now,
+          recentMessages: [],
         };
       current.count += 1;
       current.role = payload.role ?? current.role;
+      current.recentMessages = current.recentMessages ?? [];
+      current.recentMessages.push(now);
+      while (
+        current.recentMessages.length &&
+        now - (current.recentMessages[0] ?? 0) > ROLLING_WINDOW_MS
+      ) {
+        current.recentMessages.shift();
+      }
       countsRef.current.set(key, current);
       snapshotLeaderboard();
     };
@@ -269,7 +324,29 @@ export const useLeaderboardStream = ({
     settings.roles,
     settings.apiKey,
     emitStatus,
+    snapshotLeaderboard,
   ]);
+
+  useEffect(() => {
+    if (!streamingEnabled) {
+      if (rateRefreshRef.current) {
+        clearInterval(rateRefreshRef.current);
+        rateRefreshRef.current = null;
+      }
+      return;
+    }
+
+    rateRefreshRef.current = setInterval(() => {
+      snapshotLeaderboard();
+    }, RATE_REFRESH_INTERVAL_MS);
+
+    return () => {
+      if (rateRefreshRef.current) {
+        clearInterval(rateRefreshRef.current);
+        rateRefreshRef.current = null;
+      }
+    };
+  }, [streamingEnabled, snapshotLeaderboard]);
 
   useEffect(() => {
     if (disabled || !leaders.length) return;

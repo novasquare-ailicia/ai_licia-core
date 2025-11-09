@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/refs */
 import { useMemo, useRef } from "react";
 import type { RankKey } from "@/lib/overlay";
 import type { AnimatedCard, LeaderboardEntry } from "./types";

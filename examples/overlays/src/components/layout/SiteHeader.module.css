@@ -1,0 +1,209 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 1rem clamp(1.5rem, 5vw, 4rem);
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  background: color-mix(in srgb, var(--header-bg) 85%, transparent);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.branding {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  font-size: 0.7rem;
+}
+
+.logoLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-primary);
+}
+
+.logoWordmark {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.logoWordmark span:last-child {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  opacity: 0.7;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  margin-left: auto;
+}
+
+.nav a,
+.nav button {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+}
+
+.nav button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+}
+
+.nav a:hover,
+.nav button:hover,
+.nav a[aria-current="page"],
+.nav button[aria-current="page"] {
+  color: var(--text-primary);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.primaryCta {
+  border-radius: 999px;
+  padding: 0.55rem 1.2rem;
+  font-weight: 600;
+  background-image: var(--gradient-accent);
+  color: #02050a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 18px 40px rgba(32, 227, 178, 0.35);
+}
+
+.dropdownWrapper {
+  position: relative;
+}
+
+.dropdownTrigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 0.65rem);
+  left: 0;
+  min-width: 230px;
+  padding: 0.75rem;
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--panel-bg) 90%, transparent);
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 25px 45px rgba(5, 5, 15, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.dropdownLink {
+  color: var(--text-primary);
+  padding: 0.35rem 0.25rem;
+  border-radius: 0.5rem;
+  transition: background 0.2s ease;
+}
+
+.dropdownLink:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.menuButton {
+  display: none;
+  border: 1px solid var(--panel-border);
+  background: color-mix(in srgb, var(--panel-bg) 85%, transparent);
+  color: var(--text-primary);
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  cursor: pointer;
+}
+
+.mobileNav {
+  display: none;
+}
+
+.mobileDropdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.mobileDropdownLabel {
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.mobileDropdownMenu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-left: 0.75rem;
+}
+
+@media (max-width: 1024px) {
+  .nav {
+    display: none;
+  }
+
+  .menuButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .mobileNav {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    padding: 1.5rem clamp(1.5rem, 5vw, 4rem) 2rem;
+    background: color-mix(in srgb, var(--panel-bg) 90%, transparent);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    border-bottom: 1px solid var(--panel-border);
+  }
+
+.mobileNav a,
+.mobileNav button {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 1rem;
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+  .actions {
+    margin-left: auto;
+  }
+}
+.navButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  padding: 0;
+}

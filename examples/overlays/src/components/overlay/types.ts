@@ -6,6 +6,7 @@ export type LeaderboardEntry = {
   role?: string;
   firstSeenAt: number;
   messagesPerMinute?: number;
+  recentMessages?: number[];
 };
 
 export type StreamStatus = "idle" | "connecting" | "connected" | "error";

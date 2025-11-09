@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import theme from "@/theme";
-import { ThemeProvider, CssBaseline } from "@mui/material";
-import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
+import { Providers } from "@/components/Providers";
 
 export const metadata: Metadata = {
   title: "ai_licia® Overlay Studio",
@@ -15,14 +13,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="dark" suppressHydrationWarning>
       <body>
-        <AppRouterCacheProvider>
-          <ThemeProvider theme={theme}>
-            <CssBaseline />
-            {children}
-          </ThemeProvider>
-        </AppRouterCacheProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

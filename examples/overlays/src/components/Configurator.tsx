@@ -1,5 +1,6 @@
 'use client';
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { PublicChatRole } from "ai_licia-client";
 import {
@@ -10,9 +11,12 @@ import {
   RankKey,
   THEME_PRESETS,
   DEFAULT_THEME,
+  OverlayThemeId,
   buildOverlayQuery,
   normalizeBaseUrl,
+  DEFAULT_PULSE_GLOW,
 } from "@/lib/overlay";
+import type { GradientPair } from "@/lib/overlay";
 import OverlayView from "./overlay/OverlayView";
 import OverlayShowcase from "./OverlayShowcase";
 import styles from "./Configurator.module.css";
@@ -38,7 +42,70 @@ const parseExcluded = (value: string) =>
     .map((entry) => entry.trim())
     .filter(Boolean);
 
-const Configurator = () => {
+type ConfiguratorVariant = "leaderboard" | "message-rate";
+
+interface ConfiguratorProps {
+  variant?: ConfiguratorVariant;
+}
+
+type ShareLinkConfig = {
+  key: "main" | "total";
+  label: string;
+  hint: string;
+  buttonVariant: "contained" | "outlined";
+};
+
+const copyByVariant: Record<
+  ConfiguratorVariant,
+  {
+    tagline: string;
+    title: string;
+    lead: string;
+    previewCaption: string;
+    share: {
+      mainLabel: string;
+      mainHint: string;
+      totalLabel: string;
+      totalHint: string;
+    };
+  }
+> = {
+  leaderboard: {
+    tagline: "ai_licia® overlays",
+    title: "Build an AI leaderboard overlay in seconds.",
+    lead:
+      "Drop your ai_licia® credentials, choose which roles matter, then paste the generated browser-source link inside OBS or any studio.",
+    previewCaption:
+      "Example data - Your top chatters animate automatically to keep the competition heated.",
+    share: {
+      mainLabel: "Browser source link",
+      mainHint: "Paste inside OBS (recommended 800×500).",
+      totalLabel: "Total message rate overlay",
+      totalHint: "Standalone card for stream-wide msg/min stats.",
+    },
+  },
+  "message-rate": {
+    tagline: "ai_licia® message pulses",
+    title: "Surface real-time message rate cards.",
+    lead:
+      "Let ai_licia keep your community informed with a live msg/min pulse. Drop the card on top of any scene or nest it in the leaderboard.",
+    previewCaption:
+      "Example signal - The rate card glows brighter as your community speeds up.",
+    share: {
+      mainLabel: "Top chatter overlay",
+      mainHint: "Use when you want both leaderboard and rate card.",
+      totalLabel: "Message rate card",
+      totalHint: "Minimal card perfect for hype alerts or BRB scenes.",
+    },
+  },
+};
+
+const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
+  const isMessageRate = variant === "message-rate";
+  const copy = copyByVariant[variant];
+  const contextHelperText = isMessageRate
+    ? "We sync ai_licia® with your message pulse using this interval."
+    : "We ping ai_licia® this often with leaderboard context.";
   const [apiKey, setApiKey] = useState("");
   const [channel, setChannel] = useState("");
   const [baseUrl, setBaseUrl] = useState(DEFAULT_BASE_URL);
@@ -48,41 +115,64 @@ const Configurator = () => {
   );
   const [excluded, setExcluded] = useState("");
   const [theme, setTheme] = useState(DEFAULT_THEME);
-  const [customGradients, setCustomGradients] = useState<
-    OverlaySettings["customGradients"]
+  const [gradientOverrides, setGradientOverrides] = useState<
+    Record<OverlayThemeId, Partial<Record<RankKey, GradientPair>>>
   >({});
+  const activeGradients = useMemo(
+    () => gradientOverrides[theme] ?? {},
+    [gradientOverrides, theme]
+  );
   const [layout, setLayout] = useState<OverlaySettings["layout"]>(
-    "horizontal"
+    isMessageRate ? "vertical" : "horizontal"
   );
   const [showRates, setShowRates] = useState(true);
-  const [showTotalRateCard, setShowTotalRateCard] = useState(false);
+  const [showTotalRateCard, setShowTotalRateCard] = useState(
+    isMessageRate ? true : false
+  );
+  const [pulseGlowEnabled, setPulseGlowEnabled] = useState(
+    DEFAULT_PULSE_GLOW.enabled
+  );
+  const [pulseGlowMin, setPulseGlowMin] = useState(DEFAULT_PULSE_GLOW.minRate);
+  const [pulseGlowMax, setPulseGlowMax] = useState(DEFAULT_PULSE_GLOW.maxRate);
+  const [pulseGlowColor, setPulseGlowColor] = useState(
+    DEFAULT_PULSE_GLOW.color
+  );
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setIsClient(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
   const [copied, setCopied] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<{
     state: string;
     message: string;
   }>({ state: "idle", message: "Waiting for credentials" });
 
-  useEffect(() => {
-    setCustomGradients({});
-  }, [theme]);
-
   const handleGradientChange = (
     rank: RankKey,
     key: "from" | "to",
     value: string
   ) => {
-    setCustomGradients((prev) => {
+    setGradientOverrides((prev) => {
       const next = { ...prev };
-      const existing = next[rank] ?? {
+      const currentTheme = { ...(next[theme] ?? {}) };
+      const existing = currentTheme[rank] ?? {
         from: THEME_PRESETS[theme].gradients[rank].from,
         to: THEME_PRESETS[theme].gradients[rank].to,
       };
-      next[rank] = { ...existing, [key]: value };
+      currentTheme[rank] = { ...existing, [key]: value };
+      next[theme] = currentTheme;
       return next;
     });
   };
 
-  const resetColors = () => setCustomGradients({});
+  const resetColors = () =>
+    setGradientOverrides((prev) => {
+      if (!prev[theme]) return prev;
+      const next = { ...prev };
+      delete next[theme];
+      return next;
+    });
 
   const overlaySettings: OverlaySettings = useMemo(
     () => ({
@@ -93,10 +183,16 @@ const Configurator = () => {
       excludedUsernames: parseExcluded(excluded),
       contextIntervalMs: contextInterval,
       theme,
-      customGradients,
+      customGradients: activeGradients,
       layout,
       showRates,
       showTotalRateCard,
+      pulseGlow: {
+        enabled: pulseGlowEnabled,
+        minRate: pulseGlowMin,
+        maxRate: Math.max(pulseGlowMin + 0.5, pulseGlowMax),
+        color: pulseGlowColor,
+      },
     }),
     [
       apiKey,
@@ -106,10 +202,14 @@ const Configurator = () => {
       excluded,
       contextInterval,
       theme,
-      customGradients,
+      activeGradients,
       layout,
       showRates,
       showTotalRateCard,
+      pulseGlowEnabled,
+      pulseGlowMin,
+      pulseGlowMax,
+      pulseGlowColor,
     ]
   );
 
@@ -123,20 +223,39 @@ const Configurator = () => {
     [overlayPath]
   );
 
-  const [shareableUrl, setShareableUrl] = useState(overlayPath);
-  const [shareableTotalUrl, setShareableTotalUrl] = useState(totalOverlayPath);
+  const shareableUrl = useMemo(() => {
+    if (typeof window === "undefined") return overlayPath;
+    return `${window.location.origin}${overlayPath}`;
+  }, [overlayPath]);
 
-  useEffect(() => {
-    setShareableUrl(overlayPath);
-    setShareableTotalUrl(totalOverlayPath);
-  }, [overlayPath, totalOverlayPath]);
+  const shareableTotalUrl = useMemo(() => {
+    if (typeof window === "undefined") return totalOverlayPath;
+    return `${window.location.origin}${totalOverlayPath}`;
+  }, [totalOverlayPath]);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const origin = window.location.origin;
-    setShareableUrl(`${origin}${overlayPath}`);
-    setShareableTotalUrl(`${origin}${totalOverlayPath}`);
-  }, [overlayPath, totalOverlayPath]);
+  const shareLinkConfigs: ShareLinkConfig[] = isMessageRate
+    ? [
+        {
+          key: "total",
+          label: copy.share.totalLabel,
+          hint: copy.share.totalHint,
+          buttonVariant: "contained",
+        },
+      ]
+    : [
+        {
+          key: "main",
+          label: copy.share.mainLabel,
+          hint: copy.share.mainHint,
+          buttonVariant: "contained",
+        },
+        {
+          key: "total",
+          label: copy.share.totalLabel,
+          hint: copy.share.totalHint,
+          buttonVariant: "outlined",
+        },
+      ];
 
   const toggleRole = (role: PublicChatRole) => {
     setRoles((prev) => {
@@ -169,17 +288,19 @@ const Configurator = () => {
     <div className="page-shell">
       <section className="page-content">
         <Box>
-          <Typography className="tagline">ai_licia® overlays</Typography>
+          <Typography className="tagline">{copy.tagline}</Typography>
           <Typography className={styles.heroTitle} variant="h3" gutterBottom>
-            Build a glassy leaderboard overlay in seconds.
+            {copy.title}
           </Typography>
           <Typography className={styles.heroLead} variant="body1">
-            Drop your ai_licia® credentials, choose which roles matter, then
-            paste the generated browser-source link inside OBS or any studio.
+            {copy.lead}
           </Typography>
         </Box>
 
-        <OverlayShowcase />
+        <OverlayShowcase
+          variant={isMessageRate ? "message-rate" : "leaderboard"}
+          caption={copy.previewCaption}
+        />
 
         <Stack
           direction={{ xs: "column", md: "row" }}
@@ -281,46 +402,114 @@ const Configurator = () => {
                       </Stack>
                     </Box>
 
-                    <Box>
-                      <Typography variant="subtitle2" gutterBottom>
-                        Orientation
-                      </Typography>
-                      <ToggleButtonGroup
-                        value={layout}
-                        exclusive
-                        onChange={(_, value) => value && setLayout(value)}
-                      >
-                        <ToggleButton value="horizontal">
-                          Horizontal
-                        </ToggleButton>
-                        <ToggleButton value="vertical">Vertical</ToggleButton>
-                      </ToggleButtonGroup>
-                    </Box>
+                    {!isMessageRate && (
+                      <Box>
+                        <Typography variant="subtitle2" gutterBottom>
+                          Orientation
+                        </Typography>
+                        <ToggleButtonGroup
+                          value={layout}
+                          exclusive
+                          onChange={(_, value) => value && setLayout(value)}
+                        >
+                          <ToggleButton value="horizontal">
+                            Horizontal
+                          </ToggleButton>
+                          <ToggleButton value="vertical">Vertical</ToggleButton>
+                        </ToggleButtonGroup>
+                      </Box>
+                    )}
 
-                    <Stack spacing={1}>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={showRates}
-                            onChange={(event) =>
-                              setShowRates(event.target.checked)
+                    {!isMessageRate && (
+                      <Stack spacing={1}>
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={showRates}
+                              onChange={(event) =>
+                                setShowRates(event.target.checked)
+                              }
+                            />
+                          }
+                          label="Show per-chatter message rate"
+                        />
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={showTotalRateCard}
+                              onChange={(event) =>
+                                setShowTotalRateCard(event.target.checked)
+                              }
+                            />
+                          }
+                          label="Display total message rate card"
+                        />
+                      </Stack>
+                    )}
+
+                    <Card variant="outlined">
+                      <CardContent>
+                        <Stack spacing={2}>
+                          <FormControlLabel
+                            control={
+                              <Switch
+                                checked={pulseGlowEnabled}
+                                onChange={(event) =>
+                                  setPulseGlowEnabled(event.target.checked)
+                                }
+                              />
                             }
+                            label="Pulse glow on total message rate card"
                           />
-                        }
-                        label="Show per-chatter message rate"
-                      />
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={showTotalRateCard}
-                            onChange={(event) =>
-                              setShowTotalRateCard(event.target.checked)
-                            }
-                          />
-                        }
-                        label="Display total message rate card"
-                      />
-                    </Stack>
+                          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                            <TextField
+                              label="Glow min msg/min"
+                              type="number"
+                              value={pulseGlowMin}
+                              onChange={(event) =>
+                                setPulseGlowMin(
+                                  Math.max(0, Number(event.target.value) || 0)
+                                )
+                              }
+                              fullWidth
+                              disabled={!pulseGlowEnabled}
+                            />
+                            <TextField
+                              label="Glow max msg/min"
+                              type="number"
+                              value={pulseGlowMax}
+                              onChange={(event) =>
+                                setPulseGlowMax(
+                                  Math.max(
+                                    0.5,
+                                    Number(event.target.value) || DEFAULT_PULSE_GLOW.maxRate
+                                  )
+                                )
+                              }
+                              fullWidth
+                              disabled={!pulseGlowEnabled}
+                            />
+                          </Stack>
+                          <Box>
+                            <Typography variant="subtitle2" gutterBottom>
+                              Pulse color
+                            </Typography>
+                            <input
+                              type="color"
+                              value={pulseGlowColor}
+                              disabled={!pulseGlowEnabled}
+                              onChange={(event) =>
+                                setPulseGlowColor(event.target.value)
+                              }
+                            />
+                          </Box>
+                          <Typography variant="caption" color="text.secondary">
+                            We scale the glow between these msg/min thresholds so you can match the
+                            energy of your stream.
+                          </Typography>
+                        </Stack>
+                      </CardContent>
+                    </Card>
 
                     <TextField
                       label="Context sync frequency (ms)"
@@ -331,78 +520,91 @@ const Configurator = () => {
                           Math.max(15000, Number(event.target.value) || 0)
                         )
                       }
-                      helperText="We ping ai_licia® this often with leaderboard context"
+                      helperText={contextHelperText}
                       fullWidth
                     />
                   </Stack>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Advanced styling
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" mb={2}>
-                    Override each rank’s gradient to perfectly match your brand.
-                  </Typography>
-                  <Stack spacing={2}>
-                    {(["rank1", "rank2", "rank3"] as RankKey[]).map(
-                      (rank, idx) => {
-                        const preset = THEME_PRESETS[theme].gradients[rank];
-                        const custom = customGradients[rank];
-                        const from = custom?.from ?? preset.from;
-                        const to = custom?.to ?? preset.to;
-                        return (
-                          <Stack
-                            key={rank}
-                            direction={{ xs: "column", sm: "row" }}
-                            spacing={2}
-                            alignItems="center"
-                            justifyContent="space-between"
-                          >
-                            <Box>
-                              <Typography variant="subtitle2">
-                                #{idx + 1} card
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {rank === "rank1"
-                                  ? "Leader highlight"
-                                  : rank === "rank2"
-                                  ? "Second place"
-                                  : "Third place"}
-                              </Typography>
-                            </Box>
-                            <Stack direction="row" spacing={2}>
-                              <input
-                                type="color"
-                                value={from}
-                                onChange={(event) =>
-                                  handleGradientChange(
-                                    rank,
-                                    "from",
-                                    event.target.value
-                                  )
-                                }
-                              />
-                              <input
-                                type="color"
-                                value={to}
-                                onChange={(event) =>
-                                  handleGradientChange(rank, "to", event.target.value)
-                                }
-                              />
+              {!isMessageRate && (
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      Advanced styling
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" mb={2}>
+                      Override each rank’s gradient to perfectly match your brand.
+                    </Typography>
+                    <Stack spacing={2}>
+                      {(["rank1", "rank2", "rank3"] as RankKey[]).map(
+                        (rank, idx) => {
+                          const preset = THEME_PRESETS[theme].gradients[rank];
+                        const custom = activeGradients[rank];
+                          const from = custom?.from ?? preset.from;
+                          const to = custom?.to ?? preset.to;
+                          return (
+                            <Stack
+                              key={rank}
+                              direction={{ xs: "column", sm: "row" }}
+                              spacing={2}
+                              alignItems="center"
+                              justifyContent="space-between"
+                            >
+                              <Box>
+                                <Typography variant="subtitle2">
+                                  #{idx + 1} card
+                                </Typography>
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                >
+                                  {rank === "rank1"
+                                    ? "Leader highlight"
+                                    : rank === "rank2"
+                                    ? "Second place"
+                                    : "Third place"}
+                                </Typography>
+                              </Box>
+                              <Stack direction="row" spacing={2}>
+                                <input
+                                  type="color"
+                                  value={from}
+                                  onChange={(event) =>
+                                    handleGradientChange(
+                                      rank,
+                                      "from",
+                                      event.target.value
+                                    )
+                                  }
+                                />
+                                <input
+                                  type="color"
+                                  value={to}
+                                  onChange={(event) =>
+                                    handleGradientChange(
+                                      rank,
+                                      "to",
+                                      event.target.value
+                                    )
+                                  }
+                                />
+                              </Stack>
                             </Stack>
-                          </Stack>
-                        );
-                      }
-                    )}
-                  </Stack>
-                  <Button sx={{ mt: 2 }} variant="outlined" onClick={resetColors}>
-                    Reset colors to theme defaults
-                  </Button>
-                </CardContent>
-              </Card>
+                          );
+                        }
+                      )}
+                    </Stack>
+                    <Button
+                      sx={{ mt: 2 }}
+                      variant="outlined"
+                      onClick={resetColors}
+                    >
+                      Reset colors to theme defaults
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
 
               <Card>
                 <CardContent>
@@ -410,41 +612,46 @@ const Configurator = () => {
                     Share links
                   </Typography>
                   <Stack spacing={2}>
-                    <Box>
-                      <Typography variant="subtitle2">
-                        Browser source link
-                      </Typography>
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <Box className={styles.shareLink}>{shareableUrl}</Box>
-                        <Button
-                          variant="contained"
-                          onClick={() => handleCopy(shareableUrl, "main")}
-                        >
-                          {copied === "main" ? "Copied" : "Copy"}
-                        </Button>
-                      </Stack>
-                      <Typography variant="caption" color="text.secondary">
-                        Paste inside an OBS browser source (recommended 800×500)
-                      </Typography>
-                    </Box>
-                    <Divider />
-                    <Box>
-                      <Typography variant="subtitle2">
-                        Total message rate overlay
-                      </Typography>
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <Box className={styles.shareLink}>{shareableTotalUrl}</Box>
-                        <Button
-                          variant="outlined"
-                          onClick={() => handleCopy(shareableTotalUrl, "total")}
-                        >
-                          {copied === "total" ? "Copied" : "Copy"}
-                        </Button>
-                      </Stack>
-                      <Typography variant="caption" color="text.secondary">
-                        Standalone card for stream-wide msg/min stats.
-                      </Typography>
-                    </Box>
+                    {shareLinkConfigs.map((shareConfig, index) => {
+                      const url =
+                        shareConfig.key === "main"
+                          ? shareableUrl
+                          : shareableTotalUrl;
+                      const fallback =
+                        shareConfig.key === "main"
+                          ? overlayPath
+                          : totalOverlayPath;
+                      const displayUrl = isClient ? url : fallback;
+                      return (
+                        <div key={shareConfig.key}>
+                          <Box>
+                            <Typography variant="subtitle2">
+                              {shareConfig.label}
+                            </Typography>
+                            <Stack
+                              direction={{ xs: "column", sm: "row" }}
+                              spacing={1}
+                              alignItems={{ xs: "stretch", sm: "center" }}
+                            >
+                              <Box className={styles.shareLink}>{displayUrl}</Box>
+                              <Button
+                                variant={shareConfig.buttonVariant}
+                                onClick={() => handleCopy(url, shareConfig.key)}
+                              >
+                                {copied === shareConfig.key ? "Copied" : "Copy"}
+                              </Button>
+                            </Stack>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {shareConfig.hint}
+                            </Typography>
+                          </Box>
+                          {index < shareLinkConfigs.length - 1 && <Divider />}
+                        </div>
+                      );
+                    })}
                     <Chip
                       label={connectionStatus.message}
                       color={
@@ -457,6 +664,12 @@ const Configurator = () => {
                       variant="outlined"
                       sx={{ alignSelf: "flex-start" }}
                     />
+                    {isMessageRate && (
+                      <Typography variant="caption" color="text.secondary">
+                        Want the leaderboard and rate card together?{" "}
+                        <Link href="/configure">Open the full configurator.</Link>
+                      </Typography>
+                    )}
                   </Stack>
                 </CardContent>
               </Card>
@@ -478,6 +691,7 @@ const Configurator = () => {
                   settings={overlaySettings}
                   variant="preview"
                   onStatusChange={handleStatusChange}
+                  mode={isMessageRate ? "total-rate" : "full"}
                 />
               </CardContent>
             </Card>
