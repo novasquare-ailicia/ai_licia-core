@@ -3,6 +3,8 @@ import type { AnimatedCard } from "./types";
 import type { OverlayLayout, RankKey } from "@/lib/overlay";
 import styles from "./OverlayView.module.css";
 
+type CSSVarProperties = CSSProperties & Record<`--${string}`, string | number>;
+
 interface LeaderboardCardProps {
   card: AnimatedCard;
   index: number;
@@ -10,7 +12,7 @@ interface LeaderboardCardProps {
   layout: OverlayLayout;
 }
 
-const horizontalSizeVars: Record<RankKey | "base", CSSProperties> = {
+const horizontalSizeVars: Record<RankKey | "base", CSSVarProperties> = {
   base: {
     "--card-height": "clamp(120px, 16vw, 175px)",
   },
@@ -23,7 +25,7 @@ const horizontalSizeVars: Record<RankKey | "base", CSSProperties> = {
   },
 };
 
-const verticalSizeVars: Record<RankKey | "base", CSSProperties> = {
+const verticalSizeVars: Record<RankKey | "base", CSSVarProperties> = {
   base: {
     "--card-max-width": "clamp(320px, 56vw, 480px)",
     "--card-justify": "center",
@@ -57,7 +59,7 @@ const LeaderboardCard = ({ card, index, showRates, layout }: LeaderboardCardProp
     .filter(Boolean)
     .join(" ");
 
-  const styleVars: CSSProperties = {
+  const styleVars: CSSVarProperties = {
     "--lift": `${lift}px`,
     ...sizeStyle,
   };

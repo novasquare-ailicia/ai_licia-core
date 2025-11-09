@@ -55,6 +55,10 @@ type ShareLinkConfig = {
   buttonVariant: "contained" | "outlined";
 };
 
+type GradientOverridesState = Partial<
+  Record<OverlayThemeId, Partial<Record<RankKey, GradientPair>>>
+>;
+
 const copyByVariant: Record<
   ConfiguratorVariant,
   {
@@ -115,9 +119,7 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
   );
   const [excluded, setExcluded] = useState("");
   const [theme, setTheme] = useState(DEFAULT_THEME);
-  const [gradientOverrides, setGradientOverrides] = useState<
-    Record<OverlayThemeId, Partial<Record<RankKey, GradientPair>>>
-  >({});
+  const [gradientOverrides, setGradientOverrides] = useState<GradientOverridesState>({});
   const activeGradients = useMemo(
     () => gradientOverrides[theme] ?? {},
     [gradientOverrides, theme]

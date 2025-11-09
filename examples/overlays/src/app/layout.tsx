@@ -5,6 +5,10 @@ import { Providers } from "@/components/Providers";
 export const metadata: Metadata = {
   title: "ai_licia® Overlay Studio",
   description: "Generate modern browser-source overlays powered by ai_licia®.",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({

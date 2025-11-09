@@ -111,7 +111,12 @@ export const useLeaderboardStream = ({
           messagesPerMinute,
         };
       })
-      .filter((entry): entry is LeaderboardEntry => Boolean(entry))
+      .filter(
+        (
+          entry
+        ): entry is LeaderboardEntry & { messagesPerMinute: number } =>
+          Boolean(entry)
+      )
       .sort((a, b) => {
         if (b.count === a.count) {
           return a.username.localeCompare(b.username);
