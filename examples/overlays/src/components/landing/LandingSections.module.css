@@ -153,6 +153,11 @@
   justify-content: center;
 }
 
+.heroVisual > * {
+  position: relative;
+  z-index: 1;
+}
+
 .heroVisual::after {
   content: "";
   position: absolute;
