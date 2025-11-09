@@ -185,9 +185,9 @@ const Configurator = () => {
           direction={{ xs: "column", md: "row" }}
           spacing={3}
           className={styles.muiGrid}
-          sx={{ flexWrap: "wrap", alignItems: "stretch" }}
+          sx={{ flexWrap: { xs: "wrap", md: "nowrap" }, alignItems: "stretch" }}
         >
-          <Box sx={{ flex: { xs: "1 1 100%", md: "0 0 60%" }, minWidth: 0 }}>
+          <Box sx={{ flex: { xs: "1 1 100%", md: "0 0 48%" }, minWidth: 0 }}>
             <Stack spacing={3}>
               <Card>
                 <CardContent>
@@ -463,7 +463,15 @@ const Configurator = () => {
             </Stack>
           </Box>
 
-          <Box sx={{ flex: { xs: "1 1 100%", md: "0 0 40%" }, minWidth: 0 }}>
+          <Box
+            sx={{
+              flex: { xs: "1 1 100%", md: "0 0 52%" },
+              minWidth: 0,
+              position: { md: "sticky" },
+              top: { md: 24 },
+              alignSelf: "flex-start",
+            }}
+          >
             <Card className={styles.previewPanel}>
               <CardContent>
                 <OverlayView
