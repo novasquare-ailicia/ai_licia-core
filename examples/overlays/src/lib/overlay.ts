@@ -194,7 +194,11 @@ export const parseOverlaySettings = (
   });
 
   const layout: OverlayLayout =
-    layoutParam === "vertical" ? "vertical" : DEFAULT_LAYOUT;
+    layoutParam === "horizontal"
+      ? "horizontal"
+      : layoutParam === "vertical"
+      ? "vertical"
+      : DEFAULT_LAYOUT;
 
   const showRates =
     showRatesParam === ""
