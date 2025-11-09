@@ -1,29 +1,35 @@
 'use client';
 
-import { useEffect, useMemo } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import OverlayView from "@/components/overlay/OverlayView";
 import { parseOverlaySettings } from "@/lib/overlay";
 
 interface RuntimeProps {
-  initialParams: Record<string, string | string[] | undefined>;
+  initialParams?: Record<string, string | string[] | undefined>;
   mode?: "full" | "total-rate";
 }
 
-const OverlayRuntime = ({ initialParams, mode = "full" }: RuntimeProps) => {
-  const params = useSearchParams();
+const OverlayRuntime = ({ initialParams = {}, mode = "full" }: RuntimeProps) => {
+  const [clientParams, setClientParams] = useState<
+    Record<string, string | string[] | undefined>
+  >(() => initialParams);
 
-  const mergedParams = useMemo(() => {
-    const current: Record<string, string | string[] | undefined> = {};
-    params.forEach((value, key) => {
-      current[key] = value;
+  useEffect(() => {
+    const searchParams =
+      typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search)
+        : null;
+    if (!searchParams) return;
+    const next: Record<string, string> = {};
+    searchParams.forEach((value, key) => {
+      next[key] = value;
     });
-    return Object.keys(current).length ? current : initialParams;
-  }, [params, initialParams]);
+    setClientParams(next);
+  }, []);
 
   const settings = useMemo(
-    () => parseOverlaySettings(mergedParams),
-    [mergedParams]
+    () => parseOverlaySettings(clientParams),
+    [clientParams]
   );
 
   useEffect(() => {

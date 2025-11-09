@@ -1,14 +1,10 @@
 import OverlayRuntime from "../runtime";
 
 export const dynamic = "force-static";
-export const revalidate = 0;
+export const revalidate = false;
 
-interface TotalOverlayPageProps {
-  searchParams: Record<string, string | string[] | undefined>;
-}
-
-const TotalOverlayPage = ({ searchParams }: TotalOverlayPageProps) => {
-  return <OverlayRuntime initialParams={searchParams} mode="total-rate" />;
+const TotalOverlayPage = () => {
+  return <OverlayRuntime mode="total-rate" />;
 };
 
 export default TotalOverlayPage;

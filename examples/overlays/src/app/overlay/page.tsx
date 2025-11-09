@@ -1,14 +1,10 @@
 import OverlayRuntime from "./runtime";
 
 export const dynamic = "force-static";
-export const revalidate = 0;
+export const revalidate = false;
 
-interface OverlayPageProps {
-  searchParams: Record<string, string | string[] | undefined>;
-}
-
-const OverlayPage = ({ searchParams }: OverlayPageProps) => {
-  return <OverlayRuntime initialParams={searchParams} />;
+const OverlayPage = () => {
+  return <OverlayRuntime />;
 };
 
 export default OverlayPage;
