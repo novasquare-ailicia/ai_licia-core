@@ -1,12 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AiliciaClient, PublicChatMessage } from "ai_licia-client";
+import {
+  AiliciaClient,
+  ChatMessageStream,
+  PublicChatMessage,
+} from "ai_licia-client";
 import {
   DEFAULT_CONTEXT_INTERVAL,
   OverlaySettings,
   RankKey,
-  normalizeBaseUrl,
 } from "@/lib/overlay";
 import type { LeaderboardEntry, StreamStatus } from "./types";
 import { trackEvent, trackTimedEvent } from "@/lib/analytics";
@@ -61,15 +64,12 @@ export const useLeaderboardStream = ({
 
   const countsRef = useRef<Map<string, LeaderboardEntry>>(new Map());
   const excludedRef = useRef<Set<string>>(new Set());
-  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null
-  );
-  const readerRef = useRef<{ cancel: () => Promise<void> } | null>(null);
   const topChatterRef = useRef<string | null>(null);
   const clientRef = useRef<AiliciaClient | null>(null);
   const lastContextSyncRef = useRef(0);
   const contextInFlightRef = useRef(false);
   const rateRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const streamHandleRef = useRef<ChatMessageStream | null>(null);
 
   const hasCredentials = Boolean(settings.apiKey && settings.channelName);
   const streamingEnabled = hasCredentials && !disabled;
@@ -87,6 +87,11 @@ export const useLeaderboardStream = ({
       });
     },
     [onStatusChange, hasCredentials, disabled]
+  );
+  const queueStatusUpdate = useCallback(
+    (nextStatus: StreamStatus, info: string) =>
+      requestAnimationFrame(() => emitStatus(nextStatus, info)),
+    [emitStatus]
   );
 
   const snapshotLeaderboard = useCallback(() => {
@@ -145,116 +150,8 @@ export const useLeaderboardStream = ({
     snapshotLeaderboard();
   }, [settings.excludedUsernames, snapshotLeaderboard]);
 
-  useEffect(() => {
-    if (!disabled || !initialLeaders) return;
-    setLeaders(initialLeaders);
-  }, [disabled, initialLeaders]);
-
-  useEffect(() => {
-    if (!hasCredentials) {
-      countsRef.current.clear();
-      setLeaders([]);
-      emitStatus(
-        "idle",
-        "Add your ai_licia® API key and channel to preview live chat."
-      );
-      return;
-    }
-
-    clientRef.current = new AiliciaClient(
-      settings.apiKey,
-      settings.channelName,
-      settings.baseUrl
-    );
-
-    return () => {
-      clientRef.current = null;
-    };
-  }, [
-    hasCredentials,
-    settings.apiKey,
-    settings.channelName,
-    settings.baseUrl,
-    emitStatus,
-  ]);
-
-  useEffect(() => {
-    if (!streamingEnabled) {
-      if (disabled && initialLeaders) {
-        setLeaders(initialLeaders);
-      }
-      return;
-    }
-
-    countsRef.current.clear();
-    setLeaders([]);
-    topChatterRef.current = null;
-
-    const normalizedBase = normalizeBaseUrl(settings.baseUrl);
-    const params = new URLSearchParams();
-    settings.roles.forEach((role) => params.append("roles", role));
-    const url = `${normalizedBase}/events/chat/messages/stream${
-      params.size ? `?${params}` : ""
-    }`;
-
-    const controller = new AbortController();
-    const decoder = new TextDecoder();
-    let buffer = "";
-    let reconnecting = false;
-    let stopped = false;
-
-    const cleanupReader = () => {
-      readerRef.current
-        ?.cancel()
-        .catch(() => {
-          /* noop */
-        })
-        .finally(() => {
-          readerRef.current = null;
-        });
-    };
-
-    const scheduleReconnect = () => {
-      if (reconnecting || stopped) return;
-      reconnecting = true;
-      emitStatus("error", "Connection lost. Retrying…");
-      reconnectTimerRef.current = setTimeout(() => {
-        reconnecting = false;
-        connect();
-      }, 4000);
-    };
-
-    const handleChunk = (chunk: string) => {
-      buffer += chunk;
-      let boundary = buffer.indexOf("\n\n");
-
-      while (boundary !== -1) {
-        const rawEvent = buffer.slice(0, boundary);
-        buffer = buffer.slice(boundary + 2);
-        boundary = buffer.indexOf("\n\n");
-
-        const trimmed = rawEvent.trim();
-        if (!trimmed || trimmed.startsWith(":")) continue;
-
-        const dataLines: string[] = [];
-        trimmed.split("\n").forEach((line) => {
-          if (line.startsWith("data:")) {
-            dataLines.push(line.slice(5).trim());
-          }
-        });
-
-        if (!dataLines.length) continue;
-
-        try {
-          const payload = JSON.parse(dataLines.join("\n")) as PublicChatMessage;
-          processEvent(payload);
-        } catch (error) {
-          console.warn("Failed to parse SSE payload", error);
-        }
-      }
-    };
-
-    const processEvent = (payload: PublicChatMessage) => {
+  const handleIncomingMessage = useCallback(
+    (payload: PublicChatMessage) => {
       if (!payload?.username) return;
       const now = Date.now();
       const key = toKey(payload.username);
@@ -278,65 +175,120 @@ export const useLeaderboardStream = ({
       }
       countsRef.current.set(key, current);
       snapshotLeaderboard();
-    };
+    },
+    [snapshotLeaderboard]
+  );
 
-    const connect = async () => {
-      try {
-        emitStatus("connecting", "Connecting to ai_licia® chat stream…");
-        const response = await fetch(url, {
-          headers: { Authorization: `Bearer ${settings.apiKey}` },
-          signal: controller.signal,
-        });
+  useEffect(() => {
+    if (!disabled || !initialLeaders) return;
+    const frame = requestAnimationFrame(() => setLeaders(initialLeaders));
+    return () => cancelAnimationFrame(frame);
+  }, [disabled, initialLeaders]);
 
-        if (!response.ok || !response.body) {
-          throw new Error(`HTTP ${response.status}`);
-        }
+  useEffect(() => {
+    if (!hasCredentials) {
+      countsRef.current.clear();
+      const frameLeaders = requestAnimationFrame(() => setLeaders([]));
+      const frameStatus = queueStatusUpdate(
+        "idle",
+        "Add your ai_licia® API key and channel to preview live chat."
+      );
+      return () => {
+        cancelAnimationFrame(frameLeaders);
+        cancelAnimationFrame(frameStatus);
+      };
+    }
 
-        emitStatus("connected", "Live and listening");
-        const reader = response.body.getReader();
-        readerRef.current = reader;
-
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          if (value) {
-            handleChunk(decoder.decode(value, { stream: true }));
-          }
-        }
-
-        if (!stopped) {
-          emitStatus("error", "Stream ended. Reconnecting…");
-          scheduleReconnect();
-        }
-      } catch (error) {
-        if (controller.signal.aborted || stopped) {
-          return;
-        }
-        console.warn("Stream error", error);
-        scheduleReconnect();
-      }
-    };
-
-    connect();
+    clientRef.current = new AiliciaClient(
+      settings.apiKey,
+      settings.channelName,
+      settings.baseUrl
+    );
 
     return () => {
-      stopped = true;
-      cleanupReader();
-      controller.abort();
-      if (reconnectTimerRef.current) {
-        clearTimeout(reconnectTimerRef.current);
-        reconnectTimerRef.current = null;
+      clientRef.current = null;
+    };
+  }, [
+    hasCredentials,
+    settings.apiKey,
+    settings.channelName,
+    settings.baseUrl,
+    emitStatus,
+    queueStatusUpdate,
+  ]);
+
+  useEffect(() => {
+    if (!streamingEnabled) {
+      streamHandleRef.current?.close();
+      streamHandleRef.current = null;
+      if (disabled && initialLeaders) {
+        const frame = requestAnimationFrame(() => setLeaders(initialLeaders));
+        return () => cancelAnimationFrame(frame);
       }
+      return;
+    }
+
+    const client = clientRef.current;
+    if (!client) return;
+
+    countsRef.current.clear();
+    const resetFrame = requestAnimationFrame(() => setLeaders([]));
+    topChatterRef.current = null;
+
+    queueStatusUpdate(
+      "connecting",
+      "Connecting to ai_licia® chat stream…"
+    );
+
+    streamHandleRef.current = client.streamPublicChatMessages({
+      roles: settings.roles,
+      autoReconnect: true,
+      reconnectDelayMs: 4000,
+      onMessage: handleIncomingMessage,
+      onConnectionStateChange: (state) => {
+        if (state === "connecting") {
+          queueStatusUpdate(
+            "connecting",
+            "Connecting to ai_licia® chat stream…"
+          );
+        } else {
+          queueStatusUpdate("connecting", "Reconnecting to ai_licia®…");
+        }
+      },
+      onOpen: () => emitStatus("connected", "Live and listening"),
+      onReconnectAttempt: ({ attempt, delayMs }) =>
+        queueStatusUpdate(
+          "connecting",
+          `Reconnecting in ${(delayMs / 1000).toFixed(1)}s (attempt ${attempt})`
+        ),
+      onError: (error) => {
+        console.warn("Stream error", error);
+        queueStatusUpdate("error", "Connection lost. Retrying…");
+      },
+      onClose: () => {
+        if (!streamingEnabled) {
+          queueStatusUpdate(
+            "idle",
+            "Add your ai_licia® API key and channel to preview live chat."
+          );
+        }
+      },
+    });
+
+    return () => {
+      cancelAnimationFrame(resetFrame);
+      streamHandleRef.current?.close();
+      streamHandleRef.current = null;
     };
   }, [
     streamingEnabled,
     disabled,
     initialLeaders,
-    settings.baseUrl,
     settings.roles,
-    settings.apiKey,
+    settings.baseUrl,
+    handleIncomingMessage,
     emitStatus,
-    snapshotLeaderboard,
+    queueStatusUpdate,
   ]);
 
   useEffect(() => {
