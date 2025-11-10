@@ -20,6 +20,7 @@ import type { GradientPair } from "@/lib/overlay";
 import OverlayView from "./overlay/OverlayView";
 import OverlayShowcase from "./OverlayShowcase";
 import styles from "./Configurator.module.css";
+import { trackEvent } from "@/lib/analytics";
 import {
   Box,
   Button,
@@ -131,6 +132,11 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
   const [showTotalRateCard, setShowTotalRateCard] = useState(
     isMessageRate ? true : false
   );
+  const rolesCount = roles.length;
+  const excludedCount = useMemo(
+    () => parseExcluded(excluded).length,
+    [excluded]
+  );
   const [pulseGlowEnabled, setPulseGlowEnabled] = useState(
     DEFAULT_PULSE_GLOW.enabled
   );
@@ -138,6 +144,32 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
   const [pulseGlowMax, setPulseGlowMax] = useState(DEFAULT_PULSE_GLOW.maxRate);
   const [pulseGlowColor, setPulseGlowColor] = useState(
     DEFAULT_PULSE_GLOW.color
+  );
+  const baseEventData = useMemo(
+    () => ({
+      variant,
+      layout,
+      theme,
+      showRates,
+      showTotalRateCard,
+      rolesCount,
+      excludedCount,
+    }),
+    [
+      variant,
+      layout,
+      theme,
+      showRates,
+      showTotalRateCard,
+      rolesCount,
+      excludedCount,
+    ]
+  );
+  const emitConfiguratorEvent = useCallback(
+    (eventName: string, extra?: Record<string, unknown>) => {
+      trackEvent(eventName, { ...baseEventData, ...extra });
+    },
+    [baseEventData]
   );
   const [isClient, setIsClient] = useState(false);
   useEffect(() => {
@@ -260,13 +292,25 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
       ];
 
   const toggleRole = (role: PublicChatRole) => {
-    setRoles((prev) => {
-      if (prev.includes(role)) {
-        if (prev.length === 1) return prev;
-        return prev.filter((item) => item !== role);
-      }
-      return [...prev, role];
-    });
+    const active = roles.includes(role);
+    if (active) {
+      if (roles.length === 1) return;
+      const nextRoles = roles.filter((item) => item !== role);
+      setRoles(nextRoles);
+      emitConfiguratorEvent("overlay_roles_update", {
+        action: "removed",
+        role,
+        rolesCount: nextRoles.length,
+      });
+    } else {
+      const nextRoles = [...roles, role];
+      setRoles(nextRoles);
+      emitConfiguratorEvent("overlay_roles_update", {
+        action: "added",
+        role,
+        rolesCount: nextRoles.length,
+      });
+    }
   };
 
   const handleCopy = async (value: string, target: "main" | "total") => {
@@ -274,6 +318,11 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
       await navigator.clipboard.writeText(value);
       setCopied(target);
       setTimeout(() => setCopied(null), 1500);
+      emitConfiguratorEvent("overlay_copy_link", {
+        target,
+        hasCredentials: Boolean(apiKey && channel),
+        urlLength: value.length,
+      });
     } catch (error) {
       console.warn("Failed to copy overlay link", error);
     }
@@ -366,6 +415,11 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
                       placeholder="nightbot, streamelements"
                       value={excluded}
                       onChange={(event) => setExcluded(event.target.value)}
+                      onBlur={() =>
+                        emitConfiguratorEvent("overlay_exclusions_update", {
+                          excludedCount,
+                        })
+                      }
                       helperText="Comma separated list"
                       fullWidth
                     />
@@ -394,7 +448,17 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
                             <Button
                               key={preset.id}
                               variant={active ? "contained" : "outlined"}
-                              onClick={() => setTheme(preset.id)}
+                              onClick={() => {
+                                if (preset.id === theme) return;
+                                setTheme(preset.id);
+                                emitConfiguratorEvent(
+                                  "overlay_theme_change",
+                                  {
+                                    previousTheme: theme,
+                                    newTheme: preset.id,
+                                  }
+                                );
+                              }}
                               sx={{ textTransform: "none", minWidth: 150 }}
                             >
                               {preset.name}
@@ -412,7 +476,13 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
                         <ToggleButtonGroup
                           value={layout}
                           exclusive
-                          onChange={(_, value) => value && setLayout(value)}
+                          onChange={(_, value) => {
+                            if (!value || value === layout) return;
+                            setLayout(value);
+                            emitConfiguratorEvent("overlay_layout_change", {
+                              newLayout: value,
+                            });
+                          }}
                         >
                           <ToggleButton value="horizontal">
                             Horizontal
@@ -428,9 +498,13 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
                           control={
                             <Switch
                               checked={showRates}
-                              onChange={(event) =>
-                                setShowRates(event.target.checked)
-                              }
+                              onChange={(event) => {
+                                setShowRates(event.target.checked);
+                                emitConfiguratorEvent(
+                                  "overlay_show_rates_toggle",
+                                  { enabled: event.target.checked }
+                                );
+                              }}
                             />
                           }
                           label="Show per-chatter message rate"
@@ -439,9 +513,13 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
                           control={
                             <Switch
                               checked={showTotalRateCard}
-                              onChange={(event) =>
-                                setShowTotalRateCard(event.target.checked)
-                              }
+                              onChange={(event) => {
+                                setShowTotalRateCard(event.target.checked);
+                                emitConfiguratorEvent(
+                                  "overlay_show_total_toggle",
+                                  { enabled: event.target.checked }
+                                );
+                              }}
                             />
                           }
                           label="Display total message rate card"
@@ -456,9 +534,13 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
                             control={
                               <Switch
                                 checked={pulseGlowEnabled}
-                                onChange={(event) =>
-                                  setPulseGlowEnabled(event.target.checked)
-                                }
+                                onChange={(event) => {
+                                  setPulseGlowEnabled(event.target.checked);
+                                  emitConfiguratorEvent(
+                                    "overlay_pulse_glow_toggle",
+                                    { enabled: event.target.checked }
+                                  );
+                                }}
                               />
                             }
                             label="Pulse glow on total message rate card"
@@ -468,9 +550,20 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
                               label="Glow min msg/min"
                               type="number"
                               value={pulseGlowMin}
-                              onChange={(event) =>
+                              onChange={(event) => {
                                 setPulseGlowMin(
                                   Math.max(0, Number(event.target.value) || 0)
+                                );
+                              }}
+                              onBlur={() =>
+                                emitConfiguratorEvent(
+                                  "overlay_pulse_glow_update",
+                                  {
+                                    enabled: pulseGlowEnabled,
+                                    minRate: pulseGlowMin,
+                                    maxRate: pulseGlowMax,
+                                    color: pulseGlowColor,
+                                  }
                                 )
                               }
                               fullWidth
@@ -480,12 +573,24 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
                               label="Glow max msg/min"
                               type="number"
                               value={pulseGlowMax}
-                              onChange={(event) =>
+                              onChange={(event) => {
                                 setPulseGlowMax(
                                   Math.max(
                                     0.5,
-                                    Number(event.target.value) || DEFAULT_PULSE_GLOW.maxRate
+                                    Number(event.target.value) ||
+                                      DEFAULT_PULSE_GLOW.maxRate
                                   )
+                                );
+                              }}
+                              onBlur={() =>
+                                emitConfiguratorEvent(
+                                  "overlay_pulse_glow_update",
+                                  {
+                                    enabled: pulseGlowEnabled,
+                                    minRate: pulseGlowMin,
+                                    maxRate: pulseGlowMax,
+                                    color: pulseGlowColor,
+                                  }
                                 )
                               }
                               fullWidth
@@ -500,9 +605,18 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
                               type="color"
                               value={pulseGlowColor}
                               disabled={!pulseGlowEnabled}
-                              onChange={(event) =>
-                                setPulseGlowColor(event.target.value)
-                              }
+                              onChange={(event) => {
+                                setPulseGlowColor(event.target.value);
+                                emitConfiguratorEvent(
+                                  "overlay_pulse_glow_update",
+                                  {
+                                    enabled: pulseGlowEnabled,
+                                    minRate: pulseGlowMin,
+                                    maxRate: pulseGlowMax,
+                                    color: event.target.value,
+                                  }
+                                );
+                              }}
                             />
                           </Box>
                           <Typography variant="caption" color="text.secondary">
@@ -517,11 +631,17 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
                       label="Context sync frequency (ms)"
                       type="number"
                       value={contextInterval}
-                      onChange={(event) =>
-                        setContextInterval(
-                          Math.max(15000, Number(event.target.value) || 0)
-                        )
-                      }
+                      onChange={(event) => {
+                        const next = Math.max(
+                          15000,
+                          Number(event.target.value) || 0
+                        );
+                        setContextInterval(next);
+                        emitConfiguratorEvent(
+                          "overlay_context_interval_change",
+                          { intervalMs: next }
+                        );
+                      }}
                       helperText={contextHelperText}
                       fullWidth
                     />

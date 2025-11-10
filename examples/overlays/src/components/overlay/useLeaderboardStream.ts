@@ -9,6 +9,7 @@ import {
   normalizeBaseUrl,
 } from "@/lib/overlay";
 import type { LeaderboardEntry, StreamStatus } from "./types";
+import { trackEvent, trackTimedEvent } from "@/lib/analytics";
 
 const RANKS: RankKey[] = ["rank1", "rank2", "rank3"];
 const ROLLING_WINDOW_MS = 60_000;
@@ -78,8 +79,14 @@ export const useLeaderboardStream = ({
       setStatus(nextStatus);
       setStatusMessage(info);
       onStatusChange?.(nextStatus, info);
+      trackEvent("overlay_connection_status", {
+        status: nextStatus,
+        info,
+        hasCredentials,
+        disabled,
+      });
     },
-    [onStatusChange]
+    [onStatusChange, hasCredentials, disabled]
   );
 
   const snapshotLeaderboard = useCallback(() => {
@@ -378,6 +385,12 @@ export const useLeaderboardStream = ({
       .join(" | ")
       .slice(0, 680);
 
+    trackTimedEvent("overlay_context_sync", {
+      leaderCount: leaders.length,
+      intervalMs: interval,
+      hasCredentials,
+    });
+
     client
       .sendEvent(`Top chatters update: ${summary}`)
       .catch((error) => console.warn("Failed to sync leaderboard", error))
@@ -385,7 +398,7 @@ export const useLeaderboardStream = ({
         contextInFlightRef.current = false;
         lastContextSyncRef.current = Date.now();
       });
-  }, [disabled, leaders, settings.contextIntervalMs]);
+  }, [disabled, leaders, settings.contextIntervalMs, hasCredentials]);
 
   useEffect(() => {
     if (disabled || !leaders.length) return;
@@ -397,6 +410,11 @@ export const useLeaderboardStream = ({
     if (!newLeader) return;
 
     if (previousLeader && previousLeader !== newLeader) {
+      trackEvent("overlay_generation_trigger", {
+        from: previousLeader,
+        to: newLeader,
+        count: leaders[0].count,
+      });
       client
         .triggerGeneration(
           `${newLeader} just claimed the top chatter spot with ${leaders[0].count} messages!`

@@ -18,6 +18,15 @@ const CookieBanner = () => {
 
   const acceptCookies = () => {
     window.localStorage.setItem(STORAGE_KEY, "accepted");
+    const gtag =
+      (window as typeof window & { gtag?: (...args: unknown[]) => void }).gtag;
+    gtag?.("consent", "update", {
+      ad_storage: "granted",
+      analytics_storage: "granted",
+    });
+    gtag?.("event", "cookie_consent", {
+      status: "accepted",
+    });
     setVisible(false);
   };
 

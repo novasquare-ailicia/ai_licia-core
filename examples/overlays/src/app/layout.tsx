@@ -33,6 +33,13 @@ export default function RootLayout({
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
+            window.gtag = gtag;
+            const consentAccepted = window.localStorage.getItem('ai_licia_cookie_consent') === 'accepted';
+            const consentValue = consentAccepted ? 'granted' : 'denied';
+            gtag('consent', 'default', {
+              ad_storage: consentValue,
+              analytics_storage: consentValue,
+            });
             gtag('js', new Date());
             gtag('config', '${GA_MEASUREMENT_ID}', { anonymize_ip: true });
           `}

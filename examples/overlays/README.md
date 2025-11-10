@@ -61,6 +61,6 @@ By default, the GitHub Actions workflow exports the site under `/{repo-name}` so
 
 When developing locally you can mimic the production base path by exporting `NEXT_PUBLIC_BASE_PATH` (the same value the workflow injects from `OVERLAYS_BASE_PATH`).
 
-## Analytics
+## Analytics & Consent
 
-The overlays site ships with Google Analytics 4 instrumentation baked in (measurement ID `G-VDWNQ1287V`). No configuration is needed; every deploy automatically loads the GA script after hydration.
+The overlays site ships with Google Analytics 4 instrumentation baked in (measurement ID `G-VDWNQ1287V`). A built-in cookie banner initializes Google’s Consent Mode with analytics disabled until a visitor accepts, then updates GA accordingly. No additional configuration is needed.
