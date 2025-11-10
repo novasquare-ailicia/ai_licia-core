@@ -34,14 +34,26 @@ export default function RootLayout({
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             window.gtag = gtag;
-            const consentAccepted = window.localStorage.getItem('ai_licia_cookie_consent') === 'accepted';
-            const consentValue = consentAccepted ? 'granted' : 'denied';
             gtag('consent', 'default', {
-              ad_storage: consentValue,
-              analytics_storage: consentValue,
+              ad_storage: 'denied',
+              ad_user_data: 'denied',
+              ad_personalization: 'denied',
+              analytics_storage: 'denied',
+              wait_for_update: 500
             });
+            gtag('set', 'url_passthrough', true);
+            gtag('set', 'ads_data_redaction', true);
             gtag('js', new Date());
             gtag('config', '${GA_MEASUREMENT_ID}', { anonymize_ip: true });
+            const consentAccepted = window.localStorage.getItem('ai_licia_cookie_consent') === 'accepted';
+            if (consentAccepted) {
+              gtag('consent', 'update', {
+                ad_storage: 'granted',
+                ad_user_data: 'granted',
+                ad_personalization: 'granted',
+                analytics_storage: 'granted'
+              });
+            }
           `}
         </Script>
       </body>

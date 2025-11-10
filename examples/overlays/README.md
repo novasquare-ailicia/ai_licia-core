@@ -60,7 +60,3 @@ By default, the GitHub Actions workflow exports the site under `/{repo-name}` so
 3. Redeploy (push to `main` or run the `Deploy Overlay Examples to Pages` workflow manually). Once the Pages build finishes, the site is available at your custom domain without a repo suffix.
 
 When developing locally you can mimic the production base path by exporting `NEXT_PUBLIC_BASE_PATH` (the same value the workflow injects from `OVERLAYS_BASE_PATH`).
-
-## Analytics & Consent
-
-The overlays site ships with Google Analytics 4 instrumentation baked in (measurement ID `G-VDWNQ1287V`). A built-in cookie banner initializes Google’s Consent Mode with analytics disabled until a visitor accepts, then updates GA accordingly. No additional configuration is needed.

@@ -22,6 +22,8 @@ const CookieBanner = () => {
       (window as typeof window & { gtag?: (...args: unknown[]) => void }).gtag;
     gtag?.("consent", "update", {
       ad_storage: "granted",
+      ad_user_data: "granted",
+      ad_personalization: "granted",
       analytics_storage: "granted",
     });
     gtag?.("event", "cookie_consent", {
