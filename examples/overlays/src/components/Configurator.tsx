@@ -39,7 +39,7 @@ import {
 const parseExcluded = (value: string) =>
   value
     .split(",")
-    .map((entry) => entry.trim())
+    .map((entry) => entry.trim().toLowerCase())
     .filter(Boolean);
 
 type ConfiguratorVariant = "leaderboard" | "message-rate";

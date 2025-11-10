@@ -129,7 +129,7 @@ const parseCommaList = (value?: string | null) =>
   value
     ? value
         .split(",")
-        .map((entry) => entry.trim())
+        .map((entry) => entry.trim().toLowerCase())
         .filter(Boolean)
     : [];
 

@@ -79,6 +79,44 @@ a {
   background: var(--body-bg);
 }
 
+.cookieBanner {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(560px, calc(100% - 2rem));
+  padding: 1rem 1.25rem;
+  border-radius: 1rem;
+  background: rgba(4, 5, 13, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 35px 60px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  z-index: 50;
+}
+
+.cookieBanner p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: rgba(245, 247, 255, 0.82);
+}
+
+.cookieBanner button {
+  align-self: flex-start;
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1.4rem;
+  font-weight: 600;
+  color: #04050d;
+  background: linear-gradient(120deg, #8e2de2, #29ffc6);
+  cursor: pointer;
+}
+
+.overlay-mode .cookieBanner {
+  display: none !important;
+}
+
 .site-shell::before,
 .site-shell::after {
   content: "";
