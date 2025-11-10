@@ -61,6 +61,13 @@ export interface PublicChatMessage {
 
 export interface ChatMessageStreamOptions {
   roles?: PublicChatRole[];
+  autoReconnect?: boolean;
+  reconnectDelayMs?: number;
+  reconnectBackoffMultiplier?: number;
+  reconnectJitterMs?: number;
+  maxReconnectAttempts?: number;
+  onReconnectAttempt?: (attemptInfo: { attempt: number; delayMs: number }) => void;
+  onConnectionStateChange?: (state: "connecting" | "reconnecting") => void;
   onMessage: (message: PublicChatMessage) => void;
   onError?: (error: Error) => void;
   onOpen?: () => void;

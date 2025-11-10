@@ -170,14 +170,27 @@ export class AiliciaClient {
    * @param options - Roles filter and callbacks for stream lifecycle events
    */
   public streamPublicChatMessages(options: ChatMessageStreamOptions): ChatMessageStream {
-    const { onMessage } = options;
+    const {
+      onMessage,
+      roles,
+      autoReconnect = false,
+      reconnectDelayMs = 4000,
+      reconnectBackoffMultiplier = 1.5,
+      reconnectJitterMs = 1000,
+      maxReconnectAttempts = Infinity,
+      onReconnectAttempt,
+      onConnectionStateChange,
+      onError,
+      onOpen,
+      onClose,
+    } = options;
     if (typeof onMessage !== 'function') {
       throw new Error('onMessage callback is required to consume chat messages.');
     }
 
     const normalizedBase = this.baseUrl.endsWith('/') ? this.baseUrl : `${this.baseUrl}/`;
-    const query = options.roles && options.roles.length > 0
-      ? `?${options.roles.map(role => `roles=${encodeURIComponent(role)}`).join('&')}`
+    const query = roles && roles.length > 0
+      ? `?${roles.map(role => `roles=${encodeURIComponent(role)}`).join('&')}`
       : '';
     const streamUrl = new URL(`events/chat/messages/stream${query}`, normalizedBase);
 
@@ -187,38 +200,85 @@ export class AiliciaClient {
       'Authorization': `Bearer ${this.apiKey}`
     };
 
-    const controller = new AbortController();
-    const decoder = new TextDecoder();
+    let controller: AbortController | null = null;
     let reader: StreamReader | null = null;
-    let closed = false;
-    let buffer = '';
+    let shutdown = false;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let reconnectAttempts = 0;
 
-    const finalize = () => {
-      if (closed) {
-        return;
-      }
-      closed = true;
-      reader?.cancel().catch(() => {});
-      controller.abort();
-      options.onClose?.();
+    const computeDelayMs = (attempt: number) => {
+      const multiplier = Math.max(1, reconnectBackoffMultiplier);
+      const base = reconnectDelayMs * Math.pow(multiplier, Math.max(0, attempt - 1));
+      const jitter = reconnectJitterMs > 0 ? Math.random() * reconnectJitterMs : 0;
+      return base + jitter;
     };
 
-    const pump = async () => {
+    const cleanupConnection = () => {
+      reader?.cancel().catch(() => {});
+      reader = null;
+      controller?.abort();
+      controller = null;
+    };
+
+    const clearReconnectTimer = () => {
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+      }
+    };
+
+    const handleFinalClose = () => {
+      cleanupConnection();
+      clearReconnectTimer();
+      onClose?.();
+    };
+
+    const scheduleReconnect = () => {
+      if (!autoReconnect || shutdown) {
+        handleFinalClose();
+        return;
+      }
+      if (reconnectAttempts >= maxReconnectAttempts) {
+        handleFinalClose();
+        return;
+      }
+      reconnectAttempts += 1;
+      const delayMs = computeDelayMs(reconnectAttempts);
+      onReconnectAttempt?.({ attempt: reconnectAttempts, delayMs });
+      onConnectionStateChange?.("reconnecting");
+      clearReconnectTimer();
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        if (!shutdown) {
+          startStream();
+        }
+      }, delayMs);
+    };
+
+    const startStream = async () => {
       try {
+        onConnectionStateChange?.(reconnectAttempts === 0 ? "connecting" : "reconnecting");
+        cleanupConnection();
+        const localController = new AbortController();
+        controller = localController;
+        const decoder = new TextDecoder();
+        let buffer = '';
+
         const response = await fetch(streamUrl.toString(), {
           method: 'GET',
           headers,
-          signal: controller.signal
+          signal: localController.signal
         });
 
         if (!response.ok || !response.body) {
           throw new Error(`Failed to connect to chat stream: HTTP ${response.status}`);
         }
 
-        options.onOpen?.();
+        reconnectAttempts = 0;
+        onOpen?.();
         reader = response.body.getReader();
 
-        while (!closed) {
+        while (!shutdown) {
           const { value, done } = await reader.read();
           if (done) {
             break;
@@ -253,25 +313,31 @@ export class AiliciaClient {
                 };
                 onMessage(message);
               } catch (error) {
-                options.onError?.(error instanceof Error ? error : new Error(String(error)));
+                onError?.(error instanceof Error ? error : new Error(String(error)));
               }
             }
           }
         }
+        cleanupConnection();
+        scheduleReconnect();
       } catch (error) {
-        if (!closed) {
-          options.onError?.(error instanceof Error ? error : new Error(String(error)));
+        cleanupConnection();
+        if (!shutdown) {
+          onError?.(error instanceof Error ? error : new Error(String(error)));
+          scheduleReconnect();
         }
-      } finally {
-        finalize();
       }
     };
 
-    pump();
+    startStream();
 
     return {
       close: () => {
-        finalize();
+        if (shutdown) return;
+        shutdown = true;
+        clearReconnectTimer();
+        cleanupConnection();
+        onClose?.();
       }
     };
   }
