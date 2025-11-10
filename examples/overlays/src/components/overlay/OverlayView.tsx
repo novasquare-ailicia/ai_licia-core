@@ -79,6 +79,7 @@ const OverlayView = ({
     disabled: disableStream,
     initialLeaders,
     onStatusChange,
+    enableGenerations: mode === "full",
   });
 
   const isConnected = status === "connected";
@@ -116,10 +117,11 @@ const OverlayView = ({
 
   const placeholderCards = PLACEHOLDER_CARDS;
 
+  const placeholdersEnabled =
+    showPlaceholders !== undefined ? showPlaceholders : variant !== "standalone";
+
   const placeholdersActive =
-    renderCards &&
-    (showPlaceholders ?? variant !== "standalone") &&
-    leaders.length === 0;
+    renderCards && placeholdersEnabled && leaders.length === 0;
 
   const cardSource = renderCards
     ? placeholdersActive
@@ -142,7 +144,14 @@ const OverlayView = ({
 
   const hasCards = cardSlots.length > 0;
   const shouldRenderCards = renderCards && hasCards;
-  const isOverlayEmpty = renderCards && !hasCards && !showStatusOverlay;
+  const showWaitingMessage =
+    variant === "standalone" &&
+    mode === "full" &&
+    connectionAttrValue === "connected" &&
+    !hasCards &&
+    !showStatusOverlay;
+  const isOverlayEmpty =
+    renderCards && !hasCards && !showStatusOverlay && !showWaitingMessage;
   const showFooter = true;
   const showTotals =
     showTotalRateCard && (hasCards || mode === "total-rate" || variant === "preview");
@@ -166,6 +175,9 @@ const OverlayView = ({
             />
           ))}
         </div>
+      )}
+      {showWaitingMessage && (
+        <div className={styles.waitingMessage}>Waiting for the first message to arrive…</div>
       )}
 
       {showTotals && (

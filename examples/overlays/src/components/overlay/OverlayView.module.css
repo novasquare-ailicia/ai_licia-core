@@ -45,6 +45,30 @@
     pointer-events: none;
 }
 
+.waitingMessage {
+    margin-top: 1rem;
+    font-size: clamp(1rem, 2.2vw, 1.5rem);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.75);
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.25));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: waitingWave 2.5s ease-in-out infinite;
+}
+
+@keyframes waitingWave {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
 .previewWrapper {
     width: 100%;
 }

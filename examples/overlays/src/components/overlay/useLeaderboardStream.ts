@@ -18,6 +18,7 @@ const RANKS: RankKey[] = ["rank1", "rank2", "rank3"];
 const ROLLING_WINDOW_MS = 60_000;
 const MIN_SAMPLE_MS = 1_000;
 const RATE_REFRESH_INTERVAL_MS = 1_000;
+const GENERATION_COOLDOWN_MS = 25_000;
 
 const leaderboardsEqual = (
   next: LeaderboardEntry[],
@@ -44,6 +45,7 @@ interface LeaderboardHookOptions {
   disabled?: boolean;
   initialLeaders?: LeaderboardEntry[];
   onStatusChange?: (status: StreamStatus, info: string) => void;
+  enableGenerations?: boolean;
 }
 
 const toKey = (username: string) => username.toLowerCase();
@@ -53,6 +55,7 @@ export const useLeaderboardStream = ({
   disabled = false,
   initialLeaders,
   onStatusChange,
+  enableGenerations = true,
 }: LeaderboardHookOptions) => {
   const [leaders, setLeaders] = useState<LeaderboardEntry[]>(
     initialLeaders ?? []
@@ -70,6 +73,10 @@ export const useLeaderboardStream = ({
   const contextInFlightRef = useRef(false);
   const rateRefreshRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const streamHandleRef = useRef<ChatMessageStream | null>(null);
+  const lastGenerationRef = useRef(0);
+  const pendingGenerationRef = useRef<string | null>(null);
+  const generationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const generationInFlightRef = useRef(false);
 
   const hasCredentials = Boolean(settings.apiKey && settings.channelName);
   const streamingEnabled = hasCredentials && !disabled;
@@ -179,6 +186,47 @@ export const useLeaderboardStream = ({
     [snapshotLeaderboard]
   );
 
+  const processGenerationQueue = useCallback(function processQueue() {
+    const client = clientRef.current;
+    if (!client) return;
+    if (generationInFlightRef.current) return;
+    const message = pendingGenerationRef.current;
+    if (!message) return;
+    const now = Date.now();
+    const elapsed = now - lastGenerationRef.current;
+    if (elapsed < GENERATION_COOLDOWN_MS) {
+      if (!generationTimerRef.current) {
+        generationTimerRef.current = setTimeout(() => {
+          generationTimerRef.current = null;
+          processQueue();
+        }, GENERATION_COOLDOWN_MS - elapsed);
+      }
+      return;
+    }
+    pendingGenerationRef.current = null;
+    generationInFlightRef.current = true;
+    client
+      .triggerGeneration(message)
+      .catch((error) =>
+        console.warn("Failed to trigger promotion generation", error)
+      )
+      .finally(() => {
+        lastGenerationRef.current = Date.now();
+        generationInFlightRef.current = false;
+        processQueue();
+      });
+  }, []);
+
+  const enqueueGeneration = useCallback(
+    (message: string) => {
+      pendingGenerationRef.current = message;
+      if (generationTimerRef.current === null) {
+        processGenerationQueue();
+      }
+    },
+    [processGenerationQueue]
+  );
+
   useEffect(() => {
     if (!disabled || !initialLeaders) return;
     const frame = requestAnimationFrame(() => setLeaders(initialLeaders));
@@ -279,6 +327,12 @@ export const useLeaderboardStream = ({
       cancelAnimationFrame(resetFrame);
       streamHandleRef.current?.close();
       streamHandleRef.current = null;
+      if (generationTimerRef.current) {
+        clearTimeout(generationTimerRef.current);
+        generationTimerRef.current = null;
+      }
+      pendingGenerationRef.current = null;
+      generationInFlightRef.current = false;
     };
   }, [
     streamingEnabled,
@@ -353,7 +407,7 @@ export const useLeaderboardStream = ({
   }, [disabled, leaders, settings.contextIntervalMs, hasCredentials]);
 
   useEffect(() => {
-    if (disabled || !leaders.length) return;
+    if (disabled || !enableGenerations || !leaders.length) return;
     const client = clientRef.current;
     if (!client) return;
 
@@ -362,22 +416,17 @@ export const useLeaderboardStream = ({
     if (!newLeader) return;
 
     if (previousLeader && previousLeader !== newLeader) {
+      const message = `${newLeader} just claimed the top chatter spot with ${leaders[0].count} messages!`;
       trackEvent("overlay_generation_trigger", {
         from: previousLeader,
         to: newLeader,
         count: leaders[0].count,
       });
-      client
-        .triggerGeneration(
-          `${newLeader} just claimed the top chatter spot with ${leaders[0].count} messages!`
-        )
-        .catch((error) =>
-          console.warn("Failed to trigger promotion generation", error)
-        );
+      enqueueGeneration(message);
     }
 
     topChatterRef.current = newLeader;
-  }, [disabled, leaders]);
+  }, [disabled, enableGenerations, leaders, enqueueGeneration]);
 
   const totalRate = useMemo(
     () => leaders.reduce((sum, entry) => sum + (entry.messagesPerMinute ?? 0), 0),

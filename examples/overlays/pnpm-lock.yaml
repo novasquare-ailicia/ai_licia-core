@@ -24,8 +24,8 @@ importers:
         specifier: 7.3.5
         version: 7.3.5(@emotion/cache@11.14.0)(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(next@16.0.1(@babel/core@7.28.5)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)
       ai_licia-client:
-        specifier: 1.1.1
-        version: 1.1.1
+        specifier: 1.1.2
+        version: 1.1.2
       next:
         specifier: 16.0.1
         version: 16.0.1(@babel/core@7.28.5)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -787,8 +787,8 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
-  ai_licia-client@1.1.1:
-    resolution: {integrity: sha512-UcKx5LsDwImCuDtDPaIoGfSPq5AsHxoCedxLnpXV3GCl7UkAArCJRfvPtPo/xTAXA2Im2sDt92DdPEA5RpbhaQ==}
+  ai_licia-client@1.1.2:
+    resolution: {integrity: sha512-3wCG1BUDaXdBZxAzKEU9CnQR6z0CcGj+LRkKEHSyewA4N0wd/bk58X1qAwaQ9AAIuDB/GimcyO/ObbdCIClmdA==}
 
   ajv@6.12.6:
     resolution: {integrity: sha512-j3fVLgvTo527anyYyJOGTYJbG+vnnQYvE0m5mmkc1TK+nxAppkCLMIL0aZ4dblVCNoGShhm+kzE4ZUykBoMg4g==}
@@ -2747,7 +2747,7 @@ snapshots:
 
   acorn@8.15.0: {}
 
-  ai_licia-client@1.1.1:
+  ai_licia-client@1.1.2:
     dependencies:
       axios: 1.13.2
       dotenv: 17.2.3
