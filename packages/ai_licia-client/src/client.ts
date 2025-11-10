@@ -196,7 +196,6 @@ export class AiliciaClient {
 
     const headers: Record<string, string> = {
       'Accept': 'text/event-stream',
-      'Cache-Control': 'no-cache',
       'Authorization': `Bearer ${this.apiKey}`
     };
 
@@ -264,7 +263,7 @@ export class AiliciaClient {
         const decoder = new TextDecoder();
         let buffer = '';
 
-        const response = await fetch(streamUrl.toString(), {
+        const response = await fetch(streamUrl, {
           method: 'GET',
           headers,
           signal: localController.signal
