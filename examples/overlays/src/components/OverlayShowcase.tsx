@@ -67,6 +67,7 @@ const baseSettings: OverlaySettings = {
   showRates: true,
   showTotalRateCard: false,
   pulseGlow: { ...DEFAULT_PULSE_GLOW, minRate: 8, maxRate: 25 },
+  overlayOpacity: 0.78,
 };
 
 const messageRateEntries: DemoEntry[] = [
