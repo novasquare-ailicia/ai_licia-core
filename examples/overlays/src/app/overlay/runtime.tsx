@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import OverlayView from "@/components/overlay/OverlayView";
 import { parseOverlaySettings } from "@/lib/overlay";
 import { trackEvent } from "@/lib/analytics";
@@ -118,6 +118,12 @@ const OverlayRuntime = ({ initialParams = {}, mode = "full" }: RuntimeProps) => 
     [clientParams]
   );
   const visitTrackedRef = useRef(false);
+  const [isClientReady, setIsClientReady] = useState(false);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setIsClientReady(true));
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   useEffect(() => {
     if (visitTrackedRef.current) return;
@@ -152,6 +158,10 @@ const OverlayRuntime = ({ initialParams = {}, mode = "full" }: RuntimeProps) => 
       document.documentElement.classList.remove("overlay-mode");
     };
   }, []);
+
+  if (!isClientReady) {
+    return null;
+  }
 
   return (
     <div className="overlay-page">

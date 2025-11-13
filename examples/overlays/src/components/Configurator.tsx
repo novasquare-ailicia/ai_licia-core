@@ -10,11 +10,13 @@ import {
   ROLE_OPTIONS,
   RankKey,
   THEME_PRESETS,
+  THEME_OPTIONS,
   DEFAULT_THEME,
   OverlayThemeId,
   buildOverlayQuery,
   normalizeBaseUrl,
   DEFAULT_PULSE_GLOW,
+  DEFAULT_OVERLAY_OPACITY,
 } from "@/lib/overlay";
 import type { GradientPair } from "@/lib/overlay";
 import OverlayView from "./overlay/OverlayView";
@@ -29,6 +31,7 @@ import {
   Chip,
   Divider,
   FormControlLabel,
+  Slider,
   Stack,
   Switch,
   TextField,
@@ -42,6 +45,8 @@ const parseExcluded = (value: string) =>
     .split(",")
     .map((entry) => entry.trim().toLowerCase())
     .filter(Boolean);
+
+const STORAGE_KEY = "ailicia-overlay-config-v1";
 
 type ConfiguratorVariant = "leaderboard" | "message-rate";
 
@@ -145,6 +150,9 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
   const [pulseGlowColor, setPulseGlowColor] = useState(
     DEFAULT_PULSE_GLOW.color
   );
+  const [overlayOpacity, setOverlayOpacity] = useState(
+    DEFAULT_OVERLAY_OPACITY
+  );
   const baseEventData = useMemo(
     () => ({
       variant,
@@ -154,6 +162,7 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
       showTotalRateCard,
       rolesCount,
       excludedCount,
+      overlayOpacity,
     }),
     [
       variant,
@@ -163,6 +172,7 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
       showTotalRateCard,
       rolesCount,
       excludedCount,
+      overlayOpacity,
     ]
   );
   const emitConfiguratorEvent = useCallback(
@@ -176,12 +186,92 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
     const raf = requestAnimationFrame(() => setIsClient(true));
     return () => cancelAnimationFrame(raf);
   }, []);
+  const [didHydrateFromStorage, setDidHydrateFromStorage] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<{
     state: string;
     message: string;
   }>({ state: "idle", message: "Waiting for credentials" });
 
+  useEffect(() => {
+    if (!isClient || didHydrateFromStorage) return;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const stored = JSON.parse(raw);
+      if (typeof stored.apiKey === "string") setApiKey(stored.apiKey);
+      if (typeof stored.channel === "string") setChannel(stored.channel);
+      if (typeof stored.baseUrl === "string") setBaseUrl(stored.baseUrl);
+      if (Array.isArray(stored.roles) && stored.roles.length) setRoles(stored.roles);
+      if (typeof stored.contextInterval === "number")
+        setContextInterval(stored.contextInterval);
+      if (typeof stored.excluded === "string") setExcluded(stored.excluded);
+      if (stored.theme && THEME_OPTIONS.includes(stored.theme)) setTheme(stored.theme);
+      if (stored.gradientOverrides) setGradientOverrides(stored.gradientOverrides);
+      if (stored.layout === "horizontal" || stored.layout === "vertical")
+        setLayout(stored.layout);
+      if (typeof stored.showRates === "boolean") setShowRates(stored.showRates);
+      if (typeof stored.showTotalRateCard === "boolean")
+        setShowTotalRateCard(stored.showTotalRateCard);
+      if (typeof stored.pulseGlowEnabled === "boolean")
+        setPulseGlowEnabled(stored.pulseGlowEnabled);
+      if (typeof stored.pulseGlowMin === "number") setPulseGlowMin(stored.pulseGlowMin);
+      if (typeof stored.pulseGlowMax === "number") setPulseGlowMax(stored.pulseGlowMax);
+      if (typeof stored.pulseGlowColor === "string") setPulseGlowColor(stored.pulseGlowColor);
+      if (typeof stored.overlayOpacity === "number")
+        setOverlayOpacity(stored.overlayOpacity);
+    } catch (error) {
+      console.warn("Failed to load overlay settings from storage", error);
+    } finally {
+      setDidHydrateFromStorage(true);
+    }
+  }, [isClient, didHydrateFromStorage]);
+
+  useEffect(() => {
+    if (!isClient || !didHydrateFromStorage) return;
+    const snapshot = {
+      apiKey,
+      channel,
+      baseUrl,
+      roles,
+      contextInterval,
+      excluded,
+      theme,
+      gradientOverrides,
+      layout,
+      showRates,
+      showTotalRateCard,
+      pulseGlowEnabled,
+      pulseGlowMin,
+      pulseGlowMax,
+      pulseGlowColor,
+      overlayOpacity,
+    };
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+    } catch (error) {
+      console.warn("Failed to persist overlay settings", error);
+    }
+  }, [
+    isClient,
+    didHydrateFromStorage,
+    apiKey,
+    channel,
+    baseUrl,
+    roles,
+    contextInterval,
+    excluded,
+    theme,
+    gradientOverrides,
+    layout,
+    showRates,
+    showTotalRateCard,
+    pulseGlowEnabled,
+    pulseGlowMin,
+    pulseGlowMax,
+    pulseGlowColor,
+    overlayOpacity,
+  ]);
   const handleGradientChange = (
     rank: RankKey,
     key: "from" | "to",
@@ -227,6 +317,7 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
         maxRate: Math.max(pulseGlowMin + 0.5, pulseGlowMax),
         color: pulseGlowColor,
       },
+      overlayOpacity,
     }),
     [
       apiKey,
@@ -244,6 +335,7 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
       pulseGlowMin,
       pulseGlowMax,
       pulseGlowColor,
+      overlayOpacity,
     ]
   );
 
@@ -526,6 +618,31 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
                         />
                       </Stack>
                     )}
+
+                    <Box>
+                      <Typography variant="subtitle2" gutterBottom>
+                        Background opacity
+                      </Typography>
+                      <Slider
+                        min={0.2}
+                        max={1}
+                        step={0.05}
+                        value={overlayOpacity}
+                        valueLabelDisplay="auto"
+                        valueLabelFormat={(value) => `${Math.round(value * 100)}%`}
+                        onChange={(_, value) => {
+                          const next = Array.isArray(value) ? value[0] : value;
+                          setOverlayOpacity(next);
+                          emitConfiguratorEvent("overlay_opacity_change", {
+                            opacity: next,
+                          });
+                        }}
+                      />
+                      <Typography variant="caption" color="text.secondary">
+                        Controls how solid the cards appear. Lower values keep the classic glass look;
+                        higher values make them fully opaque for bright scenes.
+                      </Typography>
+                    </Box>
 
                     <Card variant="outlined">
                       <CardContent>

@@ -10,6 +10,7 @@ import {
   DEFAULT_SHOW_RATES,
   DEFAULT_SHOW_TOTAL_RATE,
   DEFAULT_PULSE_GLOW,
+  DEFAULT_OVERLAY_OPACITY,
 } from "@/lib/overlay";
 import { useLeaderboardStream } from "./useLeaderboardStream";
 import { useCardTransitions } from "./useCardTransitions";
@@ -100,16 +101,35 @@ const OverlayView = ({
     return `linear-gradient(135deg, ${gradient.from}, ${gradient.to})`;
   };
 
+  const toSolidColor = (value: string) => {
+    const match = value.match(/rgba?\(([^)]+)\)/i);
+    if (!match) return value;
+    const parts = match[1].split(",").map((part) => part.trim());
+    if (parts.length >= 3) {
+      const [r, g, b] = parts;
+      return `rgba(${r}, ${g}, ${b}, 1)`;
+    }
+    return value;
+  };
+
+  const cardSolidBg = toSolidColor(themePreset.cardBg);
+  const cardOpacityValue = settings.overlayOpacity ?? DEFAULT_OVERLAY_OPACITY;
+  const cardOpacityPercent = `${Math.round(cardOpacityValue * 100)}%`;
+
   const styleVars = {
     "--overlay-bg": themePreset.overlayBg,
     "--overlay-border": themePreset.borderColor,
     "--card-bg": themePreset.cardBg,
+    "--card-solid-bg": cardSolidBg,
     "--card-border": themePreset.borderColor,
     "--status-bg": themePreset.statusBg,
     "--footer-border": themePreset.footerBorder,
     "--gradient-rank1": gradientVar("rank1"),
     "--gradient-rank2": gradientVar("rank2"),
     "--gradient-rank3": gradientVar("rank3"),
+    "--card-opacity": `${cardOpacityValue}`,
+    "--card-opacity-percent": cardOpacityPercent,
+    "--overlay-opacity": 0.6,
   } as CSSProperties;
 
   const wrapperClass =

@@ -94,6 +94,7 @@ export const DEFAULT_PULSE_GLOW = {
   maxRate: 8,
   color: "#29ffc6",
 };
+export const DEFAULT_OVERLAY_OPACITY = 0.78;
 
 export interface PulseGlowSettings {
   enabled: boolean;
@@ -115,6 +116,7 @@ export interface OverlaySettings {
   showRates: boolean;
   showTotalRateCard: boolean;
   pulseGlow: PulseGlowSettings;
+  overlayOpacity: number;
 }
 
 export const normalizeBaseUrl = (value?: string) => {
@@ -172,6 +174,7 @@ export const parseOverlaySettings = (
   const glowMinParam = pull("glowMin");
   const glowMaxParam = pull("glowMax");
   const glowColorParam = pull("glowColor");
+  const opacityParam = pull("opacity");
 
   const roles =
     rolesParam
@@ -228,6 +231,10 @@ export const parseOverlaySettings = (
     maxRate,
     color: sanitizeHex(glowColorParam) ?? DEFAULT_PULSE_GLOW.color,
   };
+  const overlayOpacity = Math.min(
+    1,
+    Math.max(0.2, Number(opacityParam) || DEFAULT_OVERLAY_OPACITY)
+  );
   return {
     apiKey: pull("apiKey"),
     channelName: pull("channel"),
@@ -243,6 +250,7 @@ export const parseOverlaySettings = (
     showRates,
     showTotalRateCard,
     pulseGlow,
+    overlayOpacity,
   };
 };
 
@@ -289,6 +297,9 @@ export const buildOverlayQuery = (settings: OverlaySettings) => {
       params.set(rank, `${gradient.from}-${gradient.to}`);
     }
   });
+  if (settings.overlayOpacity !== DEFAULT_OVERLAY_OPACITY) {
+    params.set("opacity", `${settings.overlayOpacity}`);
+  }
 
   return params.toString();
 };

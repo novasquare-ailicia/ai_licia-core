@@ -15,7 +15,7 @@
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    background: rgba(5, 7, 19, 0.6);
+    background: rgba(5, 7, 19, var(--overlay-opacity, 0.6));
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.35s ease;
@@ -147,7 +147,7 @@
     align-self: var(--card-align, flex-start);
     justify-self: var(--card-justify, stretch);
     border: 1px solid color-mix(in srgb, var(--card-border, rgba(255, 255, 255, 0.2)) 80%, transparent);
-    background: color-mix(in srgb, var(--card-bg, rgba(17, 20, 40, 0.8)) 78%, transparent);
+    background: transparent;
     --card-height: clamp(120px, 17vw, 165px);
     min-height: var(--card-height);
     backdrop-filter: blur(40px) saturate(180%);
@@ -162,20 +162,12 @@
     content: "";
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.4), transparent 55%);
-    opacity: 0.4;
-    pointer-events: none;
-    z-index: 0;
-}
-
-.card::after {
-    content: "";
-    position: absolute;
-    inset: -20% -10%;
-    background: linear-gradient(120deg, rgba(255, 255, 255, 0.2), transparent 60%);
-    opacity: 0.5;
-    filter: blur(55px);
-    mix-blend-mode: screen;
+    border-radius: inherit;
+    background: color-mix(
+        in srgb,
+        var(--card-solid-bg, rgba(17, 20, 40, 1)) var(--card-opacity-percent, 78%),
+        transparent
+    );
     pointer-events: none;
     z-index: 0;
 }
@@ -187,7 +179,18 @@
     inset: 0;
     border-radius: inherit;
     pointer-events: none;
-    z-index: 0;
+}
+
+.cardAccent {
+    z-index: 1;
+}
+
+.cardGlow {
+    z-index: 2;
+}
+
+.cardSheen {
+    z-index: 3;
 }
 
 .cardAccent {
@@ -247,7 +250,7 @@
 
 .cardContent {
     position: relative;
-    z-index: 1;
+    z-index: 4;
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
@@ -352,7 +355,7 @@
     padding: 1rem 1.4rem;
     border-radius: 1.5rem;
     border: 1px solid rgba(255, 255, 255, 0.12);
-    background: color-mix(in srgb, rgba(5, 7, 19, 0.85) 80%, transparent);
+    background: transparent;
     backdrop-filter: blur(40px);
     -webkit-backdrop-filter: blur(40px);
     text-align: center;
@@ -365,6 +368,16 @@
     transition: box-shadow 0.35s ease;
 }
 
+.totalRateCard::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: color-mix(in srgb, rgba(5, 7, 19, 1) var(--card-opacity-percent, 78%), transparent);
+    pointer-events: none;
+    z-index: 0;
+}
+
 .totalRateCard::after {
     content: "";
     position: absolute;
@@ -374,6 +387,11 @@
     filter: blur(30px);
     pointer-events: none;
     transition: opacity 0.4s ease;
+}
+
+.totalRateCard > * {
+    position: relative;
+    z-index: 1;
 }
 
 .totalTitle {
@@ -421,6 +439,7 @@
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.35s ease;
+    background: rgba(4, 6, 18, 0.65);
 }
 
 .overlay[data-connection="connecting"] .connectionOverlay,
