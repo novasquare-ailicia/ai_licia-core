@@ -175,8 +175,7 @@
 .cardCompact {
     border-radius: 1.2rem;
     padding: clamp(0.5rem, 0.85vw, 0.75rem);
-    --card-height: clamp(60px, 8vw, 92px);
-    min-height: var(--card-height);
+    min-height: auto;
     box-shadow: 0 28px 60px rgba(4, 5, 13, 0.42);
 }
 
@@ -300,7 +299,6 @@
     color: #f5f7ff;
     line-height: 1.2;
     gap: 0.65rem;
-    min-height: var(--card-height);
 }
 
 .rank {

@@ -27,16 +27,10 @@ const horizontalSizeVars: Record<RankKey | "base", CSSVarProperties> = {
 };
 
 const compactHorizontalSizeVars: Record<RankKey | "base", CSSVarProperties> = {
-  base: {
-    "--card-height": "clamp(62px, 8vw, 96px)",
-  },
-  rank1: {
-    "--card-height": "clamp(68px, 9vw, 104px)",
-  },
+  base: {},
+  rank1: {},
   rank2: {},
-  rank3: {
-    "--card-height": "clamp(60px, 7.5vw, 92px)",
-  },
+  rank3: {},
 };
 
 const verticalSizeVars: Record<RankKey | "base", CSSVarProperties> = {
@@ -57,16 +51,13 @@ const compactVerticalSizeVars: Record<RankKey | "base", CSSVarProperties> = {
   base: {
     "--card-max-width": "clamp(280px, 48vw, 420px)",
     "--card-justify": "center",
-    "--card-height": "clamp(62px, 8vw, 96px)",
   },
   rank1: {
     "--card-max-width": "clamp(300px, 52vw, 440px)",
-    "--card-height": "clamp(68px, 9vw, 104px)",
   },
   rank2: {},
   rank3: {
     "--card-max-width": "clamp(260px, 46vw, 380px)",
-    "--card-height": "clamp(60px, 7.5vw, 92px)",
   },
 };
 
