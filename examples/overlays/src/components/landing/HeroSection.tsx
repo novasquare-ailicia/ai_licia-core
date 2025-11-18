@@ -48,7 +48,7 @@ const HeroSection = () => (
       </div>
     </div>
     <div className={styles.heroVisual}>
-      <OverlayShowcase compact showCaption={false} layoutOverride="vertical" />
+      <OverlayShowcase showCaption={false} layoutOverride="vertical" />
     </div>
   </section>
 );
