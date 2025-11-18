@@ -404,7 +404,7 @@
 
 .brand {
     font-weight: 700;
-    background: linear-gradient(120deg, #8e2de2, #29ffc6);
+    background: var(--brand-gradient, linear-gradient(120deg, #8e2de2, #29ffc6));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }

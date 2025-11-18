@@ -17,6 +17,7 @@ import {
   normalizeBaseUrl,
   DEFAULT_PULSE_GLOW,
   DEFAULT_OVERLAY_OPACITY,
+  DEFAULT_BRAND_GRADIENT,
   DEFAULT_DENSITY,
 } from "@/lib/overlay";
 import type { GradientPair } from "@/lib/overlay";
@@ -127,6 +128,9 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
   const [excluded, setExcluded] = useState("");
   const [theme, setTheme] = useState(DEFAULT_THEME);
   const [gradientOverrides, setGradientOverrides] = useState<GradientOverridesState>({});
+  const [brandGradient, setBrandGradient] = useState<GradientPair>(
+    DEFAULT_BRAND_GRADIENT
+  );
   const activeGradients = useMemo(
     () => gradientOverrides[theme] ?? {},
     [gradientOverrides, theme]
@@ -214,6 +218,8 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
       if (typeof stored.excluded === "string") setExcluded(stored.excluded);
       if (stored.theme && THEME_OPTIONS.includes(stored.theme)) setTheme(stored.theme);
       if (stored.gradientOverrides) setGradientOverrides(stored.gradientOverrides);
+      if (stored.brandGradient?.from && stored.brandGradient?.to)
+        setBrandGradient(stored.brandGradient);
       if (stored.layout === "horizontal" || stored.layout === "vertical")
         setLayout(stored.layout);
       if (typeof stored.compact === "boolean") setCompact(stored.compact);
@@ -245,6 +251,7 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
       excluded,
       theme,
       gradientOverrides,
+      brandGradient,
       layout,
       compact,
       showRates,
@@ -272,6 +279,7 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
     theme,
     gradientOverrides,
     layout,
+    brandGradient,
     compact,
     showRates,
     showTotalRateCard,
@@ -299,13 +307,22 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
     });
   };
 
-  const resetColors = () =>
+  const handleBrandGradientChange = (
+    key: "from" | "to",
+    value: string
+  ) => {
+    setBrandGradient((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const resetColors = () => {
     setGradientOverrides((prev) => {
       if (!prev[theme]) return prev;
       const next = { ...prev };
       delete next[theme];
       return next;
     });
+    setBrandGradient(DEFAULT_BRAND_GRADIENT);
+  };
 
   const overlaySettings: OverlaySettings = useMemo(
     () => ({
@@ -317,6 +334,7 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
       contextIntervalMs: contextInterval,
       theme,
       customGradients: activeGradients,
+      brandGradient,
       layout,
       compact,
       showRates,
@@ -338,6 +356,7 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
       contextInterval,
       theme,
       activeGradients,
+      brandGradient,
       layout,
       showRates,
       showTotalRateCard,
@@ -866,6 +885,39 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
                           );
                         }
                       )}
+
+                      <Divider />
+                      <Stack
+                        direction={{ xs: "column", sm: "row" }}
+                        spacing={2}
+                        alignItems="center"
+                        justifyContent="space-between"
+                      >
+                        <Box>
+                          <Typography variant="subtitle2">
+                            Footer brand gradient
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Colors for the footer line and ai_licia® mark.
+                          </Typography>
+                        </Box>
+                        <Stack direction="row" spacing={2}>
+                          <input
+                            type="color"
+                            value={brandGradient.from}
+                            onChange={(event) =>
+                              handleBrandGradientChange("from", event.target.value)
+                            }
+                          />
+                          <input
+                            type="color"
+                            value={brandGradient.to}
+                            onChange={(event) =>
+                              handleBrandGradientChange("to", event.target.value)
+                            }
+                          />
+                        </Stack>
+                      </Stack>
                     </Stack>
                     <Button
                       sx={{ mt: 2 }}
