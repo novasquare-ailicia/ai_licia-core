@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import OverlayView from "./overlay/OverlayView";
 import {
   DEFAULT_BASE_URL,
+  DEFAULT_BRAND_GRADIENT,
   DEFAULT_CONTEXT_INTERVAL,
   DEFAULT_THEME,
   OverlaySettings,
@@ -63,6 +64,7 @@ const baseSettings: OverlaySettings = {
   contextIntervalMs: DEFAULT_CONTEXT_INTERVAL,
   theme: DEFAULT_THEME,
   customGradients: {},
+  brandGradient: DEFAULT_BRAND_GRADIENT,
   layout: "horizontal",
   showRates: true,
   showTotalRateCard: false,

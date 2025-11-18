@@ -88,6 +88,10 @@ export const DEFAULT_THEME: OverlayThemeId = "aurora";
 export const DEFAULT_LAYOUT: OverlayLayout = "vertical";
 export const DEFAULT_SHOW_RATES = true;
 export const DEFAULT_SHOW_TOTAL_RATE = false;
+export const DEFAULT_BRAND_GRADIENT: GradientPair = {
+  from: "#8e2de2",
+  to: "#29ffc6",
+};
 export const DEFAULT_PULSE_GLOW = {
   enabled: true,
   minRate: 1,
@@ -112,6 +116,7 @@ export interface OverlaySettings {
   contextIntervalMs: number;
   theme: OverlayThemeId;
   customGradients: Partial<Record<RankKey, GradientPair>>;
+  brandGradient: GradientPair;
   layout: OverlayLayout;
   showRates: boolean;
   showTotalRateCard: boolean;
@@ -152,6 +157,10 @@ const parseGradientPair = (value?: string): GradientPair | undefined => {
   return { from, to };
 };
 
+const gradientsEqual = (a: GradientPair, b: GradientPair) =>
+  a.from.toLowerCase() === b.from.toLowerCase() &&
+  a.to.toLowerCase() === b.to.toLowerCase();
+
 export const parseOverlaySettings = (
   params: Record<string, string | string[] | undefined>
 ): OverlaySettings => {
@@ -175,6 +184,7 @@ export const parseOverlaySettings = (
   const glowMaxParam = pull("glowMax");
   const glowColorParam = pull("glowColor");
   const opacityParam = pull("opacity");
+  const brandGradientParam = pull("brandGradient");
 
   const roles =
     rolesParam
@@ -195,6 +205,9 @@ export const parseOverlaySettings = (
       customGradients[rank] = parsed;
     }
   });
+
+  const brandGradient =
+    parseGradientPair(brandGradientParam) ?? DEFAULT_BRAND_GRADIENT;
 
   const layout: OverlayLayout =
     layoutParam === "horizontal"
@@ -246,6 +259,7 @@ export const parseOverlaySettings = (
       : DEFAULT_CONTEXT_INTERVAL,
     theme,
     customGradients,
+    brandGradient,
     layout,
     showRates,
     showTotalRateCard,
@@ -297,6 +311,12 @@ export const buildOverlayQuery = (settings: OverlaySettings) => {
       params.set(rank, `${gradient.from}-${gradient.to}`);
     }
   });
+  if (!gradientsEqual(settings.brandGradient, DEFAULT_BRAND_GRADIENT)) {
+    params.set(
+      "brandGradient",
+      `${settings.brandGradient.from}-${settings.brandGradient.to}`
+    );
+  }
   if (settings.overlayOpacity !== DEFAULT_OVERLAY_OPACITY) {
     params.set("opacity", `${settings.overlayOpacity}`);
   }
