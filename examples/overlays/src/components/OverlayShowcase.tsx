@@ -66,6 +66,7 @@ const baseSettings: OverlaySettings = {
   customGradients: {},
   brandGradient: DEFAULT_BRAND_GRADIENT,
   layout: "horizontal",
+  compact: false,
   showRates: true,
   showTotalRateCard: false,
   pulseGlow: { ...DEFAULT_PULSE_GLOW, minRate: 8, maxRate: 25 },
@@ -156,9 +157,10 @@ const OverlayShowcase = ({
     return {
       ...baseSettings,
       layout,
+      compact: Boolean(compact),
       showTotalRateCard: variant === "message-rate",
     };
-  }, [layoutOverride, variant]);
+  }, [compact, layoutOverride, variant]);
 
   const wrapperClass = [
     styles.wrapper,

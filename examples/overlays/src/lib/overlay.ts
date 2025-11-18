@@ -13,6 +13,7 @@ export const DEFAULT_CONTEXT_INTERVAL = 60000;
 export const THEME_OPTIONS = ["aurora", "ember", "lumen"] as const;
 export type OverlayThemeId = (typeof THEME_OPTIONS)[number];
 export type OverlayLayout = "horizontal" | "vertical";
+export type OverlayDensity = "full" | "compact";
 
 export type RankKey = "rank1" | "rank2" | "rank3";
 
@@ -86,6 +87,7 @@ export const THEME_PRESETS: Record<OverlayThemeId, ThemePreset> = {
 
 export const DEFAULT_THEME: OverlayThemeId = "aurora";
 export const DEFAULT_LAYOUT: OverlayLayout = "vertical";
+export const DEFAULT_DENSITY: OverlayDensity = "full";
 export const DEFAULT_SHOW_RATES = true;
 export const DEFAULT_SHOW_TOTAL_RATE = false;
 export const DEFAULT_BRAND_GRADIENT: GradientPair = {
@@ -118,6 +120,7 @@ export interface OverlaySettings {
   customGradients: Partial<Record<RankKey, GradientPair>>;
   brandGradient: GradientPair;
   layout: OverlayLayout;
+  compact: boolean;
   showRates: boolean;
   showTotalRateCard: boolean;
   pulseGlow: PulseGlowSettings;
@@ -177,6 +180,7 @@ export const parseOverlaySettings = (
   const excludedParam = pull("excluded");
   const themeParam = pull("theme");
   const layoutParam = pull("layout");
+  const compactParam = pull("compact");
   const showRatesParam = pull("showRates");
   const showTotalParam = pull("showTotalRates");
   const glowParam = pull("glow");
@@ -215,6 +219,10 @@ export const parseOverlaySettings = (
       : layoutParam === "vertical"
       ? "vertical"
       : DEFAULT_LAYOUT;
+
+  const compact = compactParam
+    ? compactParam === "1" || compactParam.toLowerCase() === "true"
+    : DEFAULT_DENSITY === "compact";
 
   const showRates =
     showRatesParam === ""
@@ -261,6 +269,7 @@ export const parseOverlaySettings = (
     customGradients,
     brandGradient,
     layout,
+    compact,
     showRates,
     showTotalRateCard,
     pulseGlow,
@@ -285,6 +294,9 @@ export const buildOverlayQuery = (settings: OverlaySettings) => {
     params.set("theme", settings.theme);
   if (settings.layout !== DEFAULT_LAYOUT) {
     params.set("layout", settings.layout);
+  }
+  if (settings.compact && DEFAULT_DENSITY !== "compact") {
+    params.set("compact", "1");
   }
   if (settings.showRates === false) {
     params.set("showRates", "0");

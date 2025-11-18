@@ -7,6 +7,7 @@ import {
   THEME_PRESETS,
   RankKey,
   DEFAULT_LAYOUT,
+  DEFAULT_DENSITY,
   DEFAULT_SHOW_RATES,
   DEFAULT_SHOW_TOTAL_RATE,
   DEFAULT_PULSE_GLOW,
@@ -69,6 +70,7 @@ const OverlayView = ({
   const themePreset =
     THEME_PRESETS[settings.theme] ?? THEME_PRESETS[DEFAULT_THEME];
   const layout = settings.layout ?? DEFAULT_LAYOUT;
+  const compact = settings.compact ?? DEFAULT_DENSITY === "compact";
   const showRates = settings.showRates ?? DEFAULT_SHOW_RATES;
   const showTotalRateCard =
     mode === "total-rate"
@@ -140,6 +142,10 @@ const OverlayView = ({
   const wrapperClass =
     variant === "preview" ? styles.previewWrapper : styles.fullWrapper;
 
+  const overlayAttrs = {
+    "data-compact": compact ? "true" : "false",
+  };
+
   const placeholderCards = PLACEHOLDER_CARDS;
 
   const placeholdersEnabled =
@@ -163,6 +169,7 @@ const OverlayView = ({
     styles.cards,
     variant === "standalone" ? styles.cardsStandalone : "",
     layout === "vertical" ? styles.cardsVertical : styles.cardsHorizontal,
+    compact ? styles.cardsCompact : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -187,9 +194,14 @@ const OverlayView = ({
       style={styleVars}
       data-empty={isOverlayEmpty}
       data-connection={connectionAttrValue}
+      {...overlayAttrs}
     >
       {shouldRenderCards && (
-        <div className={cardsClassName} data-layout={layout}>
+        <div
+          className={cardsClassName}
+          data-layout={layout}
+          data-compact={compact ? "true" : "false"}
+        >
           {cardSlots.map((card, index) => (
             <LeaderboardCard
               key={card.id}
@@ -197,6 +209,7 @@ const OverlayView = ({
               index={index}
               showRates={showRates}
               layout={layout}
+              compact={compact}
             />
           ))}
         </div>

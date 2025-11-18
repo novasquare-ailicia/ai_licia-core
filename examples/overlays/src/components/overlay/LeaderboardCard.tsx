@@ -10,6 +10,7 @@ interface LeaderboardCardProps {
   index: number;
   showRates: boolean;
   layout: OverlayLayout;
+  compact: boolean;
 }
 
 const horizontalSizeVars: Record<RankKey | "base", CSSVarProperties> = {
@@ -23,6 +24,13 @@ const horizontalSizeVars: Record<RankKey | "base", CSSVarProperties> = {
   rank3: {
     "--card-height": "clamp(110px, 14vw, 155px)",
   },
+};
+
+const compactHorizontalSizeVars: Record<RankKey | "base", CSSVarProperties> = {
+  base: {},
+  rank1: {},
+  rank2: {},
+  rank3: {},
 };
 
 const verticalSizeVars: Record<RankKey | "base", CSSVarProperties> = {
@@ -39,15 +47,45 @@ const verticalSizeVars: Record<RankKey | "base", CSSVarProperties> = {
   },
 };
 
-const LeaderboardCard = ({ card, index, showRates, layout }: LeaderboardCardProps) => {
+const compactVerticalSizeVars: Record<RankKey | "base", CSSVarProperties> = {
+  base: {
+    "--card-max-width": "clamp(280px, 48vw, 420px)",
+    "--card-justify": "center",
+  },
+  rank1: {
+    "--card-max-width": "clamp(300px, 52vw, 440px)",
+  },
+  rank2: {},
+  rank3: {
+    "--card-max-width": "clamp(260px, 46vw, 380px)",
+  },
+};
+
+const LeaderboardCard = ({
+  card,
+  index,
+  showRates,
+  layout,
+  compact,
+}: LeaderboardCardProps) => {
   const { entry, placeholder, progress, state, countKey } = card;
   const rate = entry.messagesPerMinute ?? 0;
   const lift = placeholder ? 6 + index * 2 : (1 - progress) * 6;
-  const sizeBase = layout === "horizontal" ? horizontalSizeVars.base : verticalSizeVars.base;
+  const sizeBase = compact
+    ? layout === "horizontal"
+      ? compactHorizontalSizeVars.base
+      : compactVerticalSizeVars.base
+    : layout === "horizontal"
+      ? horizontalSizeVars.base
+      : verticalSizeVars.base;
   const rankVars =
-    layout === "horizontal"
-      ? horizontalSizeVars[card.rank]
-      : verticalSizeVars[card.rank];
+    compact
+      ? layout === "horizontal"
+        ? compactHorizontalSizeVars[card.rank]
+        : compactVerticalSizeVars[card.rank]
+      : layout === "horizontal"
+        ? horizontalSizeVars[card.rank]
+        : verticalSizeVars[card.rank];
   const sizeStyle = { ...sizeBase, ...rankVars };
 
   const className = [
@@ -55,6 +93,7 @@ const LeaderboardCard = ({ card, index, showRates, layout }: LeaderboardCardProp
     styles[`rank${index + 1}`],
     placeholder ? styles.placeholderCard : "",
     styles[`state-${state}`],
+    compact ? styles.cardCompact : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -65,25 +104,38 @@ const LeaderboardCard = ({ card, index, showRates, layout }: LeaderboardCardProp
   };
 
   return (
-    <article className={className} style={styleVars}>
+    <article
+      className={className}
+      style={styleVars}
+      data-compact={compact ? "true" : "false"}
+    >
       <div className={styles.cardAccent} />
       <div className={styles.cardGlow} />
       <div className={styles.cardSheen} />
-      <div className={styles.cardContent}>
-        <span className={styles.rank}>#{index + 1}</span>
-        <div className={styles.identity}>
-          <span className={styles.username}>{entry.username}</span>
-          {entry.role && <span className={styles.role}>{entry.role}</span>}
+      {compact ? (
+        <div className={styles.cardContentCompact}>
+          <div className={styles.compactIdentity}>
+            <span className={styles.rank}>#{index + 1}</span>
+            <span className={styles.username}>{entry.username}</span>
+          </div>
         </div>
-        <span key={countKey} className={`${styles.count} ${styles.countPop}`}>
-          {placeholder
-            ? "awaiting chat activity"
-            : `${entry.count} message${entry.count === 1 ? "" : "s"}`}
-        </span>
-        {showRates && !placeholder && (
-          <span className={styles.rate}>~{rate.toFixed(1)} msg/min</span>
-        )}
-      </div>
+      ) : (
+        <div className={styles.cardContent}>
+          <span className={styles.rank}>#{index + 1}</span>
+          <div className={styles.identity}>
+            <span className={styles.username}>{entry.username}</span>
+            {entry.role && <span className={styles.role}>{entry.role}</span>}
+          </div>
+          <span key={countKey} className={`${styles.count} ${styles.countPop}`}>
+            {placeholder
+              ? "awaiting chat activity"
+              : `${entry.count} message${entry.count === 1 ? "" : "s"}`}
+          </span>
+          {showRates && !placeholder && (
+            <span className={styles.rate}>~{rate.toFixed(1)} msg/min</span>
+          )}
+        </div>
+      )}
     </article>
   );
 };
