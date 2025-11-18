@@ -10,6 +10,11 @@
     position: relative;
 }
 
+.overlay[data-compact="true"] {
+    gap: clamp(0.45rem, 1vw, 1.05rem);
+    padding: clamp(0.75rem, 1.2vw, 1.2rem) clamp(0.55rem, 1.05vw, 1.05rem) clamp(0.5rem, 1vw, 0.95rem);
+}
+
 .overlay::before {
     content: "";
     position: absolute;
@@ -84,6 +89,11 @@
     padding: clamp(0.85rem, 1.2vw, 1.3rem) clamp(0.55rem, 0.9vw, 1rem) clamp(0.45rem, 0.8vw, 0.9rem);
 }
 
+.cardsCompact {
+    gap: clamp(0.4rem, 0.75vw, 0.9rem);
+    padding: clamp(0.65rem, 1vw, 1rem) clamp(0.4rem, 0.8vw, 0.85rem) clamp(0.4rem, 0.8vw, 0.8rem);
+}
+
 .cardsStandalone {
     width: min(1040px, 100%);
 }
@@ -94,6 +104,10 @@
     justify-content: center;
     align-items: flex-start;
     gap: clamp(0.55rem, 0.9vw, 1rem);
+}
+
+.cardsHorizontal.cardsCompact {
+    gap: clamp(0.4rem, 0.75vw, 0.85rem);
 }
 
 .previewWrapper .cardsHorizontal {
@@ -158,6 +172,13 @@
     box-shadow 0.4s ease, border-color 0.4s ease;
 }
 
+.cardCompact {
+    border-radius: 1.2rem;
+    padding: clamp(0.5rem, 0.85vw, 0.75rem);
+    min-height: auto;
+    box-shadow: 0 28px 60px rgba(4, 5, 13, 0.42);
+}
+
 .card::before {
     content: "";
     position: absolute;
@@ -207,10 +228,20 @@
     filter: blur(30px);
 }
 
+.cardCompact .cardGlow {
+    inset: 18% 22%;
+    border-radius: 1.1rem;
+    opacity: 0.48;
+}
+
 .cardSheen {
     background: linear-gradient(120deg, rgba(255, 255, 255, 0.25), transparent 50%, rgba(255, 255, 255, 0.05));
     mix-blend-mode: screen;
     opacity: 0.5;
+}
+
+.cardCompact .cardSheen {
+    opacity: 0.45;
 }
 
 
@@ -258,11 +289,28 @@
     line-height: 1.3;
 }
 
+.cardContentCompact {
+    position: relative;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    color: #f5f7ff;
+    line-height: 1.2;
+    gap: 0.65rem;
+}
+
 .rank {
     text-transform: uppercase;
     letter-spacing: 0.4em;
     font-size: clamp(0.68rem, 1vw, 0.85rem);
     color: rgba(255, 255, 255, 0.7);
+}
+
+.cardCompact .rank {
+    letter-spacing: 0.3em;
+    font-size: clamp(0.95rem, 1.3vw, 1.25rem);
 }
 
 .identity {
@@ -273,12 +321,24 @@
     min-width: 0;
 }
 
+.compactIdentity {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+    width: 100%;
+}
+
 .username {
     font-size: clamp(1.3rem, 2.8vw, 2.1rem);
     font-weight: 700;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.cardCompact .username {
+    font-size: clamp(1rem, 2vw, 1.45rem);
 }
 
 .role {

@@ -17,6 +17,7 @@ import {
   normalizeBaseUrl,
   DEFAULT_PULSE_GLOW,
   DEFAULT_OVERLAY_OPACITY,
+  DEFAULT_DENSITY,
 } from "@/lib/overlay";
 import type { GradientPair } from "@/lib/overlay";
 import OverlayView from "./overlay/OverlayView";
@@ -133,6 +134,9 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
   const [layout, setLayout] = useState<OverlaySettings["layout"]>(
     isMessageRate ? "vertical" : "horizontal"
   );
+  const [compact, setCompact] = useState(
+    DEFAULT_DENSITY === "compact"
+  );
   const [showRates, setShowRates] = useState(true);
   const [showTotalRateCard, setShowTotalRateCard] = useState(
     isMessageRate ? true : false
@@ -157,6 +161,7 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
     () => ({
       variant,
       layout,
+      compact,
       theme,
       showRates,
       showTotalRateCard,
@@ -167,6 +172,7 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
     [
       variant,
       layout,
+      compact,
       theme,
       showRates,
       showTotalRateCard,
@@ -210,6 +216,7 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
       if (stored.gradientOverrides) setGradientOverrides(stored.gradientOverrides);
       if (stored.layout === "horizontal" || stored.layout === "vertical")
         setLayout(stored.layout);
+      if (typeof stored.compact === "boolean") setCompact(stored.compact);
       if (typeof stored.showRates === "boolean") setShowRates(stored.showRates);
       if (typeof stored.showTotalRateCard === "boolean")
         setShowTotalRateCard(stored.showTotalRateCard);
@@ -239,6 +246,7 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
       theme,
       gradientOverrides,
       layout,
+      compact,
       showRates,
       showTotalRateCard,
       pulseGlowEnabled,
@@ -264,6 +272,7 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
     theme,
     gradientOverrides,
     layout,
+    compact,
     showRates,
     showTotalRateCard,
     pulseGlowEnabled,
@@ -309,6 +318,7 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
       theme,
       customGradients: activeGradients,
       layout,
+      compact,
       showRates,
       showTotalRateCard,
       pulseGlow: {
@@ -336,6 +346,7 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
       pulseGlowMax,
       pulseGlowColor,
       overlayOpacity,
+      compact,
     ]
   );
 
@@ -582,6 +593,28 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
                           <ToggleButton value="vertical">Vertical</ToggleButton>
                         </ToggleButtonGroup>
                       </Box>
+                    )}
+
+                    {!isMessageRate && (
+                      <Stack spacing={1}>
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={compact}
+                              onChange={(event) => {
+                                setCompact(event.target.checked);
+                                emitConfiguratorEvent("overlay_compact_toggle", {
+                                  enabled: event.target.checked,
+                                });
+                              }}
+                            />
+                          }
+                          label="Use compact leaderboard cards"
+                        />
+                        <Typography variant="caption" color="text.secondary">
+                          Slims the cards down to rank and username for tight layouts or stacked overlays.
+                        </Typography>
+                      </Stack>
                     )}
 
                     {!isMessageRate && (
