@@ -88,6 +88,7 @@ export const THEME_PRESETS: Record<OverlayThemeId, ThemePreset> = {
 export const DEFAULT_THEME: OverlayThemeId = "aurora";
 export const DEFAULT_LAYOUT: OverlayLayout = "vertical";
 export const DEFAULT_DENSITY: OverlayDensity = "full";
+export const DEFAULT_COMPACT = false;
 export const DEFAULT_SHOW_RATES = true;
 export const DEFAULT_SHOW_TOTAL_RATE = false;
 export const DEFAULT_PULSE_GLOW = {
@@ -209,7 +210,7 @@ export const parseOverlaySettings = (
 
   const compact = compactParam
     ? compactParam === "1" || compactParam.toLowerCase() === "true"
-    : DEFAULT_DENSITY === "compact";
+    : DEFAULT_COMPACT;
 
   const showRates =
     showRatesParam === ""
@@ -281,7 +282,7 @@ export const buildOverlayQuery = (settings: OverlaySettings) => {
   if (settings.layout !== DEFAULT_LAYOUT) {
     params.set("layout", settings.layout);
   }
-  if (settings.compact && DEFAULT_DENSITY !== "compact") {
+  if (settings.compact && !DEFAULT_COMPACT) {
     params.set("compact", "1");
   }
   if (settings.showRates === false) {
