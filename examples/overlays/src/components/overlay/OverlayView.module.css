@@ -174,8 +174,8 @@
 
 .cardCompact {
     border-radius: 1.2rem;
-    padding: clamp(0.65rem, 1vw, 0.9rem);
-    --card-height: clamp(86px, 11vw, 125px);
+    padding: clamp(0.5rem, 0.85vw, 0.75rem);
+    --card-height: clamp(60px, 8vw, 92px);
     min-height: var(--card-height);
     box-shadow: 0 28px 60px rgba(4, 5, 13, 0.42);
 }
@@ -230,9 +230,9 @@
 }
 
 .cardCompact .cardGlow {
-    inset: 14% 20%;
-    border-radius: 1.6rem;
-    opacity: 0.5;
+    inset: 18% 22%;
+    border-radius: 1.1rem;
+    opacity: 0.48;
 }
 
 .cardSheen {
@@ -311,8 +311,8 @@
 }
 
 .cardCompact .rank {
-    letter-spacing: 0.32em;
-    font-size: clamp(0.62rem, 0.9vw, 0.78rem);
+    letter-spacing: 0.3em;
+    font-size: clamp(0.95rem, 1.3vw, 1.25rem);
 }
 
 .identity {
@@ -340,7 +340,7 @@
 }
 
 .cardCompact .username {
-    font-size: clamp(1.05rem, 2.2vw, 1.6rem);
+    font-size: clamp(1rem, 2vw, 1.45rem);
 }
 
 .role {

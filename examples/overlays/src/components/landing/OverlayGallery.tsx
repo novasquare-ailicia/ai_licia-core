@@ -66,7 +66,6 @@ const OverlayGallery = () => (
             <OverlayShowcase
               variant={overlay.variant}
               showCaption={false}
-              compact
               layoutOverride={overlay.layoutOverride}
             />
           </div>
