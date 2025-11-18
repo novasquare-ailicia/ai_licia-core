@@ -12,6 +12,7 @@ import {
   DEFAULT_SHOW_TOTAL_RATE,
   DEFAULT_PULSE_GLOW,
   DEFAULT_OVERLAY_OPACITY,
+  DEFAULT_BRAND_GRADIENT,
 } from "@/lib/overlay";
 import { useLeaderboardStream } from "./useLeaderboardStream";
 import { useCardTransitions } from "./useCardTransitions";
@@ -103,6 +104,9 @@ const OverlayView = ({
     return `linear-gradient(135deg, ${gradient.from}, ${gradient.to})`;
   };
 
+  const brandGradient = settings.brandGradient ?? DEFAULT_BRAND_GRADIENT;
+  const brandGradientValue = `linear-gradient(120deg, ${brandGradient.from}, ${brandGradient.to})`;
+
   const toSolidColor = (value: string) => {
     const match = value.match(/rgba?\(([^)]+)\)/i);
     if (!match) return value;
@@ -129,6 +133,7 @@ const OverlayView = ({
     "--gradient-rank1": gradientVar("rank1"),
     "--gradient-rank2": gradientVar("rank2"),
     "--gradient-rank3": gradientVar("rank3"),
+    "--brand-gradient": brandGradientValue,
     "--card-opacity": `${cardOpacityValue}`,
     "--card-opacity-percent": cardOpacityPercent,
     "--overlay-opacity": 0.6,
