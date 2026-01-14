@@ -1,21 +1,52 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
-import { 
-  AiliciaConfig, 
-  Event, 
-  EventContent, 
-  EventContentGeneration, 
-  EventGeneration, 
+import {
+  AiliciaConfig,
+  Event,
+  EventContent,
+  EventContentGeneration,
+  EventGeneration,
   EventType,
   GenerationOptions,
   GenerationResponse,
   ChatMessageStreamOptions,
   ChatMessageStream,
-  PublicChatMessage
+  PublicChatMessage,
+  CharacterSummary,
+  JoinChannelResponse,
+  EventSubStream,
+  EventSubStreamOptions,
+  EventSubEventType,
+  EventSubEventMap,
+  EventSubEnvelope,
+  EventSubAnyHandler,
+  EventSubHandler
 } from './interfaces';
 
 type StreamReader = {
   read: () => Promise<{ value?: Uint8Array; done: boolean }>;
   cancel: (reason?: unknown) => Promise<void>;
+};
+
+const EVENT_SUB_EVENT_TYPES: EventSubEventType[] = [
+  'chat.message',
+  'chat.ai_message',
+  'chat.first_message',
+  'ai.thoughts',
+  'ai.tts.generated',
+  'channel.event',
+  'ai.moderation',
+  'api.event',
+  'system.join',
+  'system.left',
+  'character.updated'
+];
+
+const isEventSubEventType = (value: string): value is EventSubEventType =>
+  (EVENT_SUB_EVENT_TYPES as string[]).includes(value);
+
+type InternalEventSubStream = EventSubStream & {
+  emit<T extends EventSubEventType>(type: T, event: EventSubEventMap[T]): void;
+  setTeardown(teardown: () => void): void;
 };
 
 /**
@@ -160,6 +191,57 @@ export class AiliciaClient {
         }
       }
       throw error;
+    }
+  }
+
+  /**
+   * Lists the characters available to the authenticated streamer.
+   */
+  public async listCharacters(): Promise<CharacterSummary[]> {
+    try {
+      const response = await this.client.get('/characters');
+      return response.data as CharacterSummary[];
+    } catch (error) {
+      this.handleAxiosError('Failed to list characters', error);
+    }
+  }
+
+  /**
+   * Sets the active character for the authenticated streamer.
+   */
+  public async setActiveCharacter(characterId: string): Promise<void> {
+    if (!characterId) {
+      throw new Error('characterId is required to activate a character');
+    }
+    try {
+      await this.client.put(`/characters/${encodeURIComponent(characterId)}/active`);
+    } catch (error) {
+      this.handleAxiosError('Failed to set active character', error);
+    }
+  }
+
+  /**
+   * Requests ai_licia to join a chat channel immediately.
+   */
+  public async requestStreamJoin(channelName?: string): Promise<JoinChannelResponse> {
+    const targetChannel = this.resolveChannelName(channelName);
+    try {
+      const response = await this.client.post(`/streams/${encodeURIComponent(targetChannel)}`);
+      return response.data as JoinChannelResponse;
+    } catch (error) {
+      this.handleAxiosError('Failed to request ai_licia to join chat', error);
+    }
+  }
+
+  /**
+   * Requests ai_licia to leave a chat channel.
+   */
+  public async requestStreamLeave(channelName?: string): Promise<void> {
+    const targetChannel = this.resolveChannelName(channelName);
+    try {
+      await this.client.delete(`/streams/${encodeURIComponent(targetChannel)}`);
+    } catch (error) {
+      this.handleAxiosError('Failed to request ai_licia to leave chat', error);
     }
   }
 
@@ -341,6 +423,202 @@ export class AiliciaClient {
     };
   }
 
+  /**
+   * Subscribes to the EventSub SSE stream for chat, AI, moderation, and system events.
+   */
+  public streamEventSub(options: EventSubStreamOptions = {}): EventSubStream {
+    const {
+      types,
+      channelId,
+      cursor,
+      handlers,
+      autoReconnect = true,
+      reconnectDelayMs = 4000,
+      reconnectBackoffMultiplier = 1.5,
+      reconnectJitterMs = 1000,
+      maxReconnectAttempts = Infinity,
+      onReconnectAttempt,
+      onConnectionStateChange,
+      onError,
+      onOpen,
+      onClose
+    } = options;
+
+    const normalizedBase = this.baseUrl.endsWith('/') ? this.baseUrl : `${this.baseUrl}/`;
+    const params = new URLSearchParams();
+    if (types?.length) {
+      params.set('types', types.join(','));
+    }
+    if (channelId) {
+      params.set('channelId', channelId);
+    }
+    if (cursor) {
+      params.set('cursor', cursor);
+    }
+    const streamPath = params.toString() ? `eventsub/stream?${params}` : 'eventsub/stream';
+    const streamUrl = new URL(streamPath, normalizedBase);
+
+    const headers: Record<string, string> = {
+      Accept: 'text/event-stream',
+      Authorization: `Bearer ${this.apiKey}`
+    };
+
+    let controller: AbortController | null = null;
+    let reader: StreamReader | null = null;
+    let shutdown = false;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let reconnectAttempts = 0;
+    let closedCallbackFired = false;
+
+    const subscription: InternalEventSubStream = new EventSubSubscriptionImpl();
+
+    if (handlers) {
+      (Object.entries(handlers) as [EventSubEventType, EventSubHandler<EventSubEventType>][])
+        .forEach(([type, handler]) => {
+          if (handler) {
+            subscription.on(type, handler as EventSubHandler<typeof type>);
+          }
+        });
+    }
+
+    const fireOnClose = () => {
+      if (!closedCallbackFired) {
+        closedCallbackFired = true;
+        onClose?.();
+      }
+    };
+
+    const cleanupConnection = () => {
+      reader?.cancel().catch(() => {});
+      reader = null;
+      controller?.abort();
+      controller = null;
+    };
+
+    const clearReconnectTimer = () => {
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+      }
+    };
+
+    const handleFinalClose = () => {
+      shutdown = true;
+      cleanupConnection();
+      clearReconnectTimer();
+      fireOnClose();
+    };
+
+    const computeDelayMs = (attempt: number) => {
+      const multiplier = Math.max(1, reconnectBackoffMultiplier);
+      const base = reconnectDelayMs * Math.pow(multiplier, Math.max(0, attempt - 1));
+      const jitter = reconnectJitterMs > 0 ? Math.random() * reconnectJitterMs : 0;
+      return base + jitter;
+    };
+
+    const scheduleReconnect = () => {
+      if (!autoReconnect || shutdown) {
+        handleFinalClose();
+        return;
+      }
+      if (reconnectAttempts >= maxReconnectAttempts) {
+        handleFinalClose();
+        return;
+      }
+      reconnectAttempts += 1;
+      const delayMs = computeDelayMs(reconnectAttempts);
+      onReconnectAttempt?.({ attempt: reconnectAttempts, delayMs });
+      onConnectionStateChange?.('reconnecting');
+      clearReconnectTimer();
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        if (!shutdown) {
+          startStream();
+        }
+      }, delayMs);
+    };
+
+    const startStream = async () => {
+      try {
+        onConnectionStateChange?.(reconnectAttempts === 0 ? 'connecting' : 'reconnecting');
+        cleanupConnection();
+        const localController = new AbortController();
+        controller = localController;
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        const response = await fetch(streamUrl, {
+          method: 'GET',
+          headers,
+          signal: localController.signal
+        });
+
+        if (!response.ok || !response.body) {
+          throw new Error(`Failed to connect to EventSub stream: HTTP ${response.status}`);
+        }
+
+        reconnectAttempts = 0;
+        closedCallbackFired = false;
+        onOpen?.();
+        reader = response.body.getReader();
+
+        while (!shutdown) {
+          const { value, done } = await reader.read();
+          if (done) {
+            break;
+          }
+          if (value) {
+            buffer += decoder.decode(value, { stream: true });
+            let delimiterIndex = buffer.indexOf('\n\n');
+
+            while (delimiterIndex !== -1) {
+              const rawEvent = buffer.slice(0, delimiterIndex);
+              buffer = buffer.slice(delimiterIndex + 2);
+              delimiterIndex = buffer.indexOf('\n\n');
+
+              const trimmedEvent = rawEvent.trim();
+              if (!trimmedEvent || trimmedEvent.startsWith(':')) {
+                continue;
+              }
+
+              this.handleEventSubFrame(trimmedEvent, subscription, onError);
+            }
+          }
+        }
+
+        cleanupConnection();
+        if (shutdown) {
+          fireOnClose();
+        } else {
+          scheduleReconnect();
+        }
+      } catch (error) {
+        cleanupConnection();
+        if (shutdown) {
+          fireOnClose();
+          return;
+        }
+        onError?.(error instanceof Error ? error : new Error(String(error)));
+        scheduleReconnect();
+      }
+    };
+
+    const manualClose = () => {
+      if (shutdown) {
+        return;
+      }
+      shutdown = true;
+      clearReconnectTimer();
+      cleanupConnection();
+      fireOnClose();
+    };
+
+    subscription.setTeardown(manualClose);
+    startStream();
+
+    return subscription;
+  }
+
   private parseSseEvent(rawEvent: string): { id?: string; event?: string; data?: string } {
     const event: { id?: string; event?: string; data?: string } = {};
     const dataParts: string[] = [];
@@ -364,5 +642,97 @@ export class AiliciaClient {
     }
 
     return event;
+  }
+
+  private handleEventSubFrame(
+    rawEvent: string,
+    subscription: InternalEventSubStream,
+    onError?: (error: Error) => void
+  ): void {
+    const parsed = this.parseSseEvent(rawEvent);
+    if (!parsed.data) {
+      return;
+    }
+
+    try {
+      const envelope = JSON.parse(parsed.data) as EventSubEnvelope;
+      const resolvedType = (parsed.event && parsed.event !== 'message' ? parsed.event : envelope.type) ?? '';
+
+      if (resolvedType && isEventSubEventType(resolvedType)) {
+        subscription.emit(resolvedType, envelope as EventSubEventMap[typeof resolvedType]);
+      }
+    } catch (error) {
+      onError?.(error instanceof Error ? error : new Error(String(error)));
+    }
+  }
+
+  private resolveChannelName(channelName?: string): string {
+    const resolved = (channelName ?? this.channelName).trim();
+    if (!resolved) {
+      throw new Error('Channel name is required. Provide it in the constructor or as a method argument.');
+    }
+    return resolved;
+  }
+
+  private handleAxiosError(context: string, error: unknown): never {
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError;
+      const data = axiosError.response?.data as Record<string, any> | undefined;
+      const detail = data?.message || axiosError.message;
+      throw new Error(`${context}: ${detail}`);
+    }
+    throw error;
+  }
+}
+
+class EventSubSubscriptionImpl implements InternalEventSubStream {
+  private teardown: () => void;
+  private readonly handlers = new Map<EventSubEventType, Set<EventSubHandler<EventSubEventType>>>();
+  private readonly anyHandlers = new Set<EventSubAnyHandler>();
+
+  constructor(teardown?: () => void) {
+    this.teardown = teardown ?? (() => {});
+  }
+
+  public setTeardown(teardown: () => void): void {
+    this.teardown = teardown;
+  }
+
+  public on<T extends EventSubEventType>(type: T, handler: EventSubHandler<T>): EventSubStream {
+    const entry = this.handlers.get(type) ?? new Set();
+    entry.add(handler as EventSubHandler<EventSubEventType>);
+    this.handlers.set(type, entry);
+    return this;
+  }
+
+  public off<T extends EventSubEventType>(type: T, handler: EventSubHandler<T>): EventSubStream {
+    const entry = this.handlers.get(type);
+    entry?.delete(handler as EventSubHandler<EventSubEventType>);
+    if (entry && entry.size === 0) {
+      this.handlers.delete(type);
+    }
+    return this;
+  }
+
+  public onAny(handler: EventSubAnyHandler): EventSubStream {
+    this.anyHandlers.add(handler);
+    return this;
+  }
+
+  public offAny(handler: EventSubAnyHandler): EventSubStream {
+    this.anyHandlers.delete(handler);
+    return this;
+  }
+
+  public emit<T extends EventSubEventType>(type: T, event: EventSubEventMap[T]): void {
+    const entry = this.handlers.get(type);
+    entry?.forEach((handler) => {
+      (handler as EventSubHandler<T>)(event);
+    });
+    this.anyHandlers.forEach((handler) => handler(event));
+  }
+
+  public close(): void {
+    this.teardown();
   }
 }

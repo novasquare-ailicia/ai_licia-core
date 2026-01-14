@@ -57,6 +57,16 @@ const messageStream = client.streamPublicChatMessages({
 
 // Stop streaming whenever you need to
 messageStream.close();
+
+// Fetch characters and rotate personas
+const characters = await client.listCharacters();
+const chillPersona = characters.find((c) => !c.isActive);
+if (chillPersona) {
+  await client.setActiveCharacter(chillPersona.id);
+}
+
+// Ask ai_licia to join chat (defaults to the configured channel)
+await client.requestStreamJoin();
 ```
 
 ## API Reference
@@ -151,6 +161,69 @@ const stream = client.streamPublicChatMessages({
 
 // Later, when you want to disconnect:
 stream.close();
+```
+
+##### `listCharacters(): Promise<CharacterSummary[]>`
+
+Returns the list of personas linked to your account (id, name, description, `isActive` flag).
+
+```typescript
+const characters = await client.listCharacters();
+characters.forEach((character) =>
+  console.log(`${character.name} - ${character.isActive ? 'active' : 'inactive'}`)
+);
+```
+
+##### `setActiveCharacter(characterId: string): Promise<void>`
+
+Switches the active persona for ai_licia.
+
+```typescript
+await client.setActiveCharacter('char_123');
+```
+
+##### `requestStreamJoin(channelName?: string): Promise<JoinChannelResponse>`
+
+Asks ai_licia to join chat immediately. Omitting `channelName` uses the one configured in the client.
+
+```typescript
+const join = await client.requestStreamJoin();
+if (!join.success) {
+  console.warn('Join failed', join.message);
+}
+```
+
+##### `requestStreamLeave(channelName?: string): Promise<void>`
+
+Queues a leave request for ai_licia on the target channel.
+
+```typescript
+await client.requestStreamLeave('backupChannel');
+```
+
+##### `streamEventSub(options?: EventSubStreamOptions): EventSubStream`
+
+Connects to the unified EventSub SSE stream (chat, AI, channel, system, moderation, character events) and returns an event-emitter style handle.
+
+```typescript
+const eventStream = client.streamEventSub({
+  types: ['chat.message', 'ai.tts.generated'],
+  autoReconnect: true,
+  handlers: {
+    'chat.message': (event) => {
+      console.log(`[${event.payload.platform}] ${event.payload.username}: ${event.payload.message}`);
+    }
+  }
+});
+
+eventStream
+  .on('ai.tts.generated', (event) => {
+    console.log(`New TTS clip at ${event.payload.ttsStreamUrl}`);
+  })
+  .onAny((event) => console.log(`Received ${event.type}`));
+
+// Stop streaming
+eventStream.close();
 ```
 
 

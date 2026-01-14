@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/novasquare-ailicia/ai_licia-core/tree/main/packages/ai_licia-aitum#readme",
   "dependencies": {
-    "ai_licia-client": "^1.1.1",
+    "ai_licia-client": "^1.2.0",
     "aitum.js": "^2.0.3",
     "dotenv": "^17.2.2",
     "ts-node": "^10.9.2",

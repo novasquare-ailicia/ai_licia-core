@@ -11,4 +11,7 @@ try {
 export * from './interfaces';
 
 // Export the client
-export { AiliciaClient } from './client'; 
+export { AiliciaClient } from './client';
+
+// Export the local WebSocket client
+export { LocalWebSocketClient, getLocalWebSocketUrl } from './localWebSocketClient';
