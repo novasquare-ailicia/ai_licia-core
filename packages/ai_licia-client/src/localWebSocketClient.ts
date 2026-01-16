@@ -187,7 +187,9 @@ export class LocalWebSocketClient implements LocalWebSocketStream {
   }
 
   public async sendHello(overrides: Partial<LocalWebSocketHelloPayload> = {}): Promise<LocalWebSocketWelcomePayload> {
-    await this.connect();
+    if (!this.isConnected()) {
+      await this.connect();
+    }
     if (this.lastWelcome) {
       return this.lastWelcome;
     }
@@ -246,10 +248,8 @@ export class LocalWebSocketClient implements LocalWebSocketStream {
       throw new Error(`Unsupported scopes: ${invalidScopes.join(', ')}`);
     }
 
-    const welcome = await this.sendHello({ clientId, displayName });
-    if (!welcome.capabilities.includes('integration.auth')) {
-      throw new Error('integration.auth capability is not available yet.');
-    }
+    await this.connect();
+    this.sendHello({ clientId, displayName }).catch(() => {});
 
     const payload: LocalWebSocketRequestAccessPayload = {
       clientId,
@@ -335,9 +335,9 @@ export class LocalWebSocketClient implements LocalWebSocketStream {
       }
       onError();
     };
-    const handleMessage = (eventOrData: unknown) => {
+    const handleSocketMessage = (eventOrData: unknown) => {
       const messageEvent = eventOrData as { data?: unknown };
-      if (messageEvent && Object.prototype.hasOwnProperty.call(messageEvent, 'data')) {
+      if (messageEvent && typeof messageEvent === 'object' && 'data' in messageEvent) {
         this.handleMessage(messageEvent.data);
         return;
       }
@@ -360,7 +360,7 @@ export class LocalWebSocketClient implements LocalWebSocketStream {
     if (socket.addEventListener) {
       socket.addEventListener('open', handleOpen);
       socket.addEventListener('error', handleError);
-      socket.addEventListener('message', handleMessage);
+      socket.addEventListener('message', handleSocketMessage);
       socket.addEventListener('close', handleClose);
       return;
     }
@@ -368,14 +368,14 @@ export class LocalWebSocketClient implements LocalWebSocketStream {
     if (socket.on) {
       socket.on('open', handleOpen);
       socket.on('error', handleError);
-      socket.on('message', handleMessage);
+      socket.on('message', handleSocketMessage);
       socket.on('close', handleClose);
       return;
     }
 
     socket.onopen = handleOpen;
     socket.onerror = handleError;
-    socket.onmessage = handleMessage;
+    socket.onmessage = handleSocketMessage;
     socket.onclose = handleClose;
   }
 
