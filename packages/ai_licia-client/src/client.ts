@@ -13,6 +13,7 @@ import {
   PublicChatMessage,
   CharacterSummary,
   JoinChannelResponse,
+  EventSubAuth,
   EventSubStream,
   EventSubStreamOptions,
   EventSubEventType,
@@ -34,6 +35,8 @@ const EVENT_SUB_EVENT_TYPES: EventSubEventType[] = [
   'ai.thoughts',
   'ai.tts.generated',
   'channel.event',
+  'channel.go_live',
+  'channel.go_offline',
   'ai.moderation',
   'api.event',
   'system.join',
@@ -43,6 +46,13 @@ const EVENT_SUB_EVENT_TYPES: EventSubEventType[] = [
 
 const isEventSubEventType = (value: string): value is EventSubEventType =>
   (EVENT_SUB_EVENT_TYPES as string[]).includes(value);
+
+const resolveEventSubToken = (auth: EventSubAuth): string => {
+  if (auth.type === 'jwt') {
+    return auth.token;
+  }
+  return auth.key;
+};
 
 type InternalEventSubStream = EventSubStream & {
   emit<T extends EventSubEventType>(type: T, event: EventSubEventMap[T]): void;
@@ -425,8 +435,9 @@ export class AiliciaClient {
 
   /**
    * Subscribes to the EventSub SSE stream for chat, AI, moderation, and system events.
+   * Provide explicit auth so the server can enforce JWT vs API key entitlements.
    */
-  public streamEventSub(options: EventSubStreamOptions = {}): EventSubStream {
+  public streamEventSub(auth: EventSubAuth, options: EventSubStreamOptions = {}): EventSubStream {
     const {
       types,
       channelId,
@@ -444,6 +455,11 @@ export class AiliciaClient {
       onClose
     } = options;
 
+    const authToken = resolveEventSubToken(auth).trim();
+    if (!authToken) {
+      throw new Error('EventSub auth token is required.');
+    }
+
     const normalizedBase = this.baseUrl.endsWith('/') ? this.baseUrl : `${this.baseUrl}/`;
     const params = new URLSearchParams();
     if (types?.length) {
@@ -460,7 +476,7 @@ export class AiliciaClient {
 
     const headers: Record<string, string> = {
       Accept: 'text/event-stream',
-      Authorization: `Bearer ${this.apiKey}`
+      Authorization: `Bearer ${authToken}`
     };
 
     let controller: AbortController | null = null;
@@ -554,7 +570,21 @@ export class AiliciaClient {
         });
 
         if (!response.ok || !response.body) {
-          throw new Error(`Failed to connect to EventSub stream: HTTP ${response.status}`);
+          let detail = '';
+          try {
+            detail = (await response.text()).trim();
+          } catch {
+            detail = '';
+          }
+          const suffix = detail ? ` ${detail}` : '';
+
+          if (response.status === 401) {
+            throw new Error(`Unauthorized to connect to EventSub stream.${suffix}`);
+          }
+          if (response.status === 400) {
+            throw new Error(`Invalid EventSub types value.${suffix}`);
+          }
+          throw new Error(`Failed to connect to EventSub stream: HTTP ${response.status}.${suffix}`);
         }
 
         reconnectAttempts = 0;

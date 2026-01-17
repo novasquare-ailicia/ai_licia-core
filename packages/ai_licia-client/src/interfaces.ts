@@ -48,6 +48,8 @@ export interface GenerationOptions {
   voiceOnly?: boolean;
 }
 
+export type Platform = 'TWITCH' | 'TIKTOK' | 'KICK' | 'YOUTUBE';
+
 export type PublicChatRole = 'Mod' | 'VIP' | 'AI' | 'Viewer' | 'Streamer';
 
 export interface PublicChatMessage {
@@ -99,6 +101,18 @@ export interface JoinChannelResponse {
   joinRequestId?: string;
 }
 
+export type EventSubJwtAuth = {
+  type: 'jwt';
+  token: string;
+};
+
+export type EventSubApiKeyAuth = {
+  type: 'apiKey';
+  key: string;
+};
+
+export type EventSubAuth = EventSubJwtAuth | EventSubApiKeyAuth;
+
 export type EventSubEventType =
   | 'chat.message'
   | 'chat.ai_message'
@@ -106,6 +120,8 @@ export type EventSubEventType =
   | 'ai.thoughts'
   | 'ai.tts.generated'
   | 'channel.event'
+  | 'channel.go_live'
+  | 'channel.go_offline'
   | 'ai.moderation'
   | 'api.event'
   | 'system.join'
@@ -115,7 +131,7 @@ export type EventSubEventType =
 export interface EventSubChannelRef {
   id: string;
   name: string;
-  platform: string;
+  platform: Platform;
 }
 
 export interface EventSubStreamRef {
@@ -138,7 +154,7 @@ export interface EventSubChatMessagePayload {
   username: string;
   message: string;
   language: string;
-  platform: string;
+  platform: Platform;
   isSubscriber: boolean;
   isVip: boolean;
   isModerator: boolean;
@@ -198,6 +214,14 @@ export interface EventSubChannelEventPayload {
   sentDateTime: string;
 }
 
+export interface EventSubChannelGoLivePayload {
+  sentDateTime: string;
+}
+
+export interface EventSubChannelGoOfflinePayload {
+  sentDateTime: string;
+}
+
 export interface EventSubAiModerationPayload {
   messageId: string;
   username: string;
@@ -218,19 +242,20 @@ export interface EventSubApiEventPayload {
   eventType: string;
   content: string;
   shouldGenerate: boolean;
-  sentDateTime?: string;
+  ttl?: number | null;
+  expiresAt?: string | null;
 }
 
 export interface EventSubSystemJoinPayload {
+  channelId: string;
   channelName: string;
-  streamId?: string | null;
-  joinedAt: string;
+  sentDateTime: string;
 }
 
 export interface EventSubSystemLeftPayload {
+  channelId: string;
   channelName: string;
-  reason?: string | null;
-  leftAt: string;
+  sentDateTime: string;
 }
 
 export interface EventSubCharacterUpdatedPayload {
@@ -246,6 +271,8 @@ export type EventSubEventMap = {
   'ai.thoughts': EventSubEnvelope<EventSubAiThoughtsPayload>;
   'ai.tts.generated': EventSubEnvelope<EventSubAiTtsGeneratedPayload>;
   'channel.event': EventSubEnvelope<EventSubChannelEventPayload>;
+  'channel.go_live': EventSubEnvelope<EventSubChannelGoLivePayload>;
+  'channel.go_offline': EventSubEnvelope<EventSubChannelGoOfflinePayload>;
   'ai.moderation': EventSubEnvelope<EventSubAiModerationPayload>;
   'api.event': EventSubEnvelope<EventSubApiEventPayload>;
   'system.join': EventSubEnvelope<EventSubSystemJoinPayload>;

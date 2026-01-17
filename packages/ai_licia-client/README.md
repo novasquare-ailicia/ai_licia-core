@@ -201,20 +201,23 @@ Queues a leave request for ai_licia on the target channel.
 await client.requestStreamLeave('backupChannel');
 ```
 
-##### `streamEventSub(options?: EventSubStreamOptions): EventSubStream`
+##### `streamEventSub(auth: EventSubAuth, options?: EventSubStreamOptions): EventSubStream`
 
 Connects to the unified EventSub SSE stream (chat, AI, channel, system, moderation, character events) and returns an event-emitter style handle.
 
 ```typescript
-const eventStream = client.streamEventSub({
-  types: ['chat.message', 'ai.tts.generated'],
-  autoReconnect: true,
-  handlers: {
-    'chat.message': (event) => {
-      console.log(`[${event.payload.platform}] ${event.payload.username}: ${event.payload.message}`);
+const eventStream = client.streamEventSub(
+  { type: 'jwt', token: viewerJwt },
+  {
+    types: ['chat.message', 'ai.tts.generated'],
+    autoReconnect: true,
+    handlers: {
+      'chat.message': (event) => {
+        console.log(`[${event.payload.platform}] ${event.payload.username}: ${event.payload.message}`);
+      }
     }
   }
-});
+);
 
 eventStream
   .on('ai.tts.generated', (event) => {
@@ -225,6 +228,10 @@ eventStream
 // Stop streaming
 eventStream.close();
 ```
+
+Notes:
+- `auth` must be either `{ type: 'jwt', token: '...' }` (frontend JWT) or `{ type: 'apiKey', key: '...' }` (external clients).
+- Browsers cannot set headers on native `EventSource`. Use the client method (fetch streaming) or an `EventSource` polyfill that supports headers. Do not put tokens in query strings.
 
 
 ## Error Handling
