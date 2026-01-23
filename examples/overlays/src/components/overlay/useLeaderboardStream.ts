@@ -19,6 +19,7 @@ const ROLLING_WINDOW_MS = 60_000;
 const MIN_SAMPLE_MS = 1_000;
 const RATE_REFRESH_INTERVAL_MS = 1_000;
 const GENERATION_COOLDOWN_MS = 25_000;
+const OVERTAKE_DIGEST_MAX_CHARS = 300;
 
 const leaderboardsEqual = (
   next: LeaderboardEntry[],
@@ -38,6 +39,59 @@ const leaderboardsEqual = (
     }
   }
   return true;
+};
+
+type OvertakeEvent = {
+  from: string;
+  to: string;
+  count: number;
+};
+
+const formatOvertakeWindow = (intervalMs: number) => {
+  const minutes = intervalMs / 60000;
+  if (!Number.isFinite(minutes) || minutes <= 0) return "0 minutes";
+  const rounded =
+    minutes < 1
+      ? Number(minutes.toFixed(2))
+      : minutes < 10
+      ? Number(minutes.toFixed(1))
+      : Math.round(minutes);
+  return `${rounded} minute${rounded === 1 ? "" : "s"}`;
+};
+
+const buildOvertakeDigestMessage = (
+  events: OvertakeEvent[],
+  intervalMs: number
+) => {
+  const windowLabel = formatOvertakeWindow(intervalMs);
+  const prefix = `Here are the overtakes that happened in the last ${windowLabel}: `;
+  if (prefix.length >= OVERTAKE_DIGEST_MAX_CHARS) {
+    return prefix.slice(0, OVERTAKE_DIGEST_MAX_CHARS);
+  }
+
+  let message = prefix;
+  let appended = 0;
+  for (let i = 0; i < events.length; i += 1) {
+    const event = events[i];
+    const msgLabel = event.count === 1 ? "msg" : "msgs";
+    const chunk = `${event.to} over ${event.from} (${event.count} ${msgLabel})`;
+    const separator = appended ? " | " : "";
+    if (message.length + separator.length + chunk.length > OVERTAKE_DIGEST_MAX_CHARS) {
+      break;
+    }
+    message += `${separator}${chunk}`;
+    appended += 1;
+  }
+
+  const remaining = events.length - appended;
+  if (remaining > 0) {
+    const suffix = appended ? ` ... +${remaining} more` : `... +${remaining} more`;
+    if (message.length + suffix.length <= OVERTAKE_DIGEST_MAX_CHARS) {
+      message += suffix;
+    }
+  }
+
+  return message.slice(0, OVERTAKE_DIGEST_MAX_CHARS);
 };
 
 interface LeaderboardHookOptions {
@@ -77,9 +131,23 @@ export const useLeaderboardStream = ({
   const pendingGenerationRef = useRef<string | null>(null);
   const generationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const generationInFlightRef = useRef(false);
+  const overtakeBufferRef = useRef<OvertakeEvent[]>([]);
+  const overtakeDigestTimerRef = useRef<ReturnType<typeof setInterval> | null>(
+    null
+  );
 
   const hasCredentials = Boolean(settings.apiKey && settings.channelName);
   const streamingEnabled = hasCredentials && !disabled;
+  const overtakeNotificationsEnabled =
+    enableGenerations && settings.overtakeNotificationsEnabled;
+  const overtakeNotificationIntervalMs = Math.max(
+    0,
+    settings.overtakeNotificationIntervalMs || 0
+  );
+  const overtakeNotificationsActive =
+    !disabled && hasCredentials && overtakeNotificationsEnabled;
+  const useOvertakeDigest =
+    overtakeNotificationsActive && overtakeNotificationIntervalMs > 0;
 
   const emitStatus = useCallback(
     (nextStatus: StreamStatus, info: string) => {
@@ -226,6 +294,52 @@ export const useLeaderboardStream = ({
     },
     [processGenerationQueue]
   );
+
+  const flushOvertakeBuffer = useCallback(() => {
+    if (!overtakeBufferRef.current.length) return;
+    if (overtakeNotificationIntervalMs <= 0) {
+      overtakeBufferRef.current = [];
+      return;
+    }
+    if (generationInFlightRef.current || pendingGenerationRef.current) {
+      return;
+    }
+    const overtakes = overtakeBufferRef.current;
+    overtakeBufferRef.current = [];
+    const message = buildOvertakeDigestMessage(
+      overtakes,
+      overtakeNotificationIntervalMs
+    );
+    trackEvent("overlay_generation_trigger", {
+      mode: "digest",
+      overtakeCount: overtakes.length,
+      intervalMs: overtakeNotificationIntervalMs,
+    });
+    enqueueGeneration(message);
+  }, [enqueueGeneration, overtakeNotificationIntervalMs]);
+
+  useEffect(() => {
+    if (overtakeDigestTimerRef.current) {
+      clearInterval(overtakeDigestTimerRef.current);
+      overtakeDigestTimerRef.current = null;
+    }
+
+    if (!useOvertakeDigest) {
+      overtakeBufferRef.current = [];
+      return;
+    }
+
+    overtakeDigestTimerRef.current = setInterval(() => {
+      flushOvertakeBuffer();
+    }, overtakeNotificationIntervalMs);
+
+    return () => {
+      if (overtakeDigestTimerRef.current) {
+        clearInterval(overtakeDigestTimerRef.current);
+        overtakeDigestTimerRef.current = null;
+      }
+    };
+  }, [flushOvertakeBuffer, useOvertakeDigest, overtakeNotificationIntervalMs]);
 
   useEffect(() => {
     if (!disabled || !initialLeaders) return;
@@ -407,26 +521,41 @@ export const useLeaderboardStream = ({
   }, [disabled, leaders, settings.contextIntervalMs, hasCredentials]);
 
   useEffect(() => {
-    if (disabled || !enableGenerations || !leaders.length) return;
-    const client = clientRef.current;
-    if (!client) return;
+    if (!leaders.length) return;
 
     const newLeader = leaders[0]?.username;
     const previousLeader = topChatterRef.current;
     if (!newLeader) return;
 
-    if (previousLeader && previousLeader !== newLeader) {
-      const message = `${newLeader} just claimed the top chatter spot with ${leaders[0].count} messages!`;
-      trackEvent("overlay_generation_trigger", {
+    const client = clientRef.current;
+    const canNotify = overtakeNotificationsActive && Boolean(client);
+
+    if (previousLeader && previousLeader !== newLeader && canNotify) {
+      const overtake = {
         from: previousLeader,
         to: newLeader,
         count: leaders[0].count,
-      });
-      enqueueGeneration(message);
+      };
+
+      if (useOvertakeDigest) {
+        overtakeBufferRef.current.push(overtake);
+      } else {
+        const message = `${newLeader} just claimed the top chatter spot with ${leaders[0].count} messages!`;
+        trackEvent("overlay_generation_trigger", {
+          ...overtake,
+          mode: "immediate",
+        });
+        enqueueGeneration(message);
+      }
     }
 
     topChatterRef.current = newLeader;
-  }, [disabled, enableGenerations, leaders, enqueueGeneration]);
+  }, [
+    leaders,
+    overtakeNotificationsActive,
+    useOvertakeDigest,
+    enqueueGeneration,
+  ]);
 
   const totalRate = useMemo(
     () => leaders.reduce((sum, entry) => sum + (entry.messagesPerMinute ?? 0), 0),

@@ -6,6 +6,8 @@ import type { PublicChatRole } from "ai_licia-client";
 import {
   DEFAULT_BASE_URL,
   DEFAULT_CONTEXT_INTERVAL,
+  DEFAULT_OVERTAKE_NOTIFICATION_INTERVAL_MS,
+  DEFAULT_OVERTAKE_NOTIFICATIONS_ENABLED,
   OverlaySettings,
   ROLE_OPTIONS,
   RankKey,
@@ -125,6 +127,10 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
   const [contextInterval, setContextInterval] = useState(
     DEFAULT_CONTEXT_INTERVAL
   );
+  const [overtakeNotificationsEnabled, setOvertakeNotificationsEnabled] =
+    useState(DEFAULT_OVERTAKE_NOTIFICATIONS_ENABLED);
+  const [overtakeNotificationIntervalMs, setOvertakeNotificationIntervalMs] =
+    useState(DEFAULT_OVERTAKE_NOTIFICATION_INTERVAL_MS);
   const [excluded, setExcluded] = useState("");
   const [theme, setTheme] = useState(DEFAULT_THEME);
   const [gradientOverrides, setGradientOverrides] = useState<GradientOverridesState>({});
@@ -172,6 +178,8 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
       rolesCount,
       excludedCount,
       overlayOpacity,
+      overtakeNotificationsEnabled,
+      overtakeNotificationIntervalMs,
     }),
     [
       variant,
@@ -183,6 +191,8 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
       rolesCount,
       excludedCount,
       overlayOpacity,
+      overtakeNotificationsEnabled,
+      overtakeNotificationIntervalMs,
     ]
   );
   const emitConfiguratorEvent = useCallback(
@@ -215,6 +225,12 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
       if (Array.isArray(stored.roles) && stored.roles.length) setRoles(stored.roles);
       if (typeof stored.contextInterval === "number")
         setContextInterval(stored.contextInterval);
+      if (typeof stored.overtakeNotificationsEnabled === "boolean")
+        setOvertakeNotificationsEnabled(stored.overtakeNotificationsEnabled);
+      if (typeof stored.overtakeNotificationIntervalMs === "number")
+        setOvertakeNotificationIntervalMs(
+          stored.overtakeNotificationIntervalMs
+        );
       if (typeof stored.excluded === "string") setExcluded(stored.excluded);
       if (stored.theme && THEME_OPTIONS.includes(stored.theme)) setTheme(stored.theme);
       if (stored.gradientOverrides) setGradientOverrides(stored.gradientOverrides);
@@ -248,6 +264,8 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
       baseUrl,
       roles,
       contextInterval,
+      overtakeNotificationsEnabled,
+      overtakeNotificationIntervalMs,
       excluded,
       theme,
       gradientOverrides,
@@ -275,6 +293,8 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
     baseUrl,
     roles,
     contextInterval,
+    overtakeNotificationsEnabled,
+    overtakeNotificationIntervalMs,
     excluded,
     theme,
     gradientOverrides,
@@ -332,6 +352,8 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
       roles,
       excludedUsernames: parseExcluded(excluded),
       contextIntervalMs: contextInterval,
+      overtakeNotificationsEnabled,
+      overtakeNotificationIntervalMs,
       theme,
       customGradients: activeGradients,
       brandGradient,
@@ -354,6 +376,8 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
       roles,
       excluded,
       contextInterval,
+      overtakeNotificationsEnabled,
+      overtakeNotificationIntervalMs,
       theme,
       activeGradients,
       brandGradient,
@@ -814,6 +838,49 @@ const Configurator = ({ variant = "leaderboard" }: ConfiguratorProps) => {
                       helperText={contextHelperText}
                       fullWidth
                     />
+                    {!isMessageRate && (
+                      <Stack spacing={1}>
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={overtakeNotificationsEnabled}
+                              onChange={(event) => {
+                                setOvertakeNotificationsEnabled(event.target.checked);
+                                emitConfiguratorEvent(
+                                  "overlay_overtake_notifications_toggle",
+                                  { enabled: event.target.checked }
+                                );
+                              }}
+                            />
+                          }
+                          label="Send top-chatter overtake notifications"
+                        />
+                        <TextField
+                          label="Overtake digest interval (seconds)"
+                          type="number"
+                          value={overtakeNotificationIntervalMs / 1000}
+                          onChange={(event) => {
+                            const nextSeconds = Math.max(
+                              0,
+                              Number(event.target.value) || 0
+                            );
+                            const nextMs = Math.round(nextSeconds * 1000);
+                            setOvertakeNotificationIntervalMs(nextMs);
+                            emitConfiguratorEvent(
+                              "overlay_overtake_interval_change",
+                              { intervalMs: nextMs }
+                            );
+                          }}
+                          helperText={
+                            overtakeNotificationsEnabled
+                              ? "Set to 0 to send immediately. Higher values batch overtakes and send a digest only when changes occur."
+                              : "Enable overtake notifications to adjust digest sampling."
+                          }
+                          fullWidth
+                          disabled={!overtakeNotificationsEnabled}
+                        />
+                      </Stack>
+                    )}
                   </Stack>
                 </CardContent>
               </Card>

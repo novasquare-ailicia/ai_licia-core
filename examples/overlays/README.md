@@ -24,7 +24,7 @@ Open `http://localhost:3000` to launch the studio, drop in your channel API key 
 - **Overlay (`/overlay?...`)**: Pure glassmorphism card stack showing the top 3 chatters only. Pick between three presets (Aurora, Ember, Lumen), switch between horizontal/vertical layouts, surface individual message rates, and optionally show a total stream-wide msg/min card.
 - **API calls**:
   - Every *N* milliseconds (`contextInterval`) we call `client.sendEvent(...)` with a compact leaderboard summary so ai_licia® keeps up-to-date context.
-  - Whenever someone dethrones the current leader we call `client.triggerGeneration(...)` to let ai_licia® celebrate the promotion.
+  - Whenever someone dethrones the current leader we call `client.triggerGeneration(...)` to let ai_licia® celebrate the promotion (or buffer overtakes and send a digest if configured).
 
 ## Query parameters
 
@@ -36,6 +36,8 @@ Open `http://localhost:3000` to launch the studio, drop in your channel API key 
 | `roles` | Comma-separated list from `Mod,VIP,AI,Viewer,Streamer` |
 | `excluded` | Comma-separated usernames to ignore |
 | `contextInterval` | Interval in ms for context sync (default `60000`) |
+| `overtakeNotifications` | `1`/`0` toggle for top-chatter overtake notifications (default `1`) |
+| `overtakeInterval` | Interval in ms for overtake digests (default `0` = immediate) |
 | `theme` | One of `aurora`, `ember`, `lumen` |
 | `rank1`, `rank2`, `rank3` | Optional gradient overrides in the form `#from-#to` |
 | `layout` | `horizontal` (default) or `vertical` |

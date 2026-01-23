@@ -10,6 +10,8 @@ export const ROLE_OPTIONS: PublicChatRole[] = [
 
 export const DEFAULT_BASE_URL = "https://api.getailicia.com/v1";
 export const DEFAULT_CONTEXT_INTERVAL = 60000;
+export const DEFAULT_OVERTAKE_NOTIFICATIONS_ENABLED = true;
+export const DEFAULT_OVERTAKE_NOTIFICATION_INTERVAL_MS = 0;
 export const THEME_OPTIONS = ["aurora", "ember", "lumen"] as const;
 export type OverlayThemeId = (typeof THEME_OPTIONS)[number];
 export type OverlayLayout = "horizontal" | "vertical";
@@ -117,6 +119,8 @@ export interface OverlaySettings {
   roles: PublicChatRole[];
   excludedUsernames: string[];
   contextIntervalMs: number;
+  overtakeNotificationsEnabled: boolean;
+  overtakeNotificationIntervalMs: number;
   theme: OverlayThemeId;
   customGradients: Partial<Record<RankKey, GradientPair>>;
   brandGradient: GradientPair;
@@ -184,6 +188,8 @@ export const parseOverlaySettings = (
   const compactParam = pull("compact");
   const showRatesParam = pull("showRates");
   const showTotalParam = pull("showTotalRates");
+  const overtakeNotificationsParam = pull("overtakeNotifications");
+  const overtakeIntervalParam = pull("overtakeInterval");
   const glowParam = pull("glow");
   const glowMinParam = pull("glowMin");
   const glowMaxParam = pull("glowMax");
@@ -239,6 +245,19 @@ export const parseOverlaySettings = (
       ? showTotalParam === "1" || showTotalParam.toLowerCase() === "true"
       : DEFAULT_SHOW_TOTAL_RATE;
 
+  const overtakeNotificationsEnabled =
+    overtakeNotificationsParam === ""
+      ? DEFAULT_OVERTAKE_NOTIFICATIONS_ENABLED
+      : overtakeNotificationsParam
+      ? overtakeNotificationsParam === "1" ||
+        overtakeNotificationsParam.toLowerCase() === "true"
+      : DEFAULT_OVERTAKE_NOTIFICATIONS_ENABLED;
+
+  const overtakeNotificationIntervalMs = Math.max(
+    0,
+    Number(overtakeIntervalParam) || DEFAULT_OVERTAKE_NOTIFICATION_INTERVAL_MS
+  );
+
   const minRate = Math.max(0, Number(glowMinParam) || DEFAULT_PULSE_GLOW.minRate);
   const maxRate = Math.max(
     minRate + 0.5,
@@ -266,6 +285,8 @@ export const parseOverlaySettings = (
     contextIntervalMs: Number(intervalParam) > 0
       ? Number(intervalParam)
       : DEFAULT_CONTEXT_INTERVAL,
+    overtakeNotificationsEnabled,
+    overtakeNotificationIntervalMs,
     theme,
     customGradients,
     brandGradient,
@@ -291,6 +312,24 @@ export const buildOverlayQuery = (settings: OverlaySettings) => {
     params.set("excluded", settings.excludedUsernames.join(","));
   if (settings.contextIntervalMs !== DEFAULT_CONTEXT_INTERVAL)
     params.set("contextInterval", `${settings.contextIntervalMs}`);
+  if (
+    settings.overtakeNotificationsEnabled !==
+    DEFAULT_OVERTAKE_NOTIFICATIONS_ENABLED
+  ) {
+    params.set(
+      "overtakeNotifications",
+      settings.overtakeNotificationsEnabled ? "1" : "0"
+    );
+  }
+  if (
+    settings.overtakeNotificationIntervalMs !==
+    DEFAULT_OVERTAKE_NOTIFICATION_INTERVAL_MS
+  ) {
+    params.set(
+      "overtakeInterval",
+      `${settings.overtakeNotificationIntervalMs}`
+    );
+  }
   if (settings.theme && settings.theme !== DEFAULT_THEME)
     params.set("theme", settings.theme);
   if (settings.layout !== DEFAULT_LAYOUT) {

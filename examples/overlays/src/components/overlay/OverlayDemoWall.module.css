@@ -1,0 +1,50 @@
+ .page {
+     min-height: 100vh;
+     width: 100%;
+     padding: clamp(0.75rem, 2vw, 1.5rem);
+     display: flex;
+     justify-content: center;
+     align-items: center;
+     background: transparent;
+ }
+
+ .canvas {
+     width: min(1400px, 98vw);
+     display: grid;
+     gap: clamp(1rem, 2vw, 1.5rem);
+ }
+
+ .row {
+     display: grid;
+     gap: clamp(0.75rem, 1.4vw, 1rem);
+ }
+
+ .row.dual {
+     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+     align-items: start;
+ }
+
+ .label {
+     letter-spacing: 0.08em;
+     text-transform: uppercase;
+     font-size: 0.78rem;
+     opacity: 0.78;
+     color: rgba(255, 255, 255, 0.75);
+     text-align: center;
+ }
+
+.overlayFrame {
+    border-radius: 1.25rem;
+    padding: clamp(0.4rem, 0.8vw, 0.9rem);
+    background: transparent;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+ @media (max-width: 720px) {
+     .canvas {
+         width: 100%;
+     }
+ }
