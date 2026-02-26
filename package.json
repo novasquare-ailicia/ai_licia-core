@@ -1,6 +1,6 @@
 {
   "name": "ai_licia-monorepo",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Monorepo for ai_licia integrations",
   "private": true,
   "workspaces": [
