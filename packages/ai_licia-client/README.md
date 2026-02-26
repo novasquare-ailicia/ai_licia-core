@@ -67,6 +67,13 @@ if (chillPersona) {
 
 // Ask ai_licia to join chat (defaults to the configured channel)
 await client.requestStreamJoin();
+
+// Ask ai_licia to join in TEST mode
+await client.requestStreamJoin({ mode: 'TEST' });
+
+// Read runtime status for controlled channels
+const statuses = await client.getChannelRuntimeStatus();
+console.log(statuses);
 ```
 
 ## API Reference
@@ -182,15 +189,20 @@ Switches the active persona for ai_licia.
 await client.setActiveCharacter('char_123');
 ```
 
-##### `requestStreamJoin(channelName?: string): Promise<JoinChannelResponse>`
+##### `requestStreamJoin(channelName?: string, mode?: JoinMode): Promise<JoinChannelResponse>`
+##### `requestStreamJoin(options?: RequestStreamJoinOptions): Promise<JoinChannelResponse>`
 
 Asks ai_licia to join chat immediately. Omitting `channelName` uses the one configured in the client.
+`mode` defaults to `LIVE`; use `TEST` to trigger demo/test join behavior.
 
 ```typescript
 const join = await client.requestStreamJoin();
 if (!join.success) {
   console.warn('Join failed', join.message);
 }
+
+const testJoin = await client.requestStreamJoin({ mode: 'TEST' });
+console.log(testJoin.message);
 ```
 
 ##### `requestStreamLeave(channelName?: string): Promise<void>`
@@ -199,6 +211,18 @@ Queues a leave request for ai_licia on the target channel.
 
 ```typescript
 await client.requestStreamLeave('backupChannel');
+```
+
+##### `getChannelRuntimeStatus(): Promise<ChannelRuntimeStatus[]>`
+
+Returns runtime status for channels controlled by the API key owner.
+Each item contains: `channelName`, `isPrimary`, `isLive`, `isAiInChat`.
+
+```typescript
+const statuses = await client.getChannelRuntimeStatus();
+for (const status of statuses) {
+  console.log(`${status.channelName}: live=${status.isLive}, inChat=${status.isAiInChat}`);
+}
 ```
 
 ##### `streamEventSub(auth: EventSubAuth, options?: EventSubStreamOptions): EventSubStream`

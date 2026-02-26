@@ -13,6 +13,9 @@ import {
   PublicChatMessage,
   CharacterSummary,
   JoinChannelResponse,
+  JoinMode,
+  RequestStreamJoinOptions,
+  ChannelRuntimeStatus,
   EventSubAuth,
   EventSubStream,
   EventSubStreamOptions,
@@ -233,13 +236,34 @@ export class AiliciaClient {
   /**
    * Requests ai_licia to join a chat channel immediately.
    */
-  public async requestStreamJoin(channelName?: string): Promise<JoinChannelResponse> {
-    const targetChannel = this.resolveChannelName(channelName);
+  public async requestStreamJoin(channelName?: string, mode?: JoinMode): Promise<JoinChannelResponse>;
+  public async requestStreamJoin(options?: RequestStreamJoinOptions): Promise<JoinChannelResponse>;
+  public async requestStreamJoin(
+    channelNameOrOptions?: string | RequestStreamJoinOptions,
+    mode: JoinMode = 'LIVE'
+  ): Promise<JoinChannelResponse> {
+    const { targetChannel, joinMode } = this.resolveRequestStreamJoinArgs(channelNameOrOptions, mode);
     try {
-      const response = await this.client.post(`/streams/${encodeURIComponent(targetChannel)}`);
+      const response = await this.client.post(
+        `/streams/${encodeURIComponent(targetChannel)}`,
+        undefined,
+        joinMode === 'LIVE' ? undefined : { params: { mode: joinMode } }
+      );
       return response.data as JoinChannelResponse;
     } catch (error) {
       this.handleAxiosError('Failed to request ai_licia to join chat', error);
+    }
+  }
+
+  /**
+   * Fetches runtime status for channels controlled by the authenticated API key.
+   */
+  public async getChannelRuntimeStatus(): Promise<ChannelRuntimeStatus[]> {
+    try {
+      const response = await this.client.get('/channels/status');
+      return response.data as ChannelRuntimeStatus[];
+    } catch (error) {
+      this.handleAxiosError('Failed to fetch channel runtime status', error);
     }
   }
 
@@ -702,6 +726,23 @@ export class AiliciaClient {
       throw new Error('Channel name is required. Provide it in the constructor or as a method argument.');
     }
     return resolved;
+  }
+
+  private resolveRequestStreamJoinArgs(
+    channelNameOrOptions?: string | RequestStreamJoinOptions,
+    mode: JoinMode = 'LIVE'
+  ): { targetChannel: string; joinMode: JoinMode } {
+    if (typeof channelNameOrOptions === 'string' || channelNameOrOptions === undefined) {
+      return {
+        targetChannel: this.resolveChannelName(channelNameOrOptions),
+        joinMode: mode
+      };
+    }
+
+    return {
+      targetChannel: this.resolveChannelName(channelNameOrOptions.channelName),
+      joinMode: channelNameOrOptions.mode ?? 'LIVE'
+    };
   }
 
   private handleAxiosError(context: string, error: unknown): never {

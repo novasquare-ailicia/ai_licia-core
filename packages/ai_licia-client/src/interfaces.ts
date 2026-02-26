@@ -101,6 +101,21 @@ export interface JoinChannelResponse {
   joinRequestId?: string;
 }
 
+export const JOIN_MODES = ['LIVE', 'TEST'] as const;
+export type JoinMode = typeof JOIN_MODES[number];
+
+export interface RequestStreamJoinOptions {
+  channelName?: string;
+  mode?: JoinMode;
+}
+
+export interface ChannelRuntimeStatus {
+  channelName: string;
+  isPrimary: boolean;
+  isLive: boolean;
+  isAiInChat: boolean;
+}
+
 export type EventSubJwtAuth = {
   type: 'jwt';
   token: string;
