@@ -1,6 +1,11 @@
 # ai_licia® Overlays
 
-A static Next.js application that ships a configurable “Top Chatters” overlay for OBS/browser sources. It consumes the public ai_licia® chat stream, mirrors the latest leaderboard, and sends context/generation events back to ai_licia® using the official `ai_licia-client@1.1.0`.
+A static Next.js application that ships three configurable overlays for OBS/browser sources:
+1. Top chatters leaderboard
+2. Message-rate pulse card
+3. Joint chat feed (cross-platform chat + EventSub events)
+
+It uses `ai_licia-client@1.4.0` for public chat and unified EventSub streaming.
 
 ## Quick start
 
@@ -9,7 +14,7 @@ pnpm install
 pnpm dev
 ```
 
-Open `http://localhost:3000` to launch the studio, drop in your channel API key + channel name, and copy the generated `/overlay?...` link directly into an OBS browser source (recommended size: 800×500).
+Open `http://localhost:3000` to launch the studio, drop in your channel API key + channel name, and copy the generated overlay link directly into an OBS browser source.
 
 ## Commands
 
@@ -20,13 +25,15 @@ Open `http://localhost:3000` to launch the studio, drop in your channel API key 
 
 ## Overlay anatomy
 
-- **Configurator (/**): Collects API key, channel name, roles to include, excluded usernames, and the cadence used to push leaderboard context back to ai_licia®.
-- **Overlay (`/overlay?...`)**: Pure glassmorphism card stack showing the top 3 chatters only. Pick between three presets (Aurora, Ember, Lumen), switch between horizontal/vertical layouts, surface individual message rates, and optionally show a total stream-wide msg/min card.
-- **API calls**:
-  - Every *N* milliseconds (`contextInterval`) we call `client.sendEvent(...)` with a compact leaderboard summary so ai_licia® keeps up-to-date context.
-  - Whenever someone dethrones the current leader we call `client.triggerGeneration(...)` to let ai_licia® celebrate the promotion (or buffer overtakes and send a digest if configured).
+- **Leaderboard configurator (`/configure`)**: Collects API key, channel name, role filters, visual settings, and context generation cadence.
+- **Message-rate configurator (`/configure/message-rate`)**: Exposes pulse-card-specific setup.
+- **Joint-chat configurator (`/configure/joint-chat`)**: Adds platform filters (Twitch, Kick, YouTube, TikTok), EventSub toggles, profanity masking, timing controls, and lifecycle animation settings.
+- **Overlay routes**:
+  - `/overlay` for leaderboard
+  - `/overlay/total` for standalone message-rate card
+  - `/overlay/joint-chat` for the unified chat/events feed
 
-## Query parameters
+## Query parameters (leaderboard + total rate)
 
 | Param | Description |
 | --- | --- |
@@ -44,10 +51,31 @@ Open `http://localhost:3000` to launch the studio, drop in your channel API key 
 | `showRates` | `1`/`0` toggle for per-chatter msg/min (default `1`) |
 | `showTotalRates` | `1` to render the stream-wide msg/min card |
 
+## Query parameters (joint chat overlay)
+
+Route: `/overlay/joint-chat`
+
+| Param | Description |
+| --- | --- |
+| `apiKey` | Channel API key (required) |
+| `channel` | Channel name (required) |
+| `baseUrl` | Override api base (defaults to `https://api.getailicia.com/v1`) |
+| `platforms` | Comma-separated list from `TWITCH,KICK,YOUTUBE,TIKTOK` |
+| `maxItems` | Maximum on-screen rows before oldest is dropped |
+| `chatMs` | Visible duration for chat rows (ms) |
+| `eventMs` | Visible duration for event rows (ms) |
+| `enterMs` | Entry animation duration (ms) |
+| `exitMs` | Exit animation duration (ms) |
+| `showStatus` | `1`/`0` toggle for status chips |
+| `profanity` | `1`/`0` toggle for profanity masking |
+| `disabledEvents` | Comma-separated EventSub event types to hide |
+| `disabledChannelEvents` | Comma-separated documented channel-event categories to hide (`follow,subscription,cheer,raid`) |
+
 ### Routes
 
 - `/overlay` → three-card leaderboard (default)
 - `/overlay/total` → stand-alone total message rate overlay (same query params supported)
+- `/overlay/joint-chat` → unified cross-platform chat + EventSub events feed
 
 Only overlay routes consume these params so the app can be hosted on GitHub Pages or any static host with zero server logic.
 

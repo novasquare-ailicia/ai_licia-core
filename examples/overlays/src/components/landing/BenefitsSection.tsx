@@ -9,7 +9,7 @@ const benefits = [
   {
     title: "AI-powered context",
     description:
-      "Leaderboard updates are shared with ai_licia so her responses always reference who is climbing.",
+      "Leaderboard changes and EventSub activity are shared with ai_licia so responses always reflect what just happened.",
   },
   {
     title: "Export-ready for OBS/XSplit",
@@ -29,9 +29,9 @@ const BenefitsSection = () => (
       <h2 className={styles.sectionTitle}>Why overlays matter</h2>
       <p className={styles.sectionLead}>
         Great overlays turn viewers into community members. Whether you&apos;re
-        shipping a Twitch overlay, TikTok overlay, AI overlay, OBS overlay, or
-        any hybrid streaming overlay, keep the funnel tight: awareness → participation
-        → loyalty, all while ai_licia narrates the action.
+        shipping a Twitch, Kick, YouTube, or TikTok overlay flow in OBS, keep
+        the funnel tight: awareness → participation → loyalty, while ai_licia
+        narrates the action in realtime.
       </p>
     </div>
     <div className={styles.benefitGrid}>

@@ -8,13 +8,12 @@ const HeroSection = () => (
     <div className={styles.heroContent}>
       <span className="tagline">Realtime AI overlays for creators</span>
       <h1 className={styles.heroTitle}>
-        Spotlight your most dedicated chatters with ai_licia®.
+        Unify chat and stream events with ai_licia® overlays.
       </h1>
       <p className={styles.heroLead}>
-        Build an AI overlay, for OBS, that speaks to Twitch and TikTok communities.
-        ai_licia turns every stream into an interactive competition. perfect for
-        Twitch overlays, TikTok overlays, OBS overlays, and any
-        high-energy streams.
+        Build OBS-ready overlays that sync Twitch, Kick, YouTube, and TikTok
+        into one visual layer. Spotlight leaders, track hype, and surface
+        high-value channel events as they happen.
       </p>
       <div className={styles.heroActions}>
         <Link href="/configure" className={styles.primaryButton}>

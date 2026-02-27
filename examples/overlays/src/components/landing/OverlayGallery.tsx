@@ -1,5 +1,6 @@
 import Link from "next/link";
 import OverlayShowcase from "@/components/OverlayShowcase";
+import JointChatShowcase from "@/components/joint-chat/JointChatShowcase";
 import type { OverlayLayout } from "@/lib/overlay";
 import styles from "./LandingSections.module.css";
 
@@ -10,7 +11,7 @@ type OverlayCard = {
   description: string;
   bullets: string[];
   cta: { href: string; label: string };
-  variant: "leaderboard" | "message-rate";
+  variant: "leaderboard" | "message-rate" | "joint-chat";
   layoutOverride?: OverlayLayout;
 };
 
@@ -44,6 +45,20 @@ const overlayCards: OverlayCard[] = [
     cta: { href: "/configure/message-rate", label: "Configure rate cards" },
     variant: "message-rate" as const,
   },
+  {
+    id: "joint-chat",
+    pill: "Unified chat + events",
+    title: "Joint chat overlay",
+    description:
+      "Merge Twitch, Kick, YouTube, and TikTok chat with EventSub events in one feed, with typed toggles and animation timing controls.",
+    bullets: [
+      "Platform icon chips and optional status chips per row",
+      "EventSub event filters, including channel-event category toggles",
+      "Profanity masking toggle and deterministic username colors",
+    ],
+    cta: { href: "/configure/joint-chat", label: "Configure joint chat" },
+    variant: "joint-chat" as const,
+  },
 ];
 
 const OverlayGallery = () => (
@@ -51,9 +66,9 @@ const OverlayGallery = () => (
     <div>
       <h2 className={styles.sectionTitle}>Overlay gallery</h2>
       <p className={styles.sectionLead}>
-        Two overlays, one workflow. Mix and match the leaderboard and message
-        pulse to gamify your chat without extra browser sources-ideal as a
-        Twitch overlay, TikTok overlay, or any AI overlay you drop into OBS.
+        Three overlays, one workflow. Mix leaderboard cards, message pulse, and
+        the unified joint-chat feed to cover every scene without duplicate
+        browser sources.
       </p>
     </div>
     <div className={styles.galleryGrid}>
@@ -63,11 +78,15 @@ const OverlayGallery = () => (
           <h3>{overlay.title}</h3>
           <p>{overlay.description}</p>
           <div className={styles.galleryPreview}>
-            <OverlayShowcase
-              variant={overlay.variant}
-              showCaption={false}
-              layoutOverride={overlay.layoutOverride}
-            />
+            {overlay.variant === "joint-chat" ? (
+              <JointChatShowcase />
+            ) : (
+              <OverlayShowcase
+                variant={overlay.variant}
+                showCaption={false}
+                layoutOverride={overlay.layoutOverride}
+              />
+            )}
           </div>
           <ul className={styles.benefitList}>
             {overlay.bullets.map((bullet) => (

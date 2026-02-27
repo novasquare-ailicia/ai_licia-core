@@ -11,7 +11,7 @@ const integrationPoints = [
   },
   {
     title: "Flexible layouts",
-    body: "Toggle between horizontal or stacked cards, or isolate the total pulse for clean overlays and widget stacks.",
+    body: "Toggle between leaderboard layouts, isolate total pulse cards, or run a single joint-chat overlay that mixes all platforms.",
   },
 ];
 

@@ -18,6 +18,7 @@ const SiteFooter = () => (
           Benefits
         </SmoothAnchor>
         <Link href="/configure">Configurator</Link>
+        <Link href="/configure/joint-chat">Joint chat</Link>
         <Link
           href="https://docs.getailicia.com"
           target="_blank"

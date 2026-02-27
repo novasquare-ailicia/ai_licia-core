@@ -12,16 +12,19 @@ const SITE_URL =
 const SHARE_IMAGE = `${SITE_URL}/logo.png`;
 
 export const metadata: Metadata = {
-  title: "ai_licia® overlays | Live leaderboard & chat pulse widgets",
+  title: "ai_licia® overlays | Leaderboard, message pulse, and joint chat",
   description:
-    "Showcase your top chatters and real-time message rate with AI overlays powered by ai_licia®. Export-ready for Twitch overlays, TikTok overlays, OBS overlays, and every streaming overlay workflow.",
+    "Showcase top chatters, real-time message rate, and a unified cross-platform joint-chat feed with AI overlays powered by ai_licia®.",
   keywords: [
     "ai_licia overlays",
     "twitch overlay",
     "tiktok overlay",
+    "kick overlay",
+    "youtube overlay",
     "ai overlay",
     "live chat leaderboard",
     "message rate widget",
+    "joint chat overlay",
     "obs overlay",
     "streaming overlay",
   ],
@@ -29,7 +32,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "ai_licia overlays",
     description:
-      "Modern, AI-powered overlays that spotlight top chatters and the live message pulse across Twitch, TikTok, and OBS.",
+      "Modern AI-powered overlays for leaderboard, live message pulse, and unified EventSub chat/events across Twitch, Kick, YouTube, and TikTok.",
     url: SITE_URL,
     images: [
       {
@@ -44,7 +47,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "ai_licia overlays",
     description:
-      "Launch chat leaderboards and msg/min cards powered by ai_licia® for Twitch, TikTok, and OBS.",
+      "Launch leaderboard, msg/min, and joint-chat overlays powered by ai_licia® for Twitch, Kick, YouTube, TikTok, and OBS.",
     images: [SHARE_IMAGE],
   },
 };
@@ -54,7 +57,7 @@ const structuredData = {
   "@type": "Product",
   name: "ai_licia Overlay Studio",
   description:
-    "A Next.js overlay pack that renders top chatter leaderboards and live message-rate cards powered by ai_licia for Twitch, TikTok, and OBS.",
+    "A Next.js overlay pack with top chatter leaderboards, message-rate cards, and a unified multi-platform joint-chat/EventSub feed.",
   brand: {
     "@type": "Brand",
     name: "ai_licia",

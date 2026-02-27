@@ -29,7 +29,7 @@ const CTASection = () => (
         <h2 className={styles.sectionTitle}>Join the builders club</h2>
         <p className={`${styles.sectionLead} ${styles.cardBody}`}>
           Want to build a custom overlay powered by ai_licia? Create your own
-          integration and take over your Twitch or TikTok overlay workflow.
+          integration and own your Twitch, Kick, YouTube, and TikTok overlay workflow.
         </p>
         <div className={styles.cardActions}>
           <Link
