@@ -1,0 +1,200 @@
+.overlay {
+  width: min(980px, 100%);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  position: relative;
+  padding: clamp(0.75rem, 1.5vw, 1.2rem);
+  border-radius: 1.35rem;
+}
+
+.feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.row {
+  position: relative;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: color-mix(in srgb, rgba(8, 10, 18, 0.9) 84%, transparent);
+  backdrop-filter: blur(24px) saturate(170%);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  padding: 0.7rem 0.8rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.22);
+  transform-origin: left center;
+}
+
+.rowHeader {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.username {
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.platformChip {
+  width: 22px;
+  min-width: 22px;
+  padding: 0;
+  border: none;
+}
+
+.statusChip {
+  padding: 0.15rem 0.5rem;
+  color: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.message {
+  margin: 0.48rem 0 0;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 0.96rem;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.eventRow {
+  border-color: rgba(248, 196, 84, 0.56);
+  background:
+    radial-gradient(circle at 92% -5%, rgba(248, 196, 84, 0.2), transparent 42%),
+    radial-gradient(circle at -10% 100%, rgba(95, 200, 255, 0.18), transparent 35%),
+    color-mix(in srgb, rgba(13, 13, 18, 0.92) 86%, transparent);
+  box-shadow: 0 24px 46px rgba(248, 196, 84, 0.18);
+}
+
+.entering {
+  animation: itemEnter var(--joint-enter-ms, 280ms) cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.leaving {
+  animation: itemLeave var(--joint-exit-ms, 280ms) cubic-bezier(0.55, 0, 0.88, 0.37)
+    forwards;
+}
+
+.waitingMessage {
+  margin: 0;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 0.88rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.footer {
+  text-align: right;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.connectionOverlay {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(5, 7, 15, 0.76);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.connectionBadge {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  padding: 0.3rem 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+}
+
+.connectionMessage {
+  margin: 0;
+  max-width: 280px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.platformIcon {
+  width: 14px;
+  height: 14px;
+}
+
+.platformChip[data-platform="TWITCH"] {
+  color: #b58dff;
+  background: rgba(145, 70, 255, 0.23);
+}
+
+.platformChip[data-platform="KICK"] {
+  color: #7cff7b;
+  background: rgba(75, 255, 78, 0.2);
+}
+
+.platformChip[data-platform="YOUTUBE"] {
+  color: #ff4b4b;
+  background: rgba(255, 75, 75, 0.22);
+}
+
+.platformChip[data-platform="TIKTOK"] {
+  color: #8ef5ff;
+  background: rgba(95, 243, 255, 0.18);
+}
+
+@keyframes itemEnter {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes itemLeave {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    max-height: 220px;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0.7rem;
+    padding-bottom: 0.7rem;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0, -8px, 0);
+    max-height: 0;
+    margin-top: -0.05rem;
+    margin-bottom: -0.45rem;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
