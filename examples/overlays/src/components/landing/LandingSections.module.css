@@ -208,6 +208,11 @@
   gap: 1.2rem;
   position: relative;
   overflow: hidden;
+  isolation: isolate;
+}
+
+.galleryCardFeatured {
+  grid-column: 1 / -1;
 }
 
 .galleryCard::after {
@@ -216,6 +221,12 @@
   inset: 0;
   background: radial-gradient(circle at 25% 25%, var(--card-sheen), transparent 55%);
   pointer-events: none;
+  z-index: 0;
+}
+
+.galleryCard > * {
+  position: relative;
+  z-index: 1;
 }
 
 .galleryPreview {
@@ -225,6 +236,7 @@
   border: 1px solid color-mix(in srgb, var(--panel-border) 80%, transparent);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
+  overflow: hidden;
 }
 
 .cardPill {

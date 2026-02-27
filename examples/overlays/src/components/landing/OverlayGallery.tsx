@@ -17,6 +17,20 @@ type OverlayCard = {
 
 const overlayCards: OverlayCard[] = [
   {
+    id: "joint-chat",
+    pill: "Unified chat + events",
+    title: "Joint chat overlay",
+    description:
+      "Merge Twitch, Kick, YouTube, and TikTok chat with EventSub events in one feed, with typed toggles and animation timing controls.",
+    bullets: [
+      "Platform icon chips and optional status chips per row",
+      "EventSub event filters, including channel-event category toggles",
+      "Profanity masking toggle and deterministic username colors",
+    ],
+    cta: { href: "/configure/joint-chat", label: "Configure joint chat" },
+    variant: "joint-chat" as const,
+  },
+  {
     id: "leaderboard",
     pill: "Top chatters",
     title: "Realtime leaderboard overlay",
@@ -45,20 +59,6 @@ const overlayCards: OverlayCard[] = [
     cta: { href: "/configure/message-rate", label: "Configure rate cards" },
     variant: "message-rate" as const,
   },
-  {
-    id: "joint-chat",
-    pill: "Unified chat + events",
-    title: "Joint chat overlay",
-    description:
-      "Merge Twitch, Kick, YouTube, and TikTok chat with EventSub events in one feed, with typed toggles and animation timing controls.",
-    bullets: [
-      "Platform icon chips and optional status chips per row",
-      "EventSub event filters, including channel-event category toggles",
-      "Profanity masking toggle and deterministic username colors",
-    ],
-    cta: { href: "/configure/joint-chat", label: "Configure joint chat" },
-    variant: "joint-chat" as const,
-  },
 ];
 
 const OverlayGallery = () => (
@@ -73,7 +73,12 @@ const OverlayGallery = () => (
     </div>
     <div className={styles.galleryGrid}>
       {overlayCards.map((overlay) => (
-        <article key={overlay.id} className={styles.galleryCard}>
+        <article
+          key={overlay.id}
+          className={`${styles.galleryCard} ${
+            overlay.id === "joint-chat" ? styles.galleryCardFeatured : ""
+          }`}
+        >
           <span className={styles.cardPill}>{overlay.pill}</span>
           <h3>{overlay.title}</h3>
           <p>{overlay.description}</p>
