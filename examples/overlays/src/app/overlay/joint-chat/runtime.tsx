@@ -66,7 +66,7 @@ const JointChatRuntime = ({ initialParams = {} }: JointChatRuntimeProps) => {
   if (!isReady) return null;
 
   return (
-    <div className="overlay-page">
+    <div className="overlay-page overlay-page-joint-chat">
       <JointChatOverlayView settings={settings} variant="standalone" />
     </div>
   );

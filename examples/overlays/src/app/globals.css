@@ -196,6 +196,11 @@ a {
   background: transparent;
 }
 
+.overlay-page-joint-chat {
+  align-items: stretch;
+  justify-content: flex-end;
+}
+
 @media (max-width: 960px) {
   .site-main {
     padding: clamp(1.5rem, 6vw, 2.5rem);

@@ -7,6 +7,7 @@
   position: relative;
   padding: clamp(0.75rem, 1.5vw, 1.2rem);
   border-radius: 1.35rem;
+  min-height: 100%;
 }
 
 .feed {
@@ -15,7 +16,10 @@
   padding: 0;
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
   gap: 0.6rem;
+  flex: 1;
+  overflow: hidden;
 }
 
 .row {
@@ -109,6 +113,10 @@
   text-transform: uppercase;
   letter-spacing: 0.14em;
   color: rgba(255, 255, 255, 0.5);
+}
+
+.overlay[data-preview="true"] {
+  min-height: clamp(320px, 46vh, 460px);
 }
 
 .connectionOverlay {
