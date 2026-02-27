@@ -8,6 +8,8 @@
   padding: clamp(0.75rem, 1.5vw, 1.2rem);
   border-radius: 1.35rem;
   min-height: 100%;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .feed {
@@ -19,7 +21,7 @@
   justify-content: flex-end;
   gap: 0.6rem;
   flex: 1;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .row {
@@ -32,6 +34,7 @@
   padding: 0.7rem 0.8rem;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.22);
   transform-origin: left center;
+  isolation: isolate;
 }
 
 .rowHeader {
@@ -86,7 +89,24 @@
     radial-gradient(circle at 92% -5%, rgba(248, 196, 84, 0.2), transparent 42%),
     radial-gradient(circle at -10% 100%, rgba(95, 200, 255, 0.18), transparent 35%),
     color-mix(in srgb, rgba(13, 13, 18, 0.92) 86%, transparent);
-  box-shadow: 0 24px 46px rgba(248, 196, 84, 0.18);
+  box-shadow:
+    0 24px 46px rgba(248, 196, 84, 0.18),
+    0 0 14px rgba(248, 196, 84, 0.14),
+    0 0 26px rgba(248, 196, 84, 0.08);
+}
+
+.eventRow::after {
+  content: "";
+  position: absolute;
+  inset: -8px -3px;
+  border-radius: 1.25rem;
+  background:
+    radial-gradient(circle at 88% 30%, rgba(248, 196, 84, 0.2), transparent 58%),
+    radial-gradient(circle at 10% 78%, rgba(95, 200, 255, 0.1), transparent 54%);
+  filter: blur(9px);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: -1;
 }
 
 .entering {

@@ -8,6 +8,9 @@
     background: transparent;
     transition: opacity 0.4s ease, transform 0.4s ease;
     position: relative;
+    overflow: hidden;
+    border-radius: 1.8rem;
+    isolation: isolate;
 }
 
 .overlay[data-compact="true"] {
@@ -170,6 +173,7 @@
     transform: translate3d(0, var(--lift, 0px), 0) scale(var(--scale, 1));
     transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1),
     box-shadow 0.4s ease, border-color 0.4s ease;
+    isolation: isolate;
 }
 
 .cardCompact {
@@ -215,16 +219,25 @@
 }
 
 .cardAccent {
+    inset: 8% 10%;
+    border-radius: 2.4rem;
     background: var(--gradient-primary);
-    filter: blur(55px);
-    opacity: 0.6;
+    filter: blur(38px);
+    opacity: 0.52;
+}
+
+.cardCompact .cardAccent {
+    inset: 12% 14%;
+    border-radius: 1.3rem;
+    filter: blur(24px);
+    opacity: 0.48;
 }
 
 .cardGlow {
     inset: 12% 18%;
     border-radius: 2.4rem;
     background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.45), transparent 70%);
-    opacity: 0.55;
+    opacity: 0.5;
     filter: blur(30px);
 }
 
@@ -422,9 +435,10 @@
     min-width: min(280px, 90%);
     color: #ecfeff;
     box-shadow: 0 20px 40px rgba(3, 5, 15, 0.4),
-    0 0 calc(45px * var(--pulse-strength)) color-mix(in srgb, var(--pulse-color, #29ffc6) 55%, transparent);
+    0 0 calc(40px * var(--pulse-strength)) color-mix(in srgb, var(--pulse-color, #29ffc6) 52%, transparent);
     position: relative;
-    overflow: hidden;
+    overflow: visible;
+    isolation: isolate;
     transition: box-shadow 0.35s ease;
 }
 
@@ -442,11 +456,18 @@
     content: "";
     position: absolute;
     inset: -20% -10%;
-    background: radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--pulse-color, #29ffc6) 75%, transparent) 60%, transparent 65%);
-    opacity: calc(0.75 * var(--pulse-strength));
-    filter: blur(30px);
+    border-radius: 999px;
+    background:
+        radial-gradient(
+            circle at 50% 0%,
+            color-mix(in srgb, var(--pulse-color, #29ffc6) 72%, transparent) 60%,
+            transparent 65%
+        );
+    opacity: calc(0.68 * var(--pulse-strength));
+    filter: blur(28px);
     pointer-events: none;
     transition: opacity 0.4s ease;
+    z-index: -1;
 }
 
 .totalRateCard > * {

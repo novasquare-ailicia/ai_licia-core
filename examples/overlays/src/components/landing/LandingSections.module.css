@@ -23,24 +23,31 @@
 .hero::after {
   content: "";
   position: absolute;
-  width: 320px;
-  height: 320px;
-  border-radius: 50%;
-  background: var(--gradient-primary);
-  filter: blur(120px);
-  opacity: 0.35;
+  inset: 0;
+  border-radius: inherit;
   pointer-events: none;
 }
 
 .hero::after {
-  background: var(--gradient-accent);
-  top: -60px;
-  right: -40px;
+  background:
+    radial-gradient(
+      circle at 88% 10%,
+      color-mix(in srgb, #49e8ff 30%, transparent) 0%,
+      color-mix(in srgb, #49e8ff 16%, transparent) 24%,
+      transparent 58%
+    );
+  opacity: 0.95;
 }
 
 .hero::before {
-  bottom: -120px;
-  left: -60px;
+  background:
+    radial-gradient(
+      circle at 12% 88%,
+      color-mix(in srgb, #8e2de2 32%, transparent) 0%,
+      color-mix(in srgb, #8e2de2 18%, transparent) 28%,
+      transparent 62%
+    );
+  opacity: 0.9;
 }
 
 .heroContent {
@@ -151,6 +158,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 2rem;
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .heroVisual > * {
