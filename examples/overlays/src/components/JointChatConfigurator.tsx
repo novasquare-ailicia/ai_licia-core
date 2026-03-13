@@ -19,6 +19,7 @@ import {
 } from "@mui/material";
 import JointChatOverlayView from "@/components/joint-chat/JointChatOverlayView";
 import JointChatShowcase from "@/components/joint-chat/JointChatShowcase";
+import type { StreamStatus } from "@/components/overlay/types";
 import { trackEvent } from "@/lib/analytics";
 import {
   buildEnabledToggleMap,
@@ -89,7 +90,7 @@ const JointChatConfigurator = () => {
   const [channelEventToggles, setChannelEventToggles] =
     useState<JointChatChannelEventToggles>(DEFAULT_CHANNEL_EVENT_TOGGLES);
   const [connectionStatus, setConnectionStatus] = useState<{
-    state: string;
+    state: StreamStatus;
     message: string;
   }>({ state: "idle", message: "Waiting for credentials" });
   const [copied, setCopied] = useState(false);
@@ -294,6 +295,10 @@ const JointChatConfigurator = () => {
       console.warn("Failed to copy joint chat link", error);
     }
   };
+
+  const handleStatusChange = useCallback((state: StreamStatus, message: string) => {
+    setConnectionStatus({ state, message });
+  }, []);
 
   return (
     <div className="page-shell">
@@ -570,9 +575,7 @@ const JointChatConfigurator = () => {
                 <JointChatOverlayView
                   settings={settings}
                   variant="standalone"
-                  onStatusChange={(state, message) =>
-                    setConnectionStatus({ state, message })
-                  }
+                  onStatusChange={handleStatusChange}
                 />
               </CardContent>
             </Card>

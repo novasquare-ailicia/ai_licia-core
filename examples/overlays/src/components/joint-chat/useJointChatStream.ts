@@ -241,14 +241,21 @@ export const useJointChatStream = ({
     () => Boolean(settings.apiKey && settings.channelName),
     [settings.apiKey, settings.channelName]
   );
+  const onStatusChangeRef = useRef<JointChatHookOptions["onStatusChange"]>(
+    onStatusChange
+  );
+
+  useEffect(() => {
+    onStatusChangeRef.current = onStatusChange;
+  }, [onStatusChange]);
 
   const emitStatus = useCallback(
     (nextStatus: StreamStatus, info: string) => {
       setStatus(nextStatus);
       setStatusMessage(info);
-      onStatusChange?.(nextStatus, info);
+      onStatusChangeRef.current?.(nextStatus, info);
     },
-    [onStatusChange]
+    []
   );
 
   const clearItemTimers = useCallback((id: string) => {
