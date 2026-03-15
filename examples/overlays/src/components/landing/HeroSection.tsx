@@ -19,6 +19,9 @@ const HeroSection = () => (
         <Link href="/configure" className={styles.primaryButton}>
           Start with overlays →
         </Link>
+        <Link href="/configure/language-war" className={styles.primaryButton}>
+          Configure language war
+        </Link>
         <SmoothAnchor targetId="gallery" className={styles.ghostButton}>
           See overlays in action
         </SmoothAnchor>

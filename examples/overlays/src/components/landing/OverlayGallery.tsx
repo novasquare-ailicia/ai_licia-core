@@ -1,17 +1,19 @@
 import Link from "next/link";
 import OverlayShowcase from "@/components/OverlayShowcase";
 import JointChatShowcase from "@/components/joint-chat/JointChatShowcase";
+import LanguageWarShowcase from "@/components/language-war/LanguageWarShowcase";
 import type { OverlayLayout } from "@/lib/overlay";
 import styles from "./LandingSections.module.css";
 
 type OverlayCard = {
   id: string;
   pill: string;
+  badge?: string;
   title: string;
   description: string;
   bullets: string[];
   cta: { href: string; label: string };
-  variant: "leaderboard" | "message-rate" | "joint-chat";
+  variant: "leaderboard" | "message-rate" | "joint-chat" | "language-war";
   layoutOverride?: OverlayLayout;
 };
 
@@ -29,6 +31,21 @@ const overlayCards: OverlayCard[] = [
     ],
     cta: { href: "/configure/joint-chat", label: "Configure joint chat" },
     variant: "joint-chat" as const,
+  },
+  {
+    id: "language-war",
+    pill: "Timed language battle",
+    badge: "Beta",
+    title: "Language war overlay",
+    description:
+      "Multilingual stream? Activate your community with a friendly battle to see which language wins the round.",
+    bullets: [
+      "EventSub-powered language counts with timed round resets",
+      "Central ring, outer countdown arc, and right-side leaderboard rail",
+      "Ideal for multilingual communities, watch parties, and community contests",
+    ],
+    cta: { href: "/configure/language-war", label: "Configure language war" },
+    variant: "language-war" as const,
   },
   {
     id: "leaderboard",
@@ -80,11 +97,18 @@ const OverlayGallery = () => (
           }`}
         >
           <span className={styles.cardPill}>{overlay.pill}</span>
-          <h3>{overlay.title}</h3>
+          <div className={styles.cardHeading}>
+            <h3>{overlay.title}</h3>
+            {overlay.badge ? (
+              <span className={styles.cardBadge}>{overlay.badge}</span>
+            ) : null}
+          </div>
           <p>{overlay.description}</p>
           <div className={styles.galleryPreview}>
             {overlay.variant === "joint-chat" ? (
               <JointChatShowcase />
+            ) : overlay.variant === "language-war" ? (
+              <LanguageWarShowcase />
             ) : (
               <OverlayShowcase
                 variant={overlay.variant}

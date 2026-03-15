@@ -24,6 +24,7 @@ import {
   JOINT_CHAT_CHANNEL_EVENT_LABELS,
   JOINT_CHAT_EVENT_LABELS,
   JOINT_CHAT_EVENT_TYPES,
+  normalizeJointChatIdentity,
   resolveJointChatUsernameColor,
   type JointChatOverlaySettings,
   resolveChannelEventCategory,
@@ -104,6 +105,7 @@ const toFeedItem = (
   const platform = resolvePlatform(event);
   if (!settings.platforms.includes(platform)) return null;
   if (!settings.eventToggles[event.type]) return null;
+  const normalizedChannelName = normalizeJointChatIdentity(settings.channelName);
 
   let username = event.channel.name;
   let message = "";
@@ -113,6 +115,13 @@ const toFeedItem = (
   switch (event.type) {
     case "chat.message": {
       const payload = event.payload as EventSubChatMessagePayload;
+      if (
+        settings.hideStreamerMessages &&
+        normalizedChannelName &&
+        normalizeJointChatIdentity(payload.username) === normalizedChannelName
+      ) {
+        return null;
+      }
       username = payload.username;
       message = payload.message;
       kind = "chat";

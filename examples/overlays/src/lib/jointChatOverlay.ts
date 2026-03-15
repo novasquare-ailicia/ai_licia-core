@@ -80,6 +80,7 @@ export const JOINT_CHAT_DEFAULT_ENTRY_ANIMATION_MS = 280;
 export const JOINT_CHAT_DEFAULT_EXIT_ANIMATION_MS = 280;
 export const JOINT_CHAT_DEFAULT_SHOW_STATUS_CHIPS = true;
 export const JOINT_CHAT_DEFAULT_PROFANITY_FILTER = false;
+export const JOINT_CHAT_DEFAULT_HIDE_STREAMER_MESSAGES = false;
 export const JOINT_CHAT_USERNAME_COLORS = [
   "#f97316",
   "#22d3ee",
@@ -101,6 +102,7 @@ export interface JointChatOverlaySettings {
   baseUrl: string;
   platforms: Platform[];
   showStatusChips: boolean;
+  hideStreamerMessages: boolean;
   maxItems: number;
   chatVisibleMs: number;
   eventVisibleMs: number;
@@ -177,6 +179,9 @@ const normalizeChannelEventType = (eventType?: string | null) =>
     .trim()
     .toLowerCase()
     .replace(/[.\s-]+/g, "_");
+
+export const normalizeJointChatIdentity = (value?: string | null) =>
+  (value ?? "").trim().toLowerCase();
 
 export const isStreamerCaptionChannelEvent = (eventType?: string | null) => {
   const normalized = normalizeChannelEventType(eventType);
@@ -325,6 +330,11 @@ export const buildJointChatOverlayQuery = (
   ) {
     params.set("profanity", settings.profanityFilterEnabled ? "1" : "0");
   }
+  if (
+    settings.hideStreamerMessages !== JOINT_CHAT_DEFAULT_HIDE_STREAMER_MESSAGES
+  ) {
+    params.set("hideStreamerMessages", settings.hideStreamerMessages ? "1" : "0");
+  }
   if (!allEnabled(settings.eventToggles)) {
     const disabled = serializeDisabledToggles(settings.eventToggles);
     if (disabled) params.set("disabledEvents", disabled);
@@ -359,6 +369,10 @@ export const parseJointChatOverlaySettings = (
     showStatusChips: parseBoolean(
       pull("showStatus"),
       JOINT_CHAT_DEFAULT_SHOW_STATUS_CHIPS
+    ),
+    hideStreamerMessages: parseBoolean(
+      pull("hideStreamerMessages"),
+      JOINT_CHAT_DEFAULT_HIDE_STREAMER_MESSAGES
     ),
     maxItems: parseNumberInRange(
       pull("maxItems"),

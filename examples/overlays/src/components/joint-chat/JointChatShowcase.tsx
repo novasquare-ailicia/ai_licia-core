@@ -94,6 +94,7 @@ const demoSettings: JointChatOverlaySettings = {
   eventVisibleMs: JOINT_CHAT_DEFAULT_EVENT_VISIBLE_MS,
   entryAnimationMs: JOINT_CHAT_DEFAULT_ENTRY_ANIMATION_MS,
   exitAnimationMs: JOINT_CHAT_DEFAULT_EXIT_ANIMATION_MS,
+  hideStreamerMessages: false,
   profanityFilterEnabled: false,
   eventToggles: buildEnabledToggleMap(JOINT_CHAT_EVENT_TYPES),
   channelEventToggles: buildEnabledToggleMap(JOINT_CHAT_CHANNEL_EVENT_CATEGORIES),

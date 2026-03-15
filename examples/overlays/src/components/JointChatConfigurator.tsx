@@ -30,6 +30,7 @@ import {
   JOINT_CHAT_DEFAULT_ENTRY_ANIMATION_MS,
   JOINT_CHAT_DEFAULT_EVENT_VISIBLE_MS,
   JOINT_CHAT_DEFAULT_EXIT_ANIMATION_MS,
+  JOINT_CHAT_DEFAULT_HIDE_STREAMER_MESSAGES,
   JOINT_CHAT_DEFAULT_MAX_ITEMS,
   JOINT_CHAT_DEFAULT_PROFANITY_FILTER,
   JOINT_CHAT_DEFAULT_SHOW_STATUS_CHIPS,
@@ -84,6 +85,9 @@ const JointChatConfigurator = () => {
   const [profanityFilterEnabled, setProfanityFilterEnabled] = useState(
     JOINT_CHAT_DEFAULT_PROFANITY_FILTER
   );
+  const [hideStreamerMessages, setHideStreamerMessages] = useState(
+    JOINT_CHAT_DEFAULT_HIDE_STREAMER_MESSAGES
+  );
   const [eventToggles, setEventToggles] = useState<JointChatEventToggles>(
     DEFAULT_EVENT_TOGGLES
   );
@@ -101,12 +105,13 @@ const JointChatConfigurator = () => {
       trackEvent(eventName, {
         variant: "joint-chat",
         platformsCount: platforms.length,
+        hideStreamerMessages,
         maxItems,
         profanityFilterEnabled,
         ...extra,
       });
     },
-    [maxItems, platforms.length, profanityFilterEnabled]
+    [hideStreamerMessages, maxItems, platforms.length, profanityFilterEnabled]
   );
 
   useEffect(() => {
@@ -140,6 +145,9 @@ const JointChatConfigurator = () => {
         setShowStatusChips(stored.showStatusChips);
       if (typeof stored.profanityFilterEnabled === "boolean") {
         setProfanityFilterEnabled(stored.profanityFilterEnabled);
+      }
+      if (typeof stored.hideStreamerMessages === "boolean") {
+        setHideStreamerMessages(stored.hideStreamerMessages);
       }
       if (stored.eventToggles) {
         setEventToggles((prev) => ({
@@ -177,6 +185,7 @@ const JointChatConfigurator = () => {
           exitAnimationMs,
           showStatusChips,
           profanityFilterEnabled,
+          hideStreamerMessages,
           eventToggles,
           channelEventToggles,
         })
@@ -195,6 +204,7 @@ const JointChatConfigurator = () => {
     eventToggles,
     eventVisibleMs,
     exitAnimationMs,
+    hideStreamerMessages,
     maxItems,
     platforms,
     profanityFilterEnabled,
@@ -213,6 +223,7 @@ const JointChatConfigurator = () => {
       entryAnimationMs,
       exitAnimationMs,
       showStatusChips,
+      hideStreamerMessages,
       profanityFilterEnabled,
       eventToggles,
       channelEventToggles,
@@ -227,6 +238,7 @@ const JointChatConfigurator = () => {
       eventToggles,
       eventVisibleMs,
       exitAnimationMs,
+      hideStreamerMessages,
       maxItems,
       platforms,
       profanityFilterEnabled,
@@ -419,6 +431,21 @@ const JointChatConfigurator = () => {
                         />
                       }
                       label="Enable profanity masking"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={hideStreamerMessages}
+                          onChange={(event) => {
+                            setHideStreamerMessages(event.target.checked);
+                            emitConfiguratorEvent(
+                              "overlay_joint_chat_hide_streamer_toggle",
+                              { enabled: event.target.checked }
+                            );
+                          }}
+                        />
+                      }
+                      label="Hide streamer messages"
                     />
                   </Stack>
                 </CardContent>
