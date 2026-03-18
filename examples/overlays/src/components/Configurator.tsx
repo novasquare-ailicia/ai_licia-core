@@ -86,7 +86,7 @@ const copyByVariant: Record<
 > = {
   leaderboard: {
     tagline: "ai_licia® overlays",
-    title: "Build an AI leaderboard overlay in seconds.",
+    title: "Build an AI Chat Messages leaderboard overlay in seconds.",
     lead:
       "Drop your ai_licia® credentials, choose which roles matter, then paste the generated browser-source link inside OBS or any studio.",
     previewCaption:

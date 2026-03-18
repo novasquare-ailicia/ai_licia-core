@@ -5,7 +5,7 @@ import LanguageWarConfigurator from "@/components/LanguageWarConfigurator";
 export const metadata: Metadata = {
   title: "Configure ai_licia® language war overlay",
   description:
-    "Build a timed language battle overlay powered by EventSub chat message language detection.",
+    "Build a timed language battle overlay powered by ai_licia chat message language detection.",
 };
 
 const LanguageWarConfigurePage = () => (

@@ -12,9 +12,10 @@ const SITE_URL =
 const SHARE_IMAGE = `${SITE_URL}/logo.png`;
 
 export const metadata: Metadata = {
-  title: "ai_licia® overlays | Leaderboard, message pulse, and joint chat",
+  title:
+    "ai_licia® overlays | Top chatters, message rate, joint chat, and language war",
   description:
-    "Showcase top chatters, real-time message rate, and a unified cross-platform joint-chat feed with AI overlays powered by ai_licia®.",
+    "Showcase top chatters, real-time message rate, language battles, and a unified cross-platform joint chat feed with AI overlays powered by ai_licia®.",
   keywords: [
     "ai_licia overlays",
     "twitch overlay",
@@ -25,14 +26,18 @@ export const metadata: Metadata = {
     "live chat leaderboard",
     "message rate widget",
     "joint chat overlay",
+    "language war overlay",
+    "language battle overlay",
+    "multilingual chat overlay",
+    "cross-platform chat overlay",
     "obs overlay",
     "streaming overlay",
   ],
   metadataBase: new URL(SITE_URL),
   openGraph: {
-    title: "ai_licia overlays",
+    title: "ai_licia overlays | Top chatters, message rate, joint chat, language war",
     description:
-      "Modern AI-powered overlays for leaderboard, live message pulse, and unified EventSub chat/events across Twitch, Kick, YouTube, and TikTok.",
+      "Modern AI-powered overlays for top chatters leaderboard, live message rate, language war battles, and unified joint chat across Twitch, Kick, YouTube, and TikTok.",
     url: SITE_URL,
     images: [
       {
@@ -45,9 +50,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "ai_licia overlays",
+    title: "ai_licia overlays | Top chatters, message rate, joint chat, language war",
     description:
-      "Launch leaderboard, msg/min, and joint-chat overlays powered by ai_licia® for Twitch, Kick, YouTube, TikTok, and OBS.",
+      "Launch top chatters, msg/min, language war, and joint-chat overlays powered by ai_licia® for Twitch, Kick, YouTube, TikTok, and OBS.",
     images: [SHARE_IMAGE],
   },
 };
@@ -57,7 +62,7 @@ const structuredData = {
   "@type": "Product",
   name: "ai_licia Overlay Studio",
   description:
-    "A Next.js overlay pack with top chatter leaderboards, message-rate cards, and a unified multi-platform joint-chat/EventSub feed.",
+    "A Next.js overlay pack with top chatter leaderboards, message-rate cards, language war battles, and a unified multi-platform joint chat feed.",
   brand: {
     "@type": "Brand",
     name: "ai_licia",

@@ -362,7 +362,7 @@ export const useLanguageWarStream = ({
   });
   const [status, setStatus] = useState<StreamStatus>("idle");
   const [statusMessage, setStatusMessage] = useState(
-    "Add your ai_licia API key and channel to start EventSub."
+    "Add your ai_licia API key and channel to start tracking messages languags."
   );
 
   const phaseRef = useRef<LanguageWarPhase>("idle");

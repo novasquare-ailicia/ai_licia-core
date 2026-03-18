@@ -5,7 +5,7 @@ import JointChatConfigurator from "@/components/JointChatConfigurator";
 export const metadata: Metadata = {
   title: "Configure ai_licia® joint chat overlay",
   description:
-    "Build a unified cross-platform chat and EventSub overlay with typed controls for filters, timing, and animations.",
+    "Build a unified cross-platform chat overlay with typed controls for filters, timing, and animations.",
 };
 
 const JointChatConfigurePage = () => (
