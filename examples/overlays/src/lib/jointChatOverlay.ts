@@ -22,7 +22,6 @@ export const JOINT_CHAT_EVENT_TYPES = [
   "channel.go_live",
   "channel.go_offline",
   "ai.moderation",
-  "api.event",
   "system.join",
   "system.left",
   "character.updated",
@@ -42,7 +41,6 @@ export const JOINT_CHAT_EVENT_LABELS: Record<JointChatEventType, string> = {
   "channel.go_live": "Go live",
   "channel.go_offline": "Go offline",
   "ai.moderation": "Moderation",
-  "api.event": "API event",
   "system.join": "System join",
   "system.left": "System leave",
   "character.updated": "Character update",
@@ -276,15 +274,15 @@ const parsePlatforms = (value?: string) => {
 };
 
 const serializeDisabledToggles = <TKey extends string>(
-  toggleMap: Record<TKey, boolean>
+  toggleMap: Partial<Record<TKey, boolean>>,
+  keys: readonly TKey[]
 ) =>
-  Object.entries(toggleMap)
-    .filter(([, enabled]) => !enabled)
-    .map(([key]) => key)
-    .join(",");
+  keys.filter((key) => toggleMap[key] === false).join(",");
 
-const allEnabled = <TKey extends string>(toggleMap: Record<TKey, boolean>) =>
-  Object.values(toggleMap).every((enabled) => enabled);
+const allEnabled = <TKey extends string>(
+  toggleMap: Partial<Record<TKey, boolean>>,
+  keys: readonly TKey[]
+) => keys.every((key) => toggleMap[key] !== false);
 
 const samePlatformSet = (a: Platform[], b: readonly Platform[]) =>
   a.length === b.length &&
@@ -335,12 +333,23 @@ export const buildJointChatOverlayQuery = (
   ) {
     params.set("hideStreamerMessages", settings.hideStreamerMessages ? "1" : "0");
   }
-  if (!allEnabled(settings.eventToggles)) {
-    const disabled = serializeDisabledToggles(settings.eventToggles);
+  if (!allEnabled(settings.eventToggles, JOINT_CHAT_EVENT_TYPES)) {
+    const disabled = serializeDisabledToggles(
+      settings.eventToggles,
+      JOINT_CHAT_EVENT_TYPES
+    );
     if (disabled) params.set("disabledEvents", disabled);
   }
-  if (!allEnabled(settings.channelEventToggles)) {
-    const disabled = serializeDisabledToggles(settings.channelEventToggles);
+  if (
+    !allEnabled(
+      settings.channelEventToggles,
+      JOINT_CHAT_CHANNEL_EVENT_CATEGORIES
+    )
+  ) {
+    const disabled = serializeDisabledToggles(
+      settings.channelEventToggles,
+      JOINT_CHAT_CHANNEL_EVENT_CATEGORIES
+    );
     if (disabled) params.set("disabledChannelEvents", disabled);
   }
 

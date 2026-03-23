@@ -170,6 +170,7 @@ export interface EventSubChatMessagePayload {
   message: string;
   language: string;
   platform: Platform;
+  isCaption: boolean;
   isSubscriber: boolean;
   isVip: boolean;
   isModerator: boolean;

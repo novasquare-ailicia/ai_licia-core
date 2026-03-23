@@ -5,7 +5,6 @@ import type {
   EventSubAiModerationPayload,
   EventSubAiThoughtsPayload,
   EventSubAiTtsGeneratedPayload,
-  EventSubApiEventPayload,
   EventSubChannelEventPayload,
   EventSubCharacterUpdatedPayload,
   EventSubChatAiMessagePayload,
@@ -24,6 +23,7 @@ import {
   JOINT_CHAT_CHANNEL_EVENT_LABELS,
   JOINT_CHAT_EVENT_LABELS,
   JOINT_CHAT_EVENT_TYPES,
+  type JointChatEventType,
   normalizeJointChatIdentity,
   resolveJointChatUsernameColor,
   type JointChatOverlaySettings,
@@ -42,6 +42,10 @@ const DEFAULT_PROFANITY_LIST = [
 ];
 
 const MAX_MESSAGE_LENGTH = 240;
+
+type JointChatMessagePayload = EventSubChatMessagePayload & {
+  isCaption?: boolean | null;
+};
 
 interface JointChatHookOptions {
   settings: JointChatOverlaySettings;
@@ -63,11 +67,16 @@ const sanitizeProfanity = (value: string, enabled: boolean) => {
 
 const resolvePlatform = (event: EventSubEvent): Platform => {
   if (event.type === "chat.message") {
-    const payload = event.payload as EventSubChatMessagePayload;
+    const payload = event.payload as JointChatMessagePayload;
     return payload.platform;
   }
   return event.channel.platform;
 };
+
+const isJointChatEventType = (
+  eventType: EventSubEventType
+): eventType is JointChatEventType =>
+  Object.prototype.hasOwnProperty.call(JOINT_CHAT_EVENT_LABELS, eventType);
 
 const buildStatusChips = (event: EventSubEvent): string[] => {
   switch (event.type) {
@@ -93,8 +102,12 @@ const buildStatusChips = (event: EventSubEvent): string[] => {
       const payload = event.payload as EventSubAiModerationPayload;
       return [payload.isAppropriate ? "Allowed" : "Flagged"];
     }
-    default:
-      return [JOINT_CHAT_EVENT_LABELS[event.type]];
+    default: {
+      const label = isJointChatEventType(event.type)
+        ? JOINT_CHAT_EVENT_LABELS[event.type]
+        : null;
+      return label ? [label] : [];
+    }
   }
 };
 
@@ -102,8 +115,10 @@ const toFeedItem = (
   event: EventSubEvent,
   settings: JointChatOverlaySettings
 ): JointChatFeedItem | null => {
+  if (event.type === "api.event") return null;
   const platform = resolvePlatform(event);
   if (!settings.platforms.includes(platform)) return null;
+  if (!isJointChatEventType(event.type)) return null;
   if (!settings.eventToggles[event.type]) return null;
   const normalizedChannelName = normalizeJointChatIdentity(settings.channelName);
 
@@ -114,11 +129,18 @@ const toFeedItem = (
 
   switch (event.type) {
     case "chat.message": {
-      const payload = event.payload as EventSubChatMessagePayload;
+      const payload = event.payload as JointChatMessagePayload;
+      const normalizedUsername = normalizeJointChatIdentity(payload.username);
+      const normalizedEventChannelName = normalizeJointChatIdentity(
+        event.channel.name
+      );
+      const isStreamerMessage =
+        normalizedUsername !== "" &&
+        (normalizedUsername === normalizedChannelName ||
+          normalizedUsername === normalizedEventChannelName);
       if (
         settings.hideStreamerMessages &&
-        normalizedChannelName &&
-        normalizeJointChatIdentity(payload.username) === normalizedChannelName
+        (isStreamerMessage || payload.isCaption === true)
       ) {
         return null;
       }
@@ -182,12 +204,6 @@ const toFeedItem = (
       const payload = event.payload as EventSubAiTtsGeneratedPayload;
       username = payload.username;
       message = `Generated TTS clip (${payload.audioFormat})`;
-      break;
-    }
-    case "api.event": {
-      const payload = event.payload as EventSubApiEventPayload;
-      username = "API";
-      message = payload.content || payload.eventType;
       break;
     }
     case "system.join": {
