@@ -49,7 +49,7 @@ const JointChatOverlayView = ({
       style={styleVars}
     >
       {items.length === 0 ? (
-        <p className={styles.waitingMessage}>Waiting for unified chat events...</p>
+        <p className={styles.waitingMessage}>Waiting for chat messages</p>
       ) : (
         <ol className={styles.feed}>
           {items.map((item) => (
