@@ -21,7 +21,7 @@ const steps = [
 const FunnelSection = () => (
   <section className={`${styles.section} ${styles.funnel}`}>
     <div>
-      <h2 className={styles.sectionTitle}>A funnel that nudges participation</h2>
+      <h2 className={styles.sectionTitle}>Generate more Chat Engagement</h2>
       <p className={styles.sectionLead}>
         Turn passive viewers into featured supporters. The overlay keeps score,
         ai_licia keeps the banter flowing.

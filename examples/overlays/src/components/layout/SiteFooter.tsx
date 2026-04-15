@@ -17,8 +17,10 @@ const SiteFooter = () => (
         <SmoothAnchor targetId="benefits" className={styles.footerAnchor}>
           Benefits
         </SmoothAnchor>
-        <Link href="/configure">Configurator</Link>
+        <Link href="/configure">Top chatters overlay</Link>
+        <Link href="/configure/message-rate">Message rate card</Link>
         <Link href="/configure/joint-chat">Joint chat</Link>
+        <Link href="/configure/language-war">Language War overlay</Link>
         <Link
           href="https://docs.getailicia.com"
           target="_blank"

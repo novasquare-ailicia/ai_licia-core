@@ -23,10 +23,10 @@ const overlayCards: OverlayCard[] = [
     pill: "Unified chat + events",
     title: "Joint chat overlay",
     description:
-      "Merge Twitch, Kick, YouTube, and TikTok chat with EventSub events in one feed, with typed toggles and animation timing controls.",
+      "Merge Twitch, Kick, YouTube, and TikTok chat with ai_licia events in one feed, with typed toggles and animation timing controls.",
     bullets: [
       "Platform icon chips and optional status chips per row",
-      "EventSub event filters, including channel-event category toggles",
+      "ai_licia event filters, including channel-event category toggles",
       "Profanity masking toggle and deterministic username colors",
     ],
     cta: { href: "/configure/joint-chat", label: "Configure joint chat" },
@@ -40,8 +40,8 @@ const overlayCards: OverlayCard[] = [
     description:
       "Multilingual stream? Activate your community with a friendly battle to see which language wins the round.",
     bullets: [
-      "EventSub-powered language counts with timed round resets",
-      "Central ring, outer countdown arc, and right-side leaderboard rail",
+      "Chat Messages language counts with timed round resets",
+      "Language Leaderboard updating in real time",
       "Ideal for multilingual communities, watch parties, and community contests",
     ],
     cta: { href: "/configure/language-war", label: "Configure language war" },
@@ -52,9 +52,9 @@ const overlayCards: OverlayCard[] = [
     pill: "Top chatters",
     title: "Realtime leaderboard overlay",
     description:
-      "Ai_licia spotlights the fastest chatters, rotates glow states, and syncs with ai_licia for personalised callouts.",
+      "ai_licia spotlights the fastest chatters, rotates glow states, and syncs with ai_licia for personalised callouts.",
     bullets: [
-      "Configurable roles (AI, Streamer, VIP, Mods, Viewers)",
+      "Configurable roles (like VIP, Mods, Viewers)",
       "Customisable theme and orientation",
       "Auto-trigger ai_licia shout-outs as the ranking changes",
     ],
@@ -71,7 +71,7 @@ const overlayCards: OverlayCard[] = [
     bullets: [
       "Ambient glow reacts to the total message rate",
       "Perfect for BRB scenes, hype trains, and watch parties",
-      "Powered by the same ai_licia® overlay query builder",
+      "Include the activity of your chat into your content",
     ],
     cta: { href: "/configure/message-rate", label: "Configure rate cards" },
     variant: "message-rate" as const,

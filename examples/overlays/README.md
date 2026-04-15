@@ -77,7 +77,7 @@ Legacy note: older `chatMs` / `eventMs` links are still accepted and migrated to
 
 - `/overlay` → three-card leaderboard (default)
 - `/overlay/total` → stand-alone total message rate overlay (same query params supported)
-- `/overlay/joint-chat` → unified cross-platform chat + EventSub events feed
+- `/overlay/joint-chat` → unified cross-platform chat + ai_licia events feed
 
 Only overlay routes consume these params so the app can be hosted on GitHub Pages or any static host with zero server logic.
 

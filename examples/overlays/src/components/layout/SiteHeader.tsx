@@ -28,6 +28,7 @@ const navItems: NavItem[] = [
       { label: "Top chatters overlay", href: "/configure" },
       { label: "Message rate card", href: "/configure/message-rate" },
       { label: "Joint chat overlay", href: "/configure/joint-chat" },
+      { label: "Language War overlay", href: "/configure/language-war" },
     ],
   },
 ];

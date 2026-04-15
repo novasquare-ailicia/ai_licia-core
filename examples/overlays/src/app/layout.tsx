@@ -7,8 +7,9 @@ import CookieBanner from "@/components/CookieBanner";
 const GA_MEASUREMENT_ID = "G-VDWNQ1287V";
 
 export const metadata: Metadata = {
-  title: "ai_licia® Overlay Studio",
-  description: "Generate modern browser-source overlays powered by ai_licia®.",
+  title: "ai_licia® Overlay Studio | Top Chatters, Message Rate, Joint Chat & Language War",
+  description:
+    "Generate browser-source overlays powered by ai_licia®: top chatters leaderboard, message rate cards, joint chat, and language war battles.",
   icons: {
     icon: "/favicon.ico",
     shortcut: "/favicon.ico",

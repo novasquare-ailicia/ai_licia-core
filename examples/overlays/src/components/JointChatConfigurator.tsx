@@ -355,7 +355,7 @@ const JointChatConfigurator = () => {
             Build a unified cross-platform joint chat overlay.
           </Typography>
           <Typography className={styles.heroLead} variant="body1">
-            Combine Twitch, Kick, YouTube, and TikTok chat plus EventSub channel
+            Combine Twitch, Kick, YouTube, and TikTok chat plus ai_licia channel
             events in one feed. Tune animations, lifecycle timing, event toggles,
             and optional profanity filtering from a fully typed frontend config.
           </Typography>

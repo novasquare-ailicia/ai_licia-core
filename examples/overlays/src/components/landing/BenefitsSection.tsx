@@ -7,9 +7,9 @@ const benefits = [
       "Reward regulars and lurkers with a visible race to the top. ai_licia keeps the tone playful and on-brand.",
   },
   {
-    title: "AI-powered context",
+    title: "Unleash the power of ai_licia",
     description:
-      "Leaderboard changes and EventSub activity are shared with ai_licia so responses always reflect what just happened.",
+      "ai_licia keep track of the different Leaderboards in real time, and can react to updates to them.",
   },
   {
     title: "Export-ready for OBS/XSplit",
@@ -17,9 +17,9 @@ const benefits = [
       "Every overlay ships as a single browser-source link optimized for 16:9 and tall layouts.",
   },
   {
-    title: "Secure + role-aware",
+    title: "Easy to Customize",
     description:
-      "Filter VIPs, Mods, Viewers, or even ai_licia herself. Exclude bots with a comma-separated list.",
+      "Customise our Overlays to make them your Own! Adjust the colors to your brand and select the right interaction settings for your Community.",
   },
 ];
 

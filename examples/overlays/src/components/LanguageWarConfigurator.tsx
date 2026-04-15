@@ -232,7 +232,7 @@ const LanguageWarConfigurator = () => {
           <Typography className={styles.heroLead} variant="body1">
             Turn detected chat languages into a timed battlefield. Drive a
             central ring, a ranked standings rail, and a live surge ticker from
-            EventSub chat messages only, with idle, battle, crowning, and
+            your chat messages only, with idle, battle, crowning, and
             podium states.
           </Typography>
         </Box>

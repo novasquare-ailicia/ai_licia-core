@@ -8,16 +8,15 @@ const HeroSection = () => (
     <div className={styles.heroContent}>
       <span className="tagline">Realtime AI overlays for creators</span>
       <h1 className={styles.heroTitle}>
-        Unify chat and stream events with ai_licia® overlays.
+        Increase your chat engagement with the ai_licia® overlays!
       </h1>
       <p className={styles.heroLead}>
-        Build OBS-ready overlays that sync Twitch, Kick, YouTube, and TikTok
-        into one visual layer. Spotlight leaders, track hype, and surface
-        high-value channel events as they happen.
+        Customise our OBS-ready overlays that work for Twitch, Kick, YouTube, and TikTok and support Multi Stream.
+        Create engagement games, keep track of your chat, and create a more interactive experience for your viewers!
       </p>
       <div className={styles.heroActions}>
         <Link href="/configure" className={styles.primaryButton}>
-          Start with overlays →
+          Get Started with our overlays →
         </Link>
         <Link href="/configure/language-war" className={styles.primaryButton}>
           Configure language war
@@ -41,11 +40,11 @@ const HeroSection = () => (
         </div>
         <div className={styles.statCard}>
           <div className={styles.statValue}>Live</div>
-          <div className={styles.statLabel}>ai-driven callouts</div>
+          <div className={styles.statLabel}>ai-enhanced experience</div>
         </div>
         <div className={styles.statCard}>
           <div className={styles.statValue}>Seconds</div>
-          <div className={styles.statLabel}>to publish overlays</div>
+          <div className={styles.statLabel}>to customise overlays</div>
         </div>
       </div>
     </div>
