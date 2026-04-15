@@ -23,6 +23,7 @@ import {
   JOINT_CHAT_CHANNEL_EVENT_LABELS,
   JOINT_CHAT_EVENT_LABELS,
   JOINT_CHAT_EVENT_TYPES,
+  jointChatSecondsToMs,
   type JointChatEventType,
   normalizeJointChatIdentity,
   resolveJointChatUsernameColor,
@@ -42,6 +43,7 @@ const DEFAULT_PROFANITY_LIST = [
 ];
 
 const MAX_MESSAGE_LENGTH = 240;
+const AI_MESSAGE_MIRROR_DEDUPE_WINDOW_MS = 5000;
 
 type JointChatMessagePayload = EventSubChatMessagePayload & {
   isCaption?: boolean | null;
@@ -63,6 +65,31 @@ const sanitizeProfanity = (value: string, enabled: boolean) => {
     const expression = new RegExp(`\\b${term}\\b`, "gi");
     return output.replace(expression, (match) => "*".repeat(match.length));
   }, value);
+};
+
+const normalizeMessageForDedupe = (value: string) =>
+  value
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase();
+
+const buildMirroredAiMessageDedupeKey = (event: EventSubEvent) => {
+  switch (event.type) {
+    case "chat.message": {
+      const payload = event.payload as JointChatMessagePayload;
+      return `${payload.platform}:${normalizeJointChatIdentity(
+        payload.username
+      )}:${normalizeMessageForDedupe(payload.message)}`;
+    }
+    case "chat.ai_message": {
+      const payload = event.payload as EventSubChatAiMessagePayload;
+      return `${resolvePlatform(event)}:${normalizeJointChatIdentity(
+        payload.username
+      )}:${normalizeMessageForDedupe(payload.message)}`;
+    }
+    default:
+      return null;
+  }
 };
 
 const resolvePlatform = (event: EventSubEvent): Platform => {
@@ -245,6 +272,8 @@ const toFeedItem = (
     emphasized,
     ingestedAt,
     leaving: false,
+    sourceEventType: event.type,
+    dedupeKey: buildMirroredAiMessageDedupeKey(event),
   };
 };
 
@@ -258,6 +287,10 @@ export const useJointChatStream = ({
   const [statusMessage, setStatusMessage] = useState(
     "Add your ai_licia API key and channel to start EventSub."
   );
+  const recentAiMessagesRef = useRef<Map<string, number>>(new Map());
+  const renderedDedupeItemsRef = useRef<
+    Map<string, { itemId: string; sourceEventType: EventSubEventType }>
+  >(new Map());
   const timersRef = useRef<
     Map<string, { leaveTimer: ReturnType<typeof setTimeout>; removeTimer: ReturnType<typeof setTimeout> }>
   >(new Map());
@@ -291,10 +324,42 @@ export const useJointChatStream = ({
     timersRef.current.delete(id);
   }, []);
 
+  const pruneMirroredAiMessages = useCallback((now: number) => {
+    recentAiMessagesRef.current.forEach((seenAt, dedupeKey) => {
+      if (now - seenAt > AI_MESSAGE_MIRROR_DEDUPE_WINDOW_MS) {
+        recentAiMessagesRef.current.delete(dedupeKey);
+      }
+    });
+  }, []);
+
+  const clearRenderedDedupeItem = useCallback((item: JointChatFeedItem) => {
+    if (!item.dedupeKey) return;
+    const active = renderedDedupeItemsRef.current.get(item.dedupeKey);
+    if (active?.itemId === item.id) {
+      renderedDedupeItemsRef.current.delete(item.dedupeKey);
+    }
+  }, []);
+
+  const removeItemById = useCallback(
+    (itemId: string) => {
+      clearItemTimers(itemId);
+      setItems((prev) => {
+        const removedItem = prev.find((entry) => entry.id === itemId);
+        if (removedItem) {
+          clearRenderedDedupeItem(removedItem);
+        }
+        return prev.filter((entry) => entry.id !== itemId);
+      });
+    },
+    [clearItemTimers, clearRenderedDedupeItem]
+  );
+
   const scheduleLifecycle = useCallback(
     (item: JointChatFeedItem) => {
       const visibleMs =
-        item.kind === "chat" ? settings.chatVisibleMs : settings.eventVisibleMs;
+        item.kind === "chat"
+          ? jointChatSecondsToMs(settings.chatVisibleSeconds)
+          : jointChatSecondsToMs(settings.eventVisibleSeconds);
       const leaveTimer = setTimeout(() => {
         setItems((prev) =>
           prev.map((entry) =>
@@ -303,12 +368,23 @@ export const useJointChatStream = ({
         );
       }, visibleMs);
       const removeTimer = setTimeout(() => {
-        setItems((prev) => prev.filter((entry) => entry.id !== item.id));
+        setItems((prev) => {
+          const removedItem = prev.find((entry) => entry.id === item.id);
+          if (removedItem) {
+            clearRenderedDedupeItem(removedItem);
+          }
+          return prev.filter((entry) => entry.id !== item.id);
+        });
         timersRef.current.delete(item.id);
       }, visibleMs + settings.exitAnimationMs);
       timersRef.current.set(item.id, { leaveTimer, removeTimer });
     },
-    [settings.chatVisibleMs, settings.eventVisibleMs, settings.exitAnimationMs]
+    [
+      clearRenderedDedupeItem,
+      settings.chatVisibleSeconds,
+      settings.eventVisibleSeconds,
+      settings.exitAnimationMs,
+    ]
   );
 
   const pushItem = useCallback(
@@ -316,14 +392,23 @@ export const useJointChatStream = ({
       scheduleLifecycle(item);
       setItems((prev) => {
         const sorted = [...prev, item].sort((a, b) => a.ingestedAt - b.ingestedAt);
+        if (item.dedupeKey) {
+          renderedDedupeItemsRef.current.set(item.dedupeKey, {
+            itemId: item.id,
+            sourceEventType: item.sourceEventType,
+          });
+        }
         if (sorted.length <= settings.maxItems) return sorted;
         const overflow = sorted.length - settings.maxItems;
         const dropped = sorted.slice(0, overflow);
-        dropped.forEach((entry) => clearItemTimers(entry.id));
+        dropped.forEach((entry) => {
+          clearItemTimers(entry.id);
+          clearRenderedDedupeItem(entry);
+        });
         return sorted.slice(overflow);
       });
     },
-    [clearItemTimers, scheduleLifecycle, settings.maxItems]
+    [clearItemTimers, clearRenderedDedupeItem, scheduleLifecycle, settings.maxItems]
   );
 
   useEffect(() => {
@@ -370,6 +455,26 @@ export const useJointChatStream = ({
     const handler = (event: EventSubEvent) => {
       const item = toFeedItem(event, settings);
       if (!item) return;
+      if (item.dedupeKey) {
+        pruneMirroredAiMessages(item.ingestedAt);
+        const renderedEntry = renderedDedupeItemsRef.current.get(item.dedupeKey);
+        if (item.sourceEventType === "chat.ai_message") {
+          recentAiMessagesRef.current.set(item.dedupeKey, item.ingestedAt);
+          if (renderedEntry?.sourceEventType === "chat.message") {
+            removeItemById(renderedEntry.itemId);
+          } else if (renderedEntry?.sourceEventType === "chat.ai_message") {
+            return;
+          }
+        }
+        if (item.sourceEventType === "chat.message") {
+          if (recentAiMessagesRef.current.has(item.dedupeKey)) {
+            return;
+          }
+          if (renderedEntry?.sourceEventType === "chat.ai_message") {
+            return;
+          }
+        }
+      }
       pushItem(item);
     };
 
@@ -384,7 +489,9 @@ export const useJointChatStream = ({
     disabled,
     emitStatus,
     hasCredentials,
+    pruneMirroredAiMessages,
     pushItem,
+    removeItemById,
     settings,
   ]);
 
@@ -395,6 +502,8 @@ export const useJointChatStream = ({
         clearTimeout(entry.removeTimer);
       });
       timersRef.current.clear();
+      recentAiMessagesRef.current.clear();
+      renderedDedupeItemsRef.current.clear();
     },
     []
   );

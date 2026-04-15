@@ -62,14 +62,16 @@ Route: `/overlay/joint-chat`
 | `baseUrl` | Override api base (defaults to `https://api.getailicia.com/v1`) |
 | `platforms` | Comma-separated list from `TWITCH,KICK,YOUTUBE,TIKTOK` |
 | `maxItems` | Maximum on-screen rows before oldest is dropped |
-| `chatMs` | Visible duration for chat rows (ms) |
-| `eventMs` | Visible duration for event rows (ms) |
+| `chatSec` | Visible duration for chat rows (seconds, default `20`) |
+| `eventSec` | Visible duration for event rows (seconds, default `20`) |
 | `enterMs` | Entry animation duration (ms) |
 | `exitMs` | Exit animation duration (ms) |
 | `showStatus` | `1`/`0` toggle for status chips |
 | `profanity` | `1`/`0` toggle for profanity masking |
 | `disabledEvents` | Comma-separated EventSub event types to hide |
 | `disabledChannelEvents` | Comma-separated documented channel-event categories to hide (`follow,subscription,cheer,raid`) |
+
+Legacy note: older `chatMs` / `eventMs` links are still accepted and migrated to seconds for backward compatibility.
 
 ### Routes
 

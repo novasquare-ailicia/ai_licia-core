@@ -26,9 +26,9 @@ import {
   buildJointChatOverlayQuery,
   JOINT_CHAT_CHANNEL_EVENT_CATEGORIES,
   JOINT_CHAT_CHANNEL_EVENT_LABELS,
-  JOINT_CHAT_DEFAULT_CHAT_VISIBLE_MS,
+  JOINT_CHAT_DEFAULT_CHAT_VISIBLE_SECONDS,
   JOINT_CHAT_DEFAULT_ENTRY_ANIMATION_MS,
-  JOINT_CHAT_DEFAULT_EVENT_VISIBLE_MS,
+  JOINT_CHAT_DEFAULT_EVENT_VISIBLE_SECONDS,
   JOINT_CHAT_DEFAULT_EXIT_ANIMATION_MS,
   JOINT_CHAT_DEFAULT_HIDE_STREAMER_MESSAGES,
   JOINT_CHAT_DEFAULT_MAX_ITEMS,
@@ -36,6 +36,8 @@ import {
   JOINT_CHAT_DEFAULT_SHOW_STATUS_CHIPS,
   JOINT_CHAT_EVENT_LABELS,
   JOINT_CHAT_EVENT_TYPES,
+  JOINT_CHAT_MAX_VISIBLE_SECONDS,
+  JOINT_CHAT_MIN_VISIBLE_SECONDS,
   JOINT_CHAT_SUPPORTED_PLATFORMS,
   type JointChatChannelEventToggles,
   type JointChatEventToggles,
@@ -67,11 +69,11 @@ const JointChatConfigurator = () => {
     ...JOINT_CHAT_SUPPORTED_PLATFORMS,
   ]);
   const [maxItems, setMaxItems] = useState(JOINT_CHAT_DEFAULT_MAX_ITEMS);
-  const [chatVisibleMs, setChatVisibleMs] = useState(
-    JOINT_CHAT_DEFAULT_CHAT_VISIBLE_MS
+  const [chatVisibleSeconds, setChatVisibleSeconds] = useState(
+    JOINT_CHAT_DEFAULT_CHAT_VISIBLE_SECONDS
   );
-  const [eventVisibleMs, setEventVisibleMs] = useState(
-    JOINT_CHAT_DEFAULT_EVENT_VISIBLE_MS
+  const [eventVisibleSeconds, setEventVisibleSeconds] = useState(
+    JOINT_CHAT_DEFAULT_EVENT_VISIBLE_SECONDS
   );
   const [entryAnimationMs, setEntryAnimationMs] = useState(
     JOINT_CHAT_DEFAULT_ENTRY_ANIMATION_MS
@@ -133,10 +135,42 @@ const JointChatConfigurator = () => {
         }
       }
       if (typeof stored.maxItems === "number") setMaxItems(stored.maxItems);
-      if (typeof stored.chatVisibleMs === "number")
-        setChatVisibleMs(stored.chatVisibleMs);
-      if (typeof stored.eventVisibleMs === "number")
-        setEventVisibleMs(stored.eventVisibleMs);
+      if (typeof stored.chatVisibleSeconds === "number") {
+        setChatVisibleSeconds(
+          Math.min(
+            JOINT_CHAT_MAX_VISIBLE_SECONDS,
+            Math.max(JOINT_CHAT_MIN_VISIBLE_SECONDS, stored.chatVisibleSeconds)
+          )
+        );
+      } else if (typeof stored.chatVisibleMs === "number") {
+        setChatVisibleSeconds(
+          Math.min(
+            JOINT_CHAT_MAX_VISIBLE_SECONDS,
+            Math.max(
+              JOINT_CHAT_MIN_VISIBLE_SECONDS,
+              Math.round(stored.chatVisibleMs / 1000)
+            )
+          )
+        );
+      }
+      if (typeof stored.eventVisibleSeconds === "number") {
+        setEventVisibleSeconds(
+          Math.min(
+            JOINT_CHAT_MAX_VISIBLE_SECONDS,
+            Math.max(JOINT_CHAT_MIN_VISIBLE_SECONDS, stored.eventVisibleSeconds)
+          )
+        );
+      } else if (typeof stored.eventVisibleMs === "number") {
+        setEventVisibleSeconds(
+          Math.min(
+            JOINT_CHAT_MAX_VISIBLE_SECONDS,
+            Math.max(
+              JOINT_CHAT_MIN_VISIBLE_SECONDS,
+              Math.round(stored.eventVisibleMs / 1000)
+            )
+          )
+        );
+      }
       if (typeof stored.entryAnimationMs === "number")
         setEntryAnimationMs(stored.entryAnimationMs);
       if (typeof stored.exitAnimationMs === "number")
@@ -179,8 +213,8 @@ const JointChatConfigurator = () => {
           baseUrl,
           platforms,
           maxItems,
-          chatVisibleMs,
-          eventVisibleMs,
+          chatVisibleSeconds,
+          eventVisibleSeconds,
           entryAnimationMs,
           exitAnimationMs,
           showStatusChips,
@@ -197,12 +231,12 @@ const JointChatConfigurator = () => {
     apiKey,
     baseUrl,
     channel,
-    chatVisibleMs,
+    chatVisibleSeconds,
     channelEventToggles,
     didHydrate,
     entryAnimationMs,
     eventToggles,
-    eventVisibleMs,
+    eventVisibleSeconds,
     exitAnimationMs,
     hideStreamerMessages,
     maxItems,
@@ -218,8 +252,8 @@ const JointChatConfigurator = () => {
       baseUrl: baseUrl.trim().replace(/\/$/, "") || DEFAULT_BASE_URL,
       platforms,
       maxItems,
-      chatVisibleMs,
-      eventVisibleMs,
+      chatVisibleSeconds,
+      eventVisibleSeconds,
       entryAnimationMs,
       exitAnimationMs,
       showStatusChips,
@@ -232,11 +266,11 @@ const JointChatConfigurator = () => {
       apiKey,
       baseUrl,
       channel,
-      chatVisibleMs,
+      chatVisibleSeconds,
       channelEventToggles,
       entryAnimationMs,
       eventToggles,
-      eventVisibleMs,
+      eventVisibleSeconds,
       exitAnimationMs,
       hideStreamerMessages,
       maxItems,
@@ -458,23 +492,37 @@ const JointChatConfigurator = () => {
                   </Typography>
                   <Stack spacing={2}>
                     <TextField
-                      label="Chat visible time (ms)"
+                      label="Chat visible time (seconds)"
                       type="number"
-                      value={chatVisibleMs}
+                      value={chatVisibleSeconds}
                       onChange={(event) =>
-                        setChatVisibleMs(
-                          Math.max(1500, Number(event.target.value) || 1500)
+                        setChatVisibleSeconds(
+                          Math.min(
+                            JOINT_CHAT_MAX_VISIBLE_SECONDS,
+                            Math.max(
+                              JOINT_CHAT_MIN_VISIBLE_SECONDS,
+                              Number(event.target.value) ||
+                                JOINT_CHAT_MIN_VISIBLE_SECONDS
+                            )
+                          )
                         )
                       }
                       fullWidth
                     />
                     <TextField
-                      label="Event visible time (ms)"
+                      label="Event visible time (seconds)"
                       type="number"
-                      value={eventVisibleMs}
+                      value={eventVisibleSeconds}
                       onChange={(event) =>
-                        setEventVisibleMs(
-                          Math.max(1500, Number(event.target.value) || 1500)
+                        setEventVisibleSeconds(
+                          Math.min(
+                            JOINT_CHAT_MAX_VISIBLE_SECONDS,
+                            Math.max(
+                              JOINT_CHAT_MIN_VISIBLE_SECONDS,
+                              Number(event.target.value) ||
+                                JOINT_CHAT_MIN_VISIBLE_SECONDS
+                            )
+                          )
                         )
                       }
                       fullWidth

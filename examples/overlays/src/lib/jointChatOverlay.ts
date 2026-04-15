@@ -72,8 +72,10 @@ export const JOINT_CHAT_CHANNEL_EVENT_LABELS: Record<
 };
 
 export const JOINT_CHAT_DEFAULT_MAX_ITEMS = 12;
-export const JOINT_CHAT_DEFAULT_CHAT_VISIBLE_MS = 9000;
-export const JOINT_CHAT_DEFAULT_EVENT_VISIBLE_MS = 12000;
+export const JOINT_CHAT_MIN_VISIBLE_SECONDS = 2;
+export const JOINT_CHAT_MAX_VISIBLE_SECONDS = 60;
+export const JOINT_CHAT_DEFAULT_CHAT_VISIBLE_SECONDS = 20;
+export const JOINT_CHAT_DEFAULT_EVENT_VISIBLE_SECONDS = 20;
 export const JOINT_CHAT_DEFAULT_ENTRY_ANIMATION_MS = 280;
 export const JOINT_CHAT_DEFAULT_EXIT_ANIMATION_MS = 280;
 export const JOINT_CHAT_DEFAULT_SHOW_STATUS_CHIPS = true;
@@ -102,8 +104,8 @@ export interface JointChatOverlaySettings {
   showStatusChips: boolean;
   hideStreamerMessages: boolean;
   maxItems: number;
-  chatVisibleMs: number;
-  eventVisibleMs: number;
+  chatVisibleSeconds: number;
+  eventVisibleSeconds: number;
   entryAnimationMs: number;
   exitAnimationMs: number;
   profanityFilterEnabled: boolean;
@@ -140,6 +142,8 @@ const parseNumberInRange = (
   if (!Number.isFinite(parsed)) return fallback;
   return Math.min(max, Math.max(min, parsed));
 };
+
+export const jointChatSecondsToMs = (seconds: number) => seconds * 1000;
 
 const parseList = (value?: string | null) =>
   value
@@ -273,6 +277,33 @@ const parsePlatforms = (value?: string) => {
   return parsed.length ? parsed : [...JOINT_CHAT_SUPPORTED_PLATFORMS];
 };
 
+const parseVisibleDurationSeconds = (
+  secondsValue: string | undefined,
+  legacyMsValue: string | undefined,
+  fallback: number
+) => {
+  if ((secondsValue ?? "").trim()) {
+    return parseNumberInRange(
+      secondsValue,
+      fallback,
+      JOINT_CHAT_MIN_VISIBLE_SECONDS,
+      JOINT_CHAT_MAX_VISIBLE_SECONDS
+    );
+  }
+
+  if ((legacyMsValue ?? "").trim()) {
+    const legacyMs = parseNumberInRange(
+      legacyMsValue,
+      jointChatSecondsToMs(fallback),
+      jointChatSecondsToMs(JOINT_CHAT_MIN_VISIBLE_SECONDS),
+      jointChatSecondsToMs(JOINT_CHAT_MAX_VISIBLE_SECONDS)
+    );
+    return Math.round(legacyMs / 1000);
+  }
+
+  return fallback;
+};
+
 const serializeDisabledToggles = <TKey extends string>(
   toggleMap: Partial<Record<TKey, boolean>>,
   keys: readonly TKey[]
@@ -308,11 +339,15 @@ export const buildJointChatOverlayQuery = (
   if (settings.maxItems !== JOINT_CHAT_DEFAULT_MAX_ITEMS) {
     params.set("maxItems", `${settings.maxItems}`);
   }
-  if (settings.chatVisibleMs !== JOINT_CHAT_DEFAULT_CHAT_VISIBLE_MS) {
-    params.set("chatMs", `${settings.chatVisibleMs}`);
+  if (
+    settings.chatVisibleSeconds !== JOINT_CHAT_DEFAULT_CHAT_VISIBLE_SECONDS
+  ) {
+    params.set("chatSec", `${settings.chatVisibleSeconds}`);
   }
-  if (settings.eventVisibleMs !== JOINT_CHAT_DEFAULT_EVENT_VISIBLE_MS) {
-    params.set("eventMs", `${settings.eventVisibleMs}`);
+  if (
+    settings.eventVisibleSeconds !== JOINT_CHAT_DEFAULT_EVENT_VISIBLE_SECONDS
+  ) {
+    params.set("eventSec", `${settings.eventVisibleSeconds}`);
   }
   if (settings.entryAnimationMs !== JOINT_CHAT_DEFAULT_ENTRY_ANIMATION_MS) {
     params.set("enterMs", `${settings.entryAnimationMs}`);
@@ -389,17 +424,15 @@ export const parseJointChatOverlaySettings = (
       3,
       40
     ),
-    chatVisibleMs: parseNumberInRange(
+    chatVisibleSeconds: parseVisibleDurationSeconds(
+      pull("chatSec") || pull("chatSeconds"),
       pull("chatMs"),
-      JOINT_CHAT_DEFAULT_CHAT_VISIBLE_MS,
-      1500,
-      60000
+      JOINT_CHAT_DEFAULT_CHAT_VISIBLE_SECONDS
     ),
-    eventVisibleMs: parseNumberInRange(
+    eventVisibleSeconds: parseVisibleDurationSeconds(
+      pull("eventSec") || pull("eventSeconds"),
       pull("eventMs"),
-      JOINT_CHAT_DEFAULT_EVENT_VISIBLE_MS,
-      1500,
-      60000
+      JOINT_CHAT_DEFAULT_EVENT_VISIBLE_SECONDS
     ),
     entryAnimationMs: parseNumberInRange(
       pull("enterMs"),

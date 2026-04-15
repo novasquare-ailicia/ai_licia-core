@@ -225,6 +225,7 @@ export interface EventSubChannelEventPayload {
   gifter?: string | null;
   count?: number | null;
   value?: number | null;
+  currency?: string | null;
   raidViewers?: number | null;
   message?: string | null;
   sentDateTime: string;

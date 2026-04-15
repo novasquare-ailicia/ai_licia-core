@@ -5,9 +5,9 @@ import type { Platform } from "ai_licia-client";
 import {
   buildEnabledToggleMap,
   JOINT_CHAT_CHANNEL_EVENT_CATEGORIES,
-  JOINT_CHAT_DEFAULT_CHAT_VISIBLE_MS,
+  JOINT_CHAT_DEFAULT_CHAT_VISIBLE_SECONDS,
   JOINT_CHAT_DEFAULT_ENTRY_ANIMATION_MS,
-  JOINT_CHAT_DEFAULT_EVENT_VISIBLE_MS,
+  JOINT_CHAT_DEFAULT_EVENT_VISIBLE_SECONDS,
   JOINT_CHAT_DEFAULT_EXIT_ANIMATION_MS,
   JOINT_CHAT_EVENT_TYPES,
   resolveJointChatUsernameColor,
@@ -65,6 +65,8 @@ const buildDemoItem = (index: number): JointChatFeedItem => {
       emphasized: false,
       ingestedAt: Date.now(),
       leaving: false,
+      sourceEventType: "chat.message",
+      dedupeKey: null,
     };
   }
 
@@ -80,6 +82,8 @@ const buildDemoItem = (index: number): JointChatFeedItem => {
     emphasized: true,
     ingestedAt: Date.now(),
     leaving: false,
+    sourceEventType: "channel.event",
+    dedupeKey: null,
   };
 };
 
@@ -90,8 +94,8 @@ const demoSettings: JointChatOverlaySettings = {
   platforms: PLATFORM_ORDER,
   showStatusChips: true,
   maxItems: 6,
-  chatVisibleMs: JOINT_CHAT_DEFAULT_CHAT_VISIBLE_MS,
-  eventVisibleMs: JOINT_CHAT_DEFAULT_EVENT_VISIBLE_MS,
+  chatVisibleSeconds: JOINT_CHAT_DEFAULT_CHAT_VISIBLE_SECONDS,
+  eventVisibleSeconds: JOINT_CHAT_DEFAULT_EVENT_VISIBLE_SECONDS,
   entryAnimationMs: JOINT_CHAT_DEFAULT_ENTRY_ANIMATION_MS,
   exitAnimationMs: JOINT_CHAT_DEFAULT_EXIT_ANIMATION_MS,
   hideStreamerMessages: false,
