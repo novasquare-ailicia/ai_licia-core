@@ -25,6 +25,7 @@ import {
   EventSubAnyHandler,
   EventSubHandler
 } from './interfaces';
+import { AILICIA_EVENT_CONTENT_LIMITS } from './limits';
 
 type StreamReader = {
   read: () => Promise<{ value?: Uint8Array; done: boolean }>;
@@ -115,14 +116,16 @@ export class AiliciaClient {
   /**
    * Feeds data to ai_licia to be added to her context
    * 
-   * @param content - The data for ai_licia to process (max 700 characters)
+   * @param content - The data for ai_licia to process (max 1,000 characters)
    * @param ttl - Optional Time-to-Live in seconds
    * @returns Promise that resolves when data is successfully sent
    * @throws Error if the request fails
    */
   public async sendEvent(content: string, ttl?: number): Promise<void> {
-    if (content.length > 700) {
-      throw new Error('Content exceeds the 700-character limit');
+    if (content.length > AILICIA_EVENT_CONTENT_LIMITS.context) {
+      throw new Error(
+        `Content exceeds the ${AILICIA_EVENT_CONTENT_LIMITS.context}-character limit`
+      );
     }
 
     const eventContent: EventContent = {
@@ -150,7 +153,9 @@ export class AiliciaClient {
         } else if (status === 401) {
           throw new Error(`Unauthorized: Not allowed to send events for this channel. ${message}`);
         } else if (status === 422) {
-          throw new Error(`Content exceeds the 700-character limit: ${message}`);
+          throw new Error(
+            `Content exceeds the ${AILICIA_EVENT_CONTENT_LIMITS.context}-character limit: ${message}`
+          );
         } else {
           throw new Error(`Failed to send event: ${message}`);
         }
@@ -167,8 +172,10 @@ export class AiliciaClient {
    * @throws Error if the request fails
    */
   public async triggerGeneration(content: string): Promise<GenerationResponse> {
-    if (content.length > 300) {
-      throw new Error('Content exceeds the 300-character limit');
+    if (content.length > AILICIA_EVENT_CONTENT_LIMITS.generation) {
+      throw new Error(
+        `Content exceeds the ${AILICIA_EVENT_CONTENT_LIMITS.generation}-character limit`
+      );
     }
 
     const eventContent: EventContentGeneration = {
@@ -196,7 +203,9 @@ export class AiliciaClient {
         } else if (status === 401) {
           throw new Error(`Unauthorized: Not allowed to send events for this channel. ${message}`);
         } else if (status === 422) {
-          throw new Error(`Content exceeds the 300-character limit: ${message}`);
+          throw new Error(
+            `Content exceeds the ${AILICIA_EVENT_CONTENT_LIMITS.generation}-character limit: ${message}`
+          );
         } else if (status === 429) {
           throw new Error(`Too many requests: ${message}`);
         } else {

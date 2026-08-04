@@ -1,5 +1,6 @@
 import { ICCActionInputs, ICustomCode } from 'aitum.js/lib/interfaces';
 import { StringInput, IntInput } from 'aitum.js/lib/inputs';
+import { AILICIA_EVENT_CONTENT_LIMITS } from 'ai_licia-client';
 import { createAiliciaClient } from '../config'; // Import the factory function
 
 // Removed: AitumCC and DeviceType imports as they are not used in this specific action
@@ -17,7 +18,7 @@ import { createAiliciaClient } from '../config'; // Import the factory function
  * - Music currently playing
  * - Stream information
  * 
- * The data is limited to 700 characters per event.
+ * The data is limited to 1,000 characters per event.
  */
 
 // The custom code action name
@@ -25,7 +26,7 @@ const name: string = 'Send ai_licia Context Event';
 
 // The custom code inputs - using aitum.js inputs
 const inputs: ICCActionInputs = {
-  content: new StringInput('Content (max 700 chars)', { required: true }),
+  content: new StringInput(`Content (max ${AILICIA_EVENT_CONTENT_LIMITS.context} chars)`, { required: true }),
   ttl: new IntInput('Time-to-Live in seconds (optional, 0=infinite)', { required: false })
 };
 
@@ -37,9 +38,9 @@ async function method(inputs: { [key: string]: string | number | boolean | strin
   // Use IntInput which provides a number type
   const ttl = inputs.ttl as number | undefined;
   
-  // Check for content length limit (API has 700 char limit)
-  if (content.length > 700) {
-    console.error('Content exceeds the 700-character limit');
+  // Check the shared client contract before sending.
+  if (content.length > AILICIA_EVENT_CONTENT_LIMITS.context) {
+    console.error(`Content exceeds the ${AILICIA_EVENT_CONTENT_LIMITS.context}-character limit`);
     return; // Stop execution
   }
   
@@ -63,4 +64,4 @@ async function method(inputs: { [key: string]: string | number | boolean | strin
 }
 
 /*********** DON'T EDIT BELOW ***********/
-export default { name, inputs, method } as ICustomCode; 
+export default { name, inputs, method } as ICustomCode;

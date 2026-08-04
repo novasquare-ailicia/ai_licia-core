@@ -90,7 +90,7 @@ Creates or returns the singleton instance of the client.
 
 Sends contextual data to ai_licia.
 
-- `content`: The data for ai_licia to process (max 700 characters)
+- `content`: The data for ai_licia to process (max 1,000 characters)
 - `ttl`: Optional Time-to-Live in seconds
 
 #### `triggerGeneration(content: string): Promise<GenerationResponse>`
@@ -167,4 +167,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Thanks to the ai_licia team for providing the API
 - All the streamers and content creators using ai_licia with Aitum
-- Contributors to this project 
+- Contributors to this project

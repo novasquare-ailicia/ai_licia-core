@@ -10,6 +10,9 @@ try {
 // Export everything from interfaces
 export * from './interfaces';
 
+// Export API content limits
+export * from './limits';
+
 // Export the client
 export { AiliciaClient } from './client';
 

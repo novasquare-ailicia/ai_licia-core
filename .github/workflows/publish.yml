@@ -3,6 +3,20 @@ name: Publish Packages to NPM
 on:
   release:
     types: [created]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'SemVer package version to publish'
+        required: true
+        type: string
+      package:
+        description: 'Package publication scope'
+        required: true
+        default: 'client'
+        type: choice
+        options:
+          - client
+          - all
 
 jobs:
   build-and-publish:
@@ -21,11 +35,21 @@ jobs:
         run: npm run build --workspace=packages/ai_licia-client --if-present
         
       - name: Build ai_licia-aitum package 
+        if: github.event_name == 'release' || inputs.package == 'all'
         run: npm run build --workspace=packages/ai_licia-aitum --if-present
 
-      - name: Get version from release tag
+      - name: Resolve publication version
         id: get_version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="$REQUESTED_VERSION"
+          else
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          fi
+          node -e "const version = process.argv[1]; if (!/^\\d+\\.\\d+\\.\\d+$/.test(version)) process.exit(1)" "$VERSION"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
       - name: Update version in ai_licia-client package.json
         run: |
@@ -35,6 +59,7 @@ jobs:
           # cd ../.. # No longer needed here if the next step runs from root first
 
       - name: Update version in ai_licia-aitum package.json and dependency
+        if: github.event_name == 'release' || inputs.package == 'all'
         run: |
           # Run install command from root FIRST to update dependency
           npm install ai_licia-client@$VERSION --save-exact --workspace=packages/ai_licia-aitum
@@ -51,6 +76,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish ai_licia-aitum package
+        if: github.event_name == 'release' || inputs.package == 'all'
         run: npm publish --workspace=packages/ai_licia-aitum --access public # Ensure public access
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} 
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

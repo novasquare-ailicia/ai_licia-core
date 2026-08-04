@@ -40,7 +40,7 @@ const client = new AiliciaClient(
   'https://api.getailicia.com/v1'  // Optional, will use environment variable or the default if not provided
 );
 
-// Send contextual information to ai_licia (max 700 characters)
+// Send contextual information to ai_licia (max 1,000 characters)
 await client.sendEvent('Player health: 85%, Position: X:145 Y:230, Kills: 12');
 
 // Trigger an immediate reaction from ai_licia (max 300 characters)
@@ -103,7 +103,7 @@ Sends contextual information to ai_licia that will be stored in her memory and u
 - Your setup state (lights colour, fan active or off, etc)
 
 **Parameters:**
-- `content`: The information to send (max 700 characters)
+- `content`: The information to send (max 1,000 characters)
 - `ttl`: (Optional) Time-to-live in seconds - how long this information stays relevant
 
 ```typescript
@@ -271,7 +271,7 @@ try {
 ```
 
 Common errors:
-- Content length exceeding limits (700 chars for events, 300 chars for generations)
+- Content length exceeding limits (1,000 chars for events, 300 chars for generations)
 - API key authorization issues
 - Rate limiting (too many requests)
 
