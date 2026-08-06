@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosError } from 'axios';
+import axios, { type AxiosInstance } from 'axios';
 import {
   AiliciaConfig,
   Event,
@@ -26,6 +26,7 @@ import {
   EventSubHandler
 } from './interfaces';
 import { AILICIA_EVENT_CONTENT_LIMITS } from './limits';
+import { AiliciaApiError, type AiliciaApiErrorCode } from './errors';
 
 type StreamReader = {
   read: () => Promise<{ value?: Uint8Array; done: boolean }>;
@@ -57,6 +58,8 @@ const resolveEventSubToken = (auth: EventSubAuth): string => {
   }
   return auth.key;
 };
+
+type PublicEventOperation = 'send event' | 'trigger generation';
 
 type InternalEventSubStream = EventSubStream & {
   emit<T extends EventSubEventType>(type: T, event: EventSubEventMap[T]): void;
@@ -90,7 +93,7 @@ export class AiliciaClient {
       baseURL: this.baseUrl,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': this.apiKey
+        'Authorization': `Bearer ${this.apiKey}`
       }
     });
   }
@@ -142,25 +145,11 @@ export class AiliciaClient {
     try {
       await this.client.post('/events', event);
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError;
-        const status = axiosError.response?.status;
-        const data = axiosError.response?.data as Record<string, any>;
-        const message = data?.message || axiosError.message;
-        
-        if (status === 400) {
-          throw new Error(`Invalid input: ${message}`);
-        } else if (status === 401) {
-          throw new Error(`Unauthorized: Not allowed to send events for this channel. ${message}`);
-        } else if (status === 422) {
-          throw new Error(
-            `Content exceeds the ${AILICIA_EVENT_CONTENT_LIMITS.context}-character limit: ${message}`
-          );
-        } else {
-          throw new Error(`Failed to send event: ${message}`);
-        }
-      }
-      throw error;
+      this.handlePublicEventError(
+        'send event',
+        AILICIA_EVENT_CONTENT_LIMITS.context,
+        error
+      );
     }
   }
 
@@ -192,27 +181,11 @@ export class AiliciaClient {
       const response = await this.client.post('/events/generations', event);
       return response.data as GenerationResponse;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError;
-        const status = axiosError.response?.status;
-        const data = axiosError.response?.data as Record<string, any>;
-        const message = data?.message || axiosError.message;
-        
-        if (status === 400) {
-          throw new Error(`Invalid input: ${message}`);
-        } else if (status === 401) {
-          throw new Error(`Unauthorized: Not allowed to send events for this channel. ${message}`);
-        } else if (status === 422) {
-          throw new Error(
-            `Content exceeds the ${AILICIA_EVENT_CONTENT_LIMITS.generation}-character limit: ${message}`
-          );
-        } else if (status === 429) {
-          throw new Error(`Too many requests: ${message}`);
-        } else {
-          throw new Error(`Failed to trigger generation: ${message}`);
-        }
-      }
-      throw error;
+      this.handlePublicEventError(
+        'trigger generation',
+        AILICIA_EVENT_CONTENT_LIMITS.generation,
+        error
+      );
     }
   }
 
@@ -756,12 +729,76 @@ export class AiliciaClient {
 
   private handleAxiosError(context: string, error: unknown): never {
     if (axios.isAxiosError(error)) {
-      const axiosError = error as AxiosError;
-      const data = axiosError.response?.data as Record<string, any> | undefined;
-      const detail = data?.message || axiosError.message;
-      throw new Error(`${context}: ${detail}`);
+      const detail = this.extractApiErrorMessage(error.response?.data, error.message);
+      throw new AiliciaApiError(
+        `${context}: ${detail}`,
+        this.resolveApiErrorCode(error.response?.status),
+        error.response?.status
+      );
     }
     throw error;
+  }
+
+  private handlePublicEventError(
+    operation: PublicEventOperation,
+    contentLimit: number,
+    error: unknown
+  ): never {
+    if (!axios.isAxiosError(error)) {
+      throw error;
+    }
+
+    const status = error.response?.status;
+    const detail = this.extractApiErrorMessage(error.response?.data, error.message);
+    const code = this.resolveApiErrorCode(status);
+    let message: string;
+
+    switch (code) {
+      case 'invalid_input':
+        message = `Invalid input: ${detail}`;
+        break;
+      case 'unauthorized':
+        message = `Unauthorized: API key was rejected or cannot access this channel. ${detail}`;
+        break;
+      case 'content_too_long':
+        message = `Content exceeds the ${contentLimit}-character limit: ${detail}`;
+        break;
+      case 'rate_limited':
+        message = `Too many requests: ${detail}`;
+        break;
+      default:
+        message = `Failed to ${operation}: ${detail}`;
+        break;
+    }
+
+    throw new AiliciaApiError(message, code, status);
+  }
+
+  private resolveApiErrorCode(status?: number): AiliciaApiErrorCode {
+    switch (status) {
+      case 400:
+        return 'invalid_input';
+      case 401:
+      case 403:
+        return 'unauthorized';
+      case 413:
+      case 422:
+        return 'content_too_long';
+      case 429:
+        return 'rate_limited';
+      default:
+        return 'request_failed';
+    }
+  }
+
+  private extractApiErrorMessage(data: unknown, fallback: string): string {
+    if (typeof data === 'object' && data !== null && 'message' in data) {
+      const message = (data as { message?: unknown }).message;
+      if (typeof message === 'string' && message.trim().length > 0) {
+        return message;
+      }
+    }
+    return fallback;
   }
 }
 

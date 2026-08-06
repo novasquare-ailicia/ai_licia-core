@@ -13,6 +13,9 @@ export * from './interfaces';
 // Export API content limits
 export * from './limits';
 
+// Export typed API errors
+export * from './errors';
+
 // Export the client
 export { AiliciaClient } from './client';
 
