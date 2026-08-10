@@ -157,10 +157,14 @@ export class AiliciaClient {
    * Triggers a reaction from ai_licia
    * 
    * @param content - The data for ai_licia to react to (max 300 characters)
+   * @param options - Optional execution mode and TTS delivery preference
    * @returns Promise that resolves with the response from ai_licia
    * @throws Error if the request fails
    */
-  public async triggerGeneration(content: string): Promise<GenerationResponse> {
+  public async triggerGeneration(
+    content: string,
+    options?: GenerationOptions
+  ): Promise<GenerationResponse> {
     if (content.length > AILICIA_EVENT_CONTENT_LIMITS.generation) {
       throw new Error(
         `Content exceeds the ${AILICIA_EVENT_CONTENT_LIMITS.generation}-character limit`
@@ -169,7 +173,8 @@ export class AiliciaClient {
 
     const eventContent: EventContentGeneration = {
       channelName: this.channelName,
-      content
+      content,
+      ...(options ? { options } : {})
     };
 
     const event: EventGeneration = {

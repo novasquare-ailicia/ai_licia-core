@@ -31,7 +31,7 @@ Or you can provide them directly when initializing the client.
 ### Basic Usage
 
 ```typescript
-import { AiliciaClient } from 'ai_licia-client';
+import { AiliciaClient, GenerationMode } from 'ai_licia-client';
 
 // Create a new client
 const client = new AiliciaClient(
@@ -123,7 +123,7 @@ White turn
 await client.sendEvent('Player stats: Health: 75/100, Mana: 30/100, Position: Forest of Doom');
 ```
 
-##### `triggerGeneration(content: string): Promise<GenerationResponse>`
+##### `triggerGeneration(content: string, options?: GenerationOptions): Promise<GenerationResponse>`
 
 Triggers ai_licia to generate an immediate response to a specific event or moment. This creates a one-off reaction from ai_licia that will appear in your stream.
 
@@ -136,12 +136,19 @@ Triggers ai_licia to generate an immediate response to a specific event or momen
 
 **Parameters:**
 - `content`: What ai_licia should react to (max 300 characters)
+- `options.mode`: `GenerationMode.STANDARD` by default, or `GenerationMode.FAST` for brief, time-sensitive reactions. Fast mode changes model execution only. It does not rewrite the content.
+- `options.tts`: Whether the generated response should be sent to text-to-speech. Defaults to `true`.
 
 ```typescript
 // Examples
 await client.triggerGeneration('Player just pulled a legendary sword from the stone!');
 await client.triggerGeneration('Viewer "GameMaster42" redeemed points for an ai_licia roast');
 await client.triggerGeneration('Plane crashed into the mountain. Total damage: $2.5M');
+
+await client.triggerGeneration('Tyre puncture. Briefly tell the driver to pit safely.', {
+  mode: GenerationMode.FAST,
+  tts: true
+});
 ```
 
 ##### `streamPublicChatMessages(options: ChatMessageStreamOptions): ChatMessageStream`

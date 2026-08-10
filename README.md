@@ -39,7 +39,7 @@ AI_LICIA_CHANNEL_NAME=your_twitch_channel_name
 ### Core Client
 
 ```typescript
-import { AiliciaClient } from 'ai_licia-client';
+import { AiliciaClient, GenerationMode } from 'ai_licia-client';
 
 // Create a client
 const client = AiliciaClient.getInstance({
@@ -53,6 +53,12 @@ await client.sendEvent('The player just entered a new dungeon area');
 // Trigger a generation
 const response = await client.triggerGeneration('The player just defeated the boss');
 console.log(response.content);
+
+// Use fast model execution for brief, time-sensitive reactions.
+await client.triggerGeneration('Tyre puncture. Tell the driver to pit safely.', {
+  mode: GenerationMode.FAST,
+  tts: true
+});
 ```
 
 ### Aitum Custom Code Integration
@@ -93,11 +99,13 @@ Sends contextual data to ai_licia.
 - `content`: The data for ai_licia to process (max 1,000 characters)
 - `ttl`: Optional Time-to-Live in seconds
 
-#### `triggerGeneration(content: string): Promise<GenerationResponse>`
+#### `triggerGeneration(content: string, options?: GenerationOptions): Promise<GenerationResponse>`
 
 Triggers a reaction from ai_licia.
 
 - `content`: The data for ai_licia to react to (max 300 characters)
+- `options.mode`: Optional `GenerationMode.STANDARD` or `GenerationMode.FAST`. Fast mode changes model execution only.
+- `options.tts`: Optional text-to-speech delivery flag. Defaults to `true`.
 - Returns a response with the ai_licia generation content
 
 ### AiliciaActions (ai_licia-aitum)

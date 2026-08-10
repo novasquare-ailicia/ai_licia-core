@@ -4,7 +4,8 @@ const test = require('node:test');
 const {
   AiliciaClient,
   AiliciaApiError,
-  AILICIA_EVENT_CONTENT_LIMITS
+  AILICIA_EVENT_CONTENT_LIMITS,
+  GenerationMode
 } = require('../dist');
 
 test('uses Bearer authentication for API requests', () => {
@@ -59,6 +60,39 @@ test('triggerGeneration preserves a typed rate-limit response', async () => {
       return true;
     }
   );
+});
+
+test('triggerGeneration sends only the public fast mode and tts options', async () => {
+  const client = new AiliciaClient('api-key', 'channel', 'https://example.test/v1');
+  let postedEvent;
+  client.client.post = async (_path, event) => {
+    postedEvent = event;
+    return { data: { id: 'generation-id', status: 'processing' } };
+  };
+
+  await client.triggerGeneration('Announce the puncture briefly.', {
+    mode: GenerationMode.FAST,
+    tts: true
+  });
+
+  assert.deepEqual(postedEvent.data.options, {
+    mode: 'FAST',
+    tts: true
+  });
+  assert.deepEqual(Object.keys(postedEvent.data.options).sort(), ['mode', 'tts']);
+});
+
+test('triggerGeneration remains backwards compatible without options', async () => {
+  const client = new AiliciaClient('api-key', 'channel', 'https://example.test/v1');
+  let postedEvent;
+  client.client.post = async (_path, event) => {
+    postedEvent = event;
+    return { data: { id: 'generation-id', status: 'processing' } };
+  };
+
+  await client.triggerGeneration('Standard reaction');
+
+  assert.equal(postedEvent.data.options, undefined);
 });
 
 test('triggerGeneration does not assume every 401 is a channel mismatch', async () => {

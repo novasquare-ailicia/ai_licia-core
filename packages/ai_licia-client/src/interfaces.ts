@@ -15,6 +15,7 @@ export interface EventContent {
 export interface EventContentGeneration {
   channelName: string;
   content: string;
+  options?: GenerationOptions;
 }
 
 export interface Event {
@@ -41,11 +42,14 @@ export interface AiliciaConfig {
   baseUrl?: string;
 }
 
+export enum GenerationMode {
+  STANDARD = 'STANDARD',
+  FAST = 'FAST'
+}
+
 export interface GenerationOptions {
-  promptOverride?: string;
-  useMemory?: boolean;
-  additionalContext?: string;
-  voiceOnly?: boolean;
+  mode?: GenerationMode;
+  tts?: boolean;
 }
 
 export type Platform = 'TWITCH' | 'TIKTOK' | 'KICK' | 'YOUTUBE';
