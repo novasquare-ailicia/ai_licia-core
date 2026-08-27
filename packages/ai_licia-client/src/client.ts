@@ -157,7 +157,7 @@ export class AiliciaClient {
    * Triggers a reaction from ai_licia
    * 
    * @param content - The data for ai_licia to react to (max 300 characters)
-   * @param options - Optional execution mode and TTS delivery preference
+   * @param options - Optional execution mode, TTS delivery preference, and expiry
    * @returns Promise that resolves with the response from ai_licia
    * @throws Error if the request fails
    */
@@ -169,6 +169,12 @@ export class AiliciaClient {
       throw new Error(
         `Content exceeds the ${AILICIA_EVENT_CONTENT_LIMITS.generation}-character limit`
       );
+    }
+    if (
+      options?.ttl != null &&
+      (!Number.isInteger(options.ttl) || options.ttl <= 0)
+    ) {
+      throw new Error('Generation TTL must be a positive integer number of seconds');
     }
 
     const eventContent: EventContentGeneration = {

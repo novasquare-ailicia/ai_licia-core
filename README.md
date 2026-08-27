@@ -57,7 +57,8 @@ console.log(response.content);
 // Use fast model execution for brief, time-sensitive reactions.
 await client.triggerGeneration('Tyre puncture. Tell the driver to pit safely.', {
   mode: GenerationMode.FAST,
-  tts: true
+  tts: true,
+  ttl: 8
 });
 ```
 

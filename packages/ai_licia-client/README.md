@@ -138,6 +138,7 @@ Triggers ai_licia to generate an immediate response to a specific event or momen
 - `content`: What ai_licia should react to (max 300 characters)
 - `options.mode`: `GenerationMode.STANDARD` by default, or `GenerationMode.FAST` for brief, time-sensitive reactions. Fast mode changes model execution only. It does not rewrite the content.
 - `options.tts`: Whether the generated response should be sent to text-to-speech. Defaults to `true`.
+- `options.ttl`: Optional positive integer lifetime in seconds. If the event is not consumed in time, it is discarded instead of producing stale commentary.
 
 ```typescript
 // Examples
@@ -147,7 +148,8 @@ await client.triggerGeneration('Plane crashed into the mountain. Total damage: $
 
 await client.triggerGeneration('Tyre puncture. Briefly tell the driver to pit safely.', {
   mode: GenerationMode.FAST,
-  tts: true
+  tts: true,
+  ttl: 8
 });
 ```
 

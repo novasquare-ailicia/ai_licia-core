@@ -50,6 +50,8 @@ export enum GenerationMode {
 export interface GenerationOptions {
   mode?: GenerationMode;
   tts?: boolean;
+  /** Drop the generation if it has not been consumed within this many seconds. */
+  ttl?: number;
 }
 
 export type Platform = 'TWITCH' | 'TIKTOK' | 'KICK' | 'YOUTUBE';

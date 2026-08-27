@@ -62,7 +62,7 @@ test('triggerGeneration preserves a typed rate-limit response', async () => {
   );
 });
 
-test('triggerGeneration sends only the public fast mode and tts options', async () => {
+test('triggerGeneration sends the public fast mode, tts, and expiry options', async () => {
   const client = new AiliciaClient('api-key', 'channel', 'https://example.test/v1');
   let postedEvent;
   client.client.post = async (_path, event) => {
@@ -72,14 +72,33 @@ test('triggerGeneration sends only the public fast mode and tts options', async 
 
   await client.triggerGeneration('Announce the puncture briefly.', {
     mode: GenerationMode.FAST,
-    tts: true
+    tts: true,
+    ttl: 8
   });
 
   assert.deepEqual(postedEvent.data.options, {
     mode: 'FAST',
-    tts: true
+    tts: true,
+    ttl: 8
   });
-  assert.deepEqual(Object.keys(postedEvent.data.options).sort(), ['mode', 'tts']);
+  assert.deepEqual(Object.keys(postedEvent.data.options).sort(), ['mode', 'ttl', 'tts']);
+});
+
+test('triggerGeneration rejects an invalid expiry before sending', async () => {
+  const client = new AiliciaClient('api-key', 'channel', 'https://example.test/v1');
+  let posted = false;
+  client.client.post = async () => {
+    posted = true;
+  };
+
+  await assert.rejects(
+    client.triggerGeneration('Stale racing advice', {
+      mode: GenerationMode.FAST,
+      ttl: 0
+    }),
+    /TTL must be a positive integer/
+  );
+  assert.equal(posted, false);
 });
 
 test('triggerGeneration remains backwards compatible without options', async () => {
