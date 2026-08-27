@@ -6,23 +6,12 @@ This monorepo contains libraries for integrating with [ai_licia AI Co-Host](http
 
 ## Packages
 
-This repository contains the following packages:
-
-1. **ai_licia-client** - Core client library for interacting with the ai_licia API
-2. **ai_licia-aitum** - Integration for Aitum Custom Code that imports ai_licia-client
+This repository contains **ai_licia-client**, the core client library for interacting with the ai_licia API.
 
 ## Installation
 
-### Core Client Only
-
 ```bash
 npm install ai_licia-client
-```
-
-### Aitum Integration
-
-```bash
-npm install ai_licia-client ai_licia-aitum
 ```
 
 ## Environment Setup
@@ -62,25 +51,6 @@ await client.triggerGeneration('Tyre puncture. Tell the driver to pit safely.', 
 });
 ```
 
-### Aitum Custom Code Integration
-
-```typescript
-import { AitumCC } from 'aitum.js';
-import { AiliciaActions } from 'ai_licia-aitum';
-
-// Initialize the Custom Code lib
-const lib = new AitumCC('My Aitum CC Project');
-
-// Register all ailicia actions
-Object.values(AiliciaActions).forEach(action => {
-  lib.registerAction(action);
-});
-
-// This registers two actions in Aitum:
-// 1. Send ai_licia Context Event
-// 2. Trigger ai_licia Direct Generation
-```
-
 ## API Reference
 
 ### AiliciaClient (ai_licia-client)
@@ -108,13 +78,6 @@ Triggers a reaction from ai_licia.
 - `options.mode`: Optional `GenerationMode.STANDARD` or `GenerationMode.FAST`. Fast mode changes model execution only.
 - `options.tts`: Optional text-to-speech delivery flag. Defaults to `true`.
 - Returns a response with the ai_licia generation content
-
-### AiliciaActions (ai_licia-aitum)
-
-Contains Aitum Custom Code actions for ai_licia:
-
-- `SendContextEvent`: Action to send context events to ai_licia
-- `TriggerDirectGeneration`: Action to trigger reactions from ai_licia
 
 ## Example Use Cases
 
@@ -145,7 +108,6 @@ Or build specific packages:
 
 ```bash
 npm run build:client
-npm run build:aitum
 ```
 
 ## Contributing
@@ -175,5 +137,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgments
 
 - Thanks to the ai_licia team for providing the API
-- All the streamers and content creators using ai_licia with Aitum
+- All the streamers and content creators building with ai_licia
 - Contributors to this project

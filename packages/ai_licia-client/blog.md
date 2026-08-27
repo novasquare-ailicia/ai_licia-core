@@ -79,8 +79,6 @@ Build complex workflows where ai_licia responds to specific viewer actions, chan
 
 Connect your smart lighting system to ai_licia so she can control your room's ambiance based on game events or stream milestones. Imagine your lights turning red while ai_licia gets excited about an intense boss fight.
 
-### Aitum
-
 ## Getting Started (No Computer Science Degree Required)
 
 Even if you're not a developer, our npm package is designed to be accessible. Here's how to get started:
@@ -145,4 +143,4 @@ Let's build the future of interactive streaming together!
 
 ---
 
-*Have questions or need help? Join our [Discord community](https://discord.gg/Pbh7bYPJKt) or check out our [documentation](https://docs.getailicia.com).* 
+*Have questions or need help? Join our [Discord community](https://discord.gg/Pbh7bYPJKt) or check out our [documentation](https://docs.getailicia.com).*

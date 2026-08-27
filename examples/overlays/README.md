@@ -5,7 +5,7 @@ A static Next.js application that ships three configurable overlays for OBS/brow
 2. Message-rate pulse card
 3. Joint chat feed (cross-platform chat + EventSub events)
 
-It uses `ai_licia-client@1.4.0` for public chat and unified EventSub streaming.
+It uses `ai_licia-client@1.5.0` for public chat and unified EventSub streaming.
 
 ## Quick start
 

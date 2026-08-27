@@ -9,14 +9,6 @@ on:
         description: 'SemVer package version to publish'
         required: true
         type: string
-      package:
-        description: 'Package publication scope'
-        required: true
-        default: 'client'
-        type: choice
-        options:
-          - client
-          - all
 
 permissions:
   contents: read
@@ -36,12 +28,8 @@ jobs:
       - name: Install dependencies
         run: npm ci # Installs dependencies for the entire workspace
 
-      - name: Build ai_licia-client package (Dependency first)
+      - name: Build ai_licia-client package
         run: npm run build --workspace=packages/ai_licia-client --if-present
-        
-      - name: Build ai_licia-aitum package 
-        if: github.event_name == 'release' || inputs.package == 'all'
-        run: npm run build --workspace=packages/ai_licia-aitum --if-present
 
       - name: Resolve publication version
         id: get_version
@@ -61,25 +49,6 @@ jobs:
           cd packages/ai_licia-client
           npm version $VERSION --no-git-tag-version --allow-same-version
           echo "Updated ai_licia-client to version $VERSION"
-          # cd ../.. # No longer needed here if the next step runs from root first
-
-      - name: Update version in ai_licia-aitum package.json and dependency
-        if: github.event_name == 'release' || inputs.package == 'all'
-        run: |
-          # Run install command from root FIRST to update dependency
-          npm install ai_licia-client@$VERSION --save-exact --workspace=packages/ai_licia-aitum
-          echo "Set ai_licia-client dependency to $VERSION in ai_licia-aitum package.json"
-          
-          # Now cd into the package to update its version
-          cd packages/ai_licia-aitum
-          npm version $VERSION --no-git-tag-version --allow-same-version
-          echo "Updated ai_licia-aitum package version to $VERSION"
         
       - name: Publish ai_licia-client package
-        run: npm publish --workspace=packages/ai_licia-client --access public # Ensure public access
-
-      - name: Publish ai_licia-aitum package
-        if: github.event_name == 'release' || inputs.package == 'all'
-        run: npm publish --workspace=packages/ai_licia-aitum --access public # Ensure public access
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --workspace=packages/ai_licia-client --access public

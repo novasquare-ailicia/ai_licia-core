@@ -1,7 +1,7 @@
 # ai_licia Client
 
 <p align="center">
-    <a href="https://www.npmjs.com/package/aitum.js">
+    <a href="https://www.npmjs.com/package/ai_licia-client">
         <img alt="npm" src="https://img.shields.io/npm/v/ai_licia-client?style=flat-square">
     </a>
 </p>
@@ -374,7 +374,3 @@ Please check out the [contributing guidelines](../../CONTRIBUTING.md) for more i
 ## License
 
 Distributed under the MIT License. See [LICENSE](../../LICENSE) for more information.
-
-## Related
-
-- [ai_licia-aitum](../ai_licia-aitum) - Aitum Custom Code integration for ai_licia 

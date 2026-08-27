@@ -9,15 +9,11 @@
   "scripts": {
     "build": "npm run build --workspaces",
     "build:client": "npm run build --workspace=packages/ai_licia-client",
-    "build:aitum": "npm run build --workspace=packages/ai_licia-aitum",
     "test": "npm run test --workspaces",
-    "clean": "rm -rf packages/*/dist",
-    "setup:aitum": "cd packages/ai_licia-aitum && npm run setup",
-    "start:aitum": "cd packages/ai_licia-aitum && npm run start"
+    "clean": "rm -rf packages/*/dist"
   },
   "keywords": [
     "ai_licia",
-    "aitum",
     "twitch",
     "ai"
   ],

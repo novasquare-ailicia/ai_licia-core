@@ -1,6 +1,8 @@
 name: Continuous Integration
 
-on: [push]
+on:
+  push:
+  pull_request:
 
 jobs:
   build:
@@ -8,36 +10,19 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v6
         with:
-          node-version: '16.x' # Or your preferred/required Node version
-          cache: 'npm' # Enable caching for npm dependencies
+          node-version: '24'
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Build ai_licia-client package (Dependency first)
-        run: npm run build --workspace=packages/ai_licia-client --if-present
+      - name: Build and test ai_licia-client
+        run: npm test
 
-      - name: Build ai_licia-aitum package 
-        run: npm run build --workspace=packages/ai_licia-aitum --if-present
-
-      - name: Update version in ai_licia-aitum package.json and dependency
-        run: |
-          # Run install command from root FIRST to update dependency
-          npm install ai_licia-client@$VERSION --save-exact --workspace=packages/ai_licia-aitum
-          echo "Set ai_licia-client dependency to $VERSION in ai_licia-aitum package.json"
-          
-          # Now cd into the package to update its version
-          cd packages/ai_licia-aitum
-          npm version $VERSION --no-git-tag-version --allow-same-version
-          echo "Updated ai_licia-aitum package version to $VERSION"
-
-      # Optional: Add steps for linting or testing here if needed
-      # - name: Run linter
-      #   run: npm run lint --workspaces --if-present
-      # - name: Run tests
-      #   run: npm run test --workspaces --if-present 
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
