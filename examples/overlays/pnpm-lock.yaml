@@ -24,8 +24,8 @@ importers:
         specifier: 7.3.5
         version: 7.3.5(@emotion/cache@11.14.0)(@emotion/react@11.14.0(@types/react@19.2.18)(react@19.2.0))(@types/react@19.2.18)(next@16.3.3(@babel/core@7.29.7)(@types/node@20.19.43)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)
       ai_licia-client:
-        specifier: 1.5.0
-        version: 1.5.0
+        specifier: 1.6.0
+        version: 1.6.0
       next:
         specifier: 16.3.3
         version: 16.3.3(@babel/core@7.29.7)(@types/node@20.19.43)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -832,8 +832,8 @@ packages:
     resolution: {integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==}
     engines: {node: '>= 6.0.0'}
 
-  ai_licia-client@1.5.0:
-    resolution: {integrity: sha512-A9j5Jh7OuhX/49BdF4dWO894+4UItSMi1C1TOF5IEj6eSwnUjZtyDuloxuYiBG1G78SP90UCe6Vh5f9CgLpqEg==}
+  ai_licia-client@1.6.0:
+    resolution: {integrity: sha512-srIqqWdcVhfeTcKu7q1FY49fcXD9/a26iUuJ1bxpIph51pJJc9pWl2AknoajvXwzmGtG4Bts0S/+5jZktltznw==}
 
   ajv@6.15.0:
     resolution: {integrity: sha512-fgFx7Hfoq60ytK2c7DhnF8jIvzYgOMxfugjLOSMHjLIPgenqa7S7oaagATUq99mV6IYvN2tRmC0wnTYX6iPbMw==}
@@ -2862,7 +2862,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ai_licia-client@1.5.0:
+  ai_licia-client@1.6.0:
     dependencies:
       axios: 1.20.0
       dotenv: 17.4.2
