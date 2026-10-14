@@ -110,6 +110,25 @@ Or build specific packages:
 npm run build:client
 ```
 
+### Avatar protocol conformance
+
+With an ai_licia Desktop development build running, validate the live authenticated
+Avatar Protocol producer with:
+
+```bash
+npm run conformance:avatar -- --report ./avatar-conformance-report.json
+```
+
+On first use, approve `avatar.events.read` in Desktop. The command stores only the
+opaque reconnect credential in a user-local file with private permissions. It then
+reconnects, subscribes to the lifecycle and amplitude profiles, and asks you to play
+one complete TTS utterance.
+
+The resulting JSON report checks authorization recovery, subscription filtering,
+delivery sequencing, exact message/audio identity, lifecycle, amplitude, final mouth
+rest, and active-state snapshot recovery. Run `npm run conformance:avatar -- --help`
+for endpoint, timeout, credential-file, and report options.
+
 ## Contributing
 
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.

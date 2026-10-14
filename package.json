@@ -12,6 +12,7 @@
     "generate:avatar-schema": "npm run build:client && node scripts/generate-avatar-protocol-schema.mjs",
     "check:avatar-schema": "npm run build:client && node scripts/generate-avatar-protocol-schema.mjs --check",
     "simulator:avatar": "npm run build:client && node scripts/avatar-protocol-simulator.mjs",
+    "conformance:avatar": "npm run build:client && node scripts/avatar-protocol-live-check.mjs",
     "test": "npm run test --workspaces",
     "clean": "rm -rf packages/*/dist"
   },

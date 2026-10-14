@@ -13,6 +13,9 @@ export * from './interfaces';
 // Export the renderer-neutral avatar protocol contract and validators
 export * from './avatarProtocol';
 
+// Export live producer conformance types and state validation
+export * from './avatarConformance';
+
 // Export API content limits
 export * from './limits';
 
