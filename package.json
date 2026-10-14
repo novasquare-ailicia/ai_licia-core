@@ -9,6 +9,9 @@
   "scripts": {
     "build": "npm run build --workspaces",
     "build:client": "npm run build --workspace=packages/ai_licia-client",
+    "generate:avatar-schema": "npm run build:client && node scripts/generate-avatar-protocol-schema.mjs",
+    "check:avatar-schema": "npm run build:client && node scripts/generate-avatar-protocol-schema.mjs --check",
+    "simulator:avatar": "npm run build:client && node scripts/avatar-protocol-simulator.mjs",
     "test": "npm run test --workspaces",
     "clean": "rm -rf packages/*/dist"
   },
@@ -21,6 +24,8 @@
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^20.11.16",
-    "typescript": "^5.3.3"
+    "@types/ws": "^8.18.2",
+    "typescript": "^5.3.3",
+    "ws": "^8.22.0"
   }
 }

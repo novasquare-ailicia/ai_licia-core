@@ -323,13 +323,47 @@ export interface EventSubStream {
   offAny(handler: EventSubAnyHandler): EventSubStream;
 }
 
-export const LOCAL_WEBSOCKET_CAPABILITIES = ['events', 'state', 'integration.auth'] as const;
+import type {
+  AvatarGetStateMessage,
+  AvatarProfileId,
+  AvatarProtocolEvent,
+  AvatarSubscribeMessage,
+  AvatarSubscribedMessage,
+  AvatarSubscriptionErrorMessage,
+} from './avatarProtocol';
+
+export const LOCAL_WEBSOCKET_CAPABILITIES = [
+  'events',
+  'state',
+  'integration.auth',
+  'integration.auth.vision-rtmp-v1',
+  'integration.auth.vision-installation-v1',
+  'avatar.protocol.v1'
+] as const;
 export type LocalWebSocketCapability = typeof LOCAL_WEBSOCKET_CAPABILITIES[number];
 
-export const LOCAL_WEBSOCKET_SCOPES = ['rest.full'] as const;
+export const LOCAL_WEBSOCKET_SCOPES = [
+  'rest.full',
+  'vision.rtmp.configure',
+  'vision.installation.register',
+  'avatar.events.read'
+] as const;
 export type LocalWebSocketScope = typeof LOCAL_WEBSOCKET_SCOPES[number];
 
-export const LOCAL_WEBSOCKET_EVENT_NAMES = ['ttsAmplitude'] as const;
+export const LOCAL_WEBSOCKET_EVENT_NAMES = [
+  'ttsAmplitude',
+  'avatar.speech.prepared',
+  'avatar.speech.started',
+  'avatar.speech.paused',
+  'avatar.speech.resumed',
+  'avatar.speech.ended',
+  'avatar.mouth.amplitude',
+  'avatar.mouth.visemes',
+  'avatar.mouth.arkit_frames',
+  'avatar.expression.state',
+  'avatar.action.triggered',
+  'avatar.state.snapshot'
+] as const;
 export type LocalWebSocketEventName = typeof LOCAL_WEBSOCKET_EVENT_NAMES[number];
 
 export const LOCAL_WEBSOCKET_ERROR_CODES = [
@@ -349,10 +383,12 @@ export interface LocalWebSocketHelloPayload {
   clientId: string;
   displayName?: string;
   version?: string;
+  reconnectCredential?: string;
 }
 
 export interface LocalWebSocketWelcomePayload {
   capabilities: LocalWebSocketCapability[];
+  authorizedScopes: LocalWebSocketScope[];
 }
 
 export interface LocalWebSocketRequestAccessPayload {
@@ -374,9 +410,10 @@ export interface LocalWebSocketAccessDeniedPayload {
 
 export interface LocalWebSocketAccessGrantedPayload {
   requestId: string;
-  apiKey: string;
   scopes: LocalWebSocketScope[];
+  apiKey?: string;
   channelName?: string;
+  reconnectCredential?: string;
 }
 
 export interface LocalWebSocketErrorPayload {
@@ -384,12 +421,19 @@ export interface LocalWebSocketErrorPayload {
   message: string;
 }
 
-export interface LocalWebSocketEventMap {
+type AvatarLocalWebSocketEventMap = {
+  [K in AvatarProtocolEvent['payload']['name']]: Extract<
+    AvatarProtocolEvent,
+    { payload: { name: K } }
+  >['payload']['data'];
+};
+
+export type LocalWebSocketEventMap = AvatarLocalWebSocketEventMap & {
   ttsAmplitude: {
     soundAmplitudeValue: number;
     animationId?: string | number | null;
   };
-}
+};
 
 export interface LocalWebSocketEventEnvelope<TName extends LocalWebSocketEventName> {
   name: TName;
@@ -403,6 +447,8 @@ export type LocalWebSocketMessageMap = {
   access_denied: LocalWebSocketAccessDeniedPayload;
   error: LocalWebSocketErrorPayload;
   event: LocalWebSocketEventEnvelope<LocalWebSocketEventName>;
+  'avatar.subscribed': AvatarSubscribedMessage['payload'];
+  'avatar.subscription_error': AvatarSubscriptionErrorMessage['payload'];
 };
 
 export type LocalWebSocketMessageType = keyof LocalWebSocketMessageMap;
@@ -448,6 +494,7 @@ export interface LocalWebSocketClientOptions extends LocalWebSocketConnectionOpt
   clientId: string;
   displayName?: string;
   version?: string;
+  reconnectCredential?: string;
 }
 
 export interface LocalWebSocketRequestAccessOptions {
@@ -455,6 +502,18 @@ export interface LocalWebSocketRequestAccessOptions {
   clientId?: string;
   displayName?: string;
   timeoutMs?: number;
+}
+
+export type LocalWebSocketAvatarSubscribeOptions = AvatarSubscribeMessage['payload'];
+export type LocalWebSocketAvatarGetStateOptions = AvatarGetStateMessage['payload'];
+
+export interface LocalWebSocketAvatarSubscription {
+  requestId: string;
+  protocolVersion: 1;
+  avatarSessionId: string;
+  subscriptionId: string;
+  acceptedProfiles: AvatarProfileId[];
+  rejectedProfiles: AvatarSubscribedMessage['payload']['rejectedProfiles'];
 }
 
 export interface LocalWebSocketStream {

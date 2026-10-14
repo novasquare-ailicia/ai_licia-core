@@ -10,6 +10,9 @@ try {
 // Export everything from interfaces
 export * from './interfaces';
 
+// Export the renderer-neutral avatar protocol contract and validators
+export * from './avatarProtocol';
+
 // Export API content limits
 export * from './limits';
 

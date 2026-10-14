@@ -6,6 +6,8 @@ import {
   LocalWebSocketAccessDeniedPayload,
   LocalWebSocketAccessGrantedPayload,
   LocalWebSocketAccessPendingPayload,
+  LocalWebSocketAvatarGetStateOptions,
+  LocalWebSocketAvatarSubscribeOptions,
   LocalWebSocketCapability,
   LocalWebSocketClientOptions,
   LocalWebSocketConnectionOptions,
@@ -25,6 +27,11 @@ import {
   WebSocketFactory,
   WebSocketLike
 } from './interfaces';
+import {
+  AvatarSubscribedMessage,
+  AvatarSubscriptionErrorMessage,
+  validateAvatarProtocolMessage
+} from './avatarProtocol';
 
 type MessageHandler<T extends LocalWebSocketMessageType> = (payload: LocalWebSocketMessageMap[T]) => void;
 type AnyMessageHandler = (message: LocalWebSocketMessage) => void;
@@ -60,7 +67,16 @@ const isNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value);
 
 const isLocalWebSocketMessageType = (value: string): value is LocalWebSocketMessageType =>
-  (['welcome', 'access_pending', 'access_granted', 'access_denied', 'error', 'event'] as const)
+  ([
+    'welcome',
+    'access_pending',
+    'access_granted',
+    'access_denied',
+    'error',
+    'event',
+    'avatar.subscribed',
+    'avatar.subscription_error'
+  ] as const)
     .includes(value as LocalWebSocketMessageType);
 
 const isLocalWebSocketEventName = (value: string): value is LocalWebSocketEventName =>
@@ -116,6 +132,7 @@ export class LocalWebSocketClient implements LocalWebSocketStream {
   private readonly clientId: string;
   private readonly displayName?: string;
   private readonly version?: string;
+  private reconnectCredential?: string;
   private readonly url: string;
   private readonly socketFactory: WebSocketFactory;
   private socket: WebSocketLike | null = null;
@@ -132,6 +149,7 @@ export class LocalWebSocketClient implements LocalWebSocketStream {
     this.clientId = options.clientId;
     this.displayName = options.displayName;
     this.version = options.version;
+    this.reconnectCredential = options.reconnectCredential;
     this.url = buildLocalWebSocketUrl(options);
     this.socketFactory = resolveWebSocketFactory(options.webSocketFactory);
   }
@@ -142,6 +160,10 @@ export class LocalWebSocketClient implements LocalWebSocketStream {
 
   public isConnected(): boolean {
     return this.socket?.readyState === 1;
+  }
+
+  public getReconnectCredential(): string | undefined {
+    return this.reconnectCredential;
   }
 
   public async connect(): Promise<void> {
@@ -217,7 +239,8 @@ export class LocalWebSocketClient implements LocalWebSocketStream {
       clientType: 'integration',
       clientId: resolvedClientId,
       displayName: overrides.displayName ?? this.displayName,
-      version: overrides.version ?? this.version
+      version: overrides.version ?? this.version,
+      reconnectCredential: overrides.reconnectCredential ?? this.reconnectCredential
     };
 
     this.sendMessage({ type: 'hello', payload: hello });
@@ -232,7 +255,7 @@ export class LocalWebSocketClient implements LocalWebSocketStream {
     if (this.pendingAccess) {
       throw new Error('Access request already pending.');
     }
-    const scopes = options.scopes ?? [...LOCAL_WEBSOCKET_SCOPES];
+    const scopes = options.scopes ?? ['rest.full'];
     const clientId = options.clientId ?? this.clientId;
     const displayName = options.displayName ?? this.displayName ?? clientId;
     const timeoutMs = options.timeoutMs ?? DEFAULT_ACCESS_TIMEOUT_MS;
@@ -266,6 +289,45 @@ export class LocalWebSocketClient implements LocalWebSocketStream {
       }, timeoutMs);
       this.pendingAccess = { resolve, reject, timeoutId };
     });
+  }
+
+  public async subscribeAvatar(
+    options: LocalWebSocketAvatarSubscribeOptions,
+    timeoutMs = 15_000
+  ): Promise<AvatarSubscribedMessage['payload']> {
+    await this.connect();
+    await this.sendHello();
+
+    return new Promise((resolve, reject) => {
+      const handleSubscribed = (payload: AvatarSubscribedMessage['payload']) => {
+        if (payload.requestId !== options.requestId) return;
+        cleanup();
+        resolve(payload);
+      };
+      const handleError = (payload: AvatarSubscriptionErrorMessage['payload']) => {
+        if (payload.requestId !== options.requestId) return;
+        cleanup();
+        reject(new Error(`${payload.code}: ${payload.message}`));
+      };
+      const timeoutId = setTimeout(() => {
+        cleanup();
+        reject(new Error('Avatar subscription timed out.'));
+      }, timeoutMs);
+      const cleanup = () => {
+        clearTimeout(timeoutId);
+        this.off('avatar.subscribed', handleSubscribed);
+        this.off('avatar.subscription_error', handleError);
+      };
+      this.on('avatar.subscribed', handleSubscribed);
+      this.on('avatar.subscription_error', handleError);
+      this.sendMessage({ type: 'avatar.subscribe', payload: options });
+    });
+  }
+
+  public async requestAvatarState(options: LocalWebSocketAvatarGetStateOptions): Promise<void> {
+    await this.connect();
+    await this.sendHello();
+    this.sendMessage({ type: 'avatar.get_state', payload: options });
   }
 
   public on<T extends LocalWebSocketMessageType>(
@@ -379,7 +441,12 @@ export class LocalWebSocketClient implements LocalWebSocketStream {
     socket.onclose = handleClose;
   }
 
-  private sendMessage(message: { type: 'hello'; payload: LocalWebSocketHelloPayload } | { type: 'request_access'; payload: LocalWebSocketRequestAccessPayload }): void {
+  private sendMessage(message:
+    | { type: 'hello'; payload: LocalWebSocketHelloPayload }
+    | { type: 'request_access'; payload: LocalWebSocketRequestAccessPayload }
+    | { type: 'avatar.subscribe'; payload: LocalWebSocketAvatarSubscribeOptions }
+    | { type: 'avatar.get_state'; payload: LocalWebSocketAvatarGetStateOptions }
+  ): void {
     if (!this.socket || this.socket.readyState !== 1) {
       throw new Error('WebSocket is not connected.');
     }
@@ -398,6 +465,15 @@ export class LocalWebSocketClient implements LocalWebSocketStream {
       return;
     }
     if (!isRecord(parsed)) {
+      return;
+    }
+    const avatarMessage = validateAvatarProtocolMessage(parsed);
+    if (avatarMessage.success && (
+      avatarMessage.value.type === 'event' ||
+      avatarMessage.value.type === 'avatar.subscribed' ||
+      avatarMessage.value.type === 'avatar.subscription_error'
+    )) {
+      this.dispatchMessage(avatarMessage.value as LocalWebSocketMessage);
       return;
     }
     const typeValue = readString(parsed.type);
@@ -420,7 +496,12 @@ export class LocalWebSocketClient implements LocalWebSocketStream {
           .map((value) => (typeof value === 'string' ? value : null))
           .filter((value): value is string => !!value)
           .filter(isLocalWebSocketCapability);
-        return { type, payload: { capabilities } };
+        const authorizedScopesRaw = Array.isArray(payload.authorizedScopes) ? payload.authorizedScopes : [];
+        const authorizedScopes = authorizedScopesRaw
+          .map((value) => (typeof value === 'string' ? value : null))
+          .filter((value): value is string => !!value)
+          .filter(isLocalWebSocketScope);
+        return { type, payload: { capabilities, authorizedScopes } };
       }
       case 'access_pending': {
         const requestId = readString(payload.requestId);
@@ -431,12 +512,13 @@ export class LocalWebSocketClient implements LocalWebSocketStream {
       case 'access_granted': {
         const requestId = readString(payload.requestId);
         const apiKey = readString(payload.apiKey);
+        const reconnectCredential = readString(payload.reconnectCredential);
         const scopesRaw = Array.isArray(payload.scopes) ? payload.scopes : [];
         const scopes = scopesRaw
           .map((value) => (typeof value === 'string' ? value : null))
           .filter((value): value is string => !!value)
           .filter(isLocalWebSocketScope);
-        if (!requestId || !apiKey || scopes.length === 0) {
+        if (!requestId || scopes.length === 0) {
           return null;
         }
         const channelName = readString(payload.channelName);
@@ -444,7 +526,8 @@ export class LocalWebSocketClient implements LocalWebSocketStream {
           requestId,
           apiKey,
           scopes,
-          channelName
+          channelName,
+          reconnectCredential
         };
         return { type, payload: parsedPayload };
       }
@@ -493,6 +576,9 @@ export class LocalWebSocketClient implements LocalWebSocketStream {
         }
         return null;
       }
+      case 'avatar.subscribed':
+      case 'avatar.subscription_error':
+        return null;
       default:
         return null;
     }
@@ -516,6 +602,9 @@ export class LocalWebSocketClient implements LocalWebSocketStream {
       this.handleAccessPending(message.payload);
     }
     if (message.type === 'access_granted') {
+      if (message.payload.reconnectCredential) {
+        this.reconnectCredential = message.payload.reconnectCredential;
+      }
       this.handleAccessGranted(message.payload);
     }
     if (message.type === 'access_denied') {

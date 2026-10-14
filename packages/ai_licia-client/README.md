@@ -308,6 +308,58 @@ const client = new AiliciaClient();
 // Now you can use client.sendEvent() and client.triggerGeneration()
 ```
 
+## Avatar Protocol v1
+
+The package exports the strongly typed `avatar.protocol.v1` contract, runtime validation, and a client for the Desktop application's authenticated local WebSocket.
+
+```typescript
+import { LocalWebSocketClient } from 'ai_licia-client';
+
+const client = new LocalWebSocketClient({
+  clientId: 'com.example.unreal-renderer',
+  displayName: 'Example Unreal Renderer',
+  reconnectCredential: loadCredential()
+});
+
+await client.connect();
+const welcome = await client.sendHello();
+
+if (!welcome.authorizedScopes.includes('avatar.events.read')) {
+  const grant = await client.requestAccess({
+    scopes: ['avatar.events.read']
+  });
+  if (grant.reconnectCredential) saveCredential(grant.reconnectCredential);
+}
+
+client.onEvent('avatar.state.snapshot', (snapshot) => {
+  console.log('Avatar state', snapshot);
+});
+
+client.onEvent('avatar.mouth.amplitude', (sample) => {
+  console.log(sample.utteranceId, sample.offsetMs, sample.value);
+});
+
+await client.subscribeAvatar({
+  requestId: crypto.randomUUID(),
+  protocolVersion: 1,
+  profiles: [
+    { id: 'avatar.speech.lifecycle.v1', required: true },
+    { id: 'avatar.mouth.amplitude.v1', required: true }
+  ],
+  speechDriverPreference: ['avatar.mouth.amplitude.v1']
+});
+```
+
+The generated JSON Schema is shipped at `schema/avatar-protocol.v1.schema.json`. The package also exports `validateAvatarProtocolMessage` and `validateAvatarProtocolSequence` for adapters that need runtime validation.
+
+For integration development without Desktop, run the local simulator from the repository root:
+
+```bash
+npm run simulator:avatar
+```
+
+It listens on `ws://127.0.0.1:51744`, grants only the avatar scope, and emits a deterministic lifecycle and amplitude stream.
+
 ## Official Integrations & Partnerships
 
 Are you a game developer, app creator, or platform looking to build a deeper integration with ai_licia? We welcome partnerships to create official, branded integrations that enhance the streaming experience!

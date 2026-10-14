@@ -24,5 +24,8 @@ jobs:
       - name: Build and test ai_licia-client
         run: npm test
 
+      - name: Check generated avatar protocol schema
+        run: npm run check:avatar-schema
+
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high

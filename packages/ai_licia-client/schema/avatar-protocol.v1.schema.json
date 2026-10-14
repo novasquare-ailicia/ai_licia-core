@@ -1,0 +1,2605 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.getailicia.com/avatar/protocol/v1/message.schema.json",
+  "title": "ai_licia Avatar Protocol v1 wire message",
+  "description": "Complete client, server and event messages for avatar.protocol.v1.",
+  "anyOf": [
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "avatar.subscribe",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "requestId",
+            "protocolVersion",
+            "profiles"
+          ],
+          "properties": {
+            "requestId": {
+              "minLength": 1,
+              "maxLength": 64,
+              "type": "string"
+            },
+            "protocolVersion": {
+              "const": 1,
+              "type": "number"
+            },
+            "profiles": {
+              "minItems": 1,
+              "maxItems": 32,
+              "type": "array",
+              "items": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "id",
+                  "required"
+                ],
+                "properties": {
+                  "id": {
+                    "anyOf": [
+                      {
+                        "anyOf": [
+                          {
+                            "const": "avatar.speech.lifecycle.v1",
+                            "type": "string"
+                          },
+                          {
+                            "const": "avatar.mouth.amplitude.v1",
+                            "type": "string"
+                          },
+                          {
+                            "const": "avatar.mouth.viseme-15.v1",
+                            "type": "string"
+                          },
+                          {
+                            "const": "avatar.mouth.arkit-speech.v1",
+                            "type": "string"
+                          },
+                          {
+                            "const": "avatar.expression.vrm.v1",
+                            "type": "string"
+                          },
+                          {
+                            "const": "avatar.action.semantic.v1",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      {
+                        "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)+/[a-z0-9][a-z0-9._-]*\\.v[1-9][0-9]*$",
+                        "maxLength": 128,
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "required": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            },
+            "speechDriverPreference": {
+              "minItems": 1,
+              "maxItems": 3,
+              "uniqueItems": true,
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "const": "avatar.mouth.arkit-speech.v1",
+                    "type": "string"
+                  },
+                  {
+                    "const": "avatar.mouth.viseme-15.v1",
+                    "type": "string"
+                  },
+                  {
+                    "const": "avatar.mouth.amplitude.v1",
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "avatar.subscribed",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "requestId",
+            "protocolVersion",
+            "avatarSessionId",
+            "subscriptionId",
+            "acceptedProfiles",
+            "rejectedProfiles"
+          ],
+          "properties": {
+            "requestId": {
+              "minLength": 1,
+              "maxLength": 64,
+              "type": "string"
+            },
+            "protocolVersion": {
+              "const": 1,
+              "type": "number"
+            },
+            "avatarSessionId": {
+              "minLength": 1,
+              "maxLength": 128,
+              "type": "string"
+            },
+            "subscriptionId": {
+              "minLength": 1,
+              "maxLength": 128,
+              "type": "string"
+            },
+            "acceptedProfiles": {
+              "uniqueItems": true,
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "anyOf": [
+                      {
+                        "const": "avatar.speech.lifecycle.v1",
+                        "type": "string"
+                      },
+                      {
+                        "const": "avatar.mouth.amplitude.v1",
+                        "type": "string"
+                      },
+                      {
+                        "const": "avatar.mouth.viseme-15.v1",
+                        "type": "string"
+                      },
+                      {
+                        "const": "avatar.mouth.arkit-speech.v1",
+                        "type": "string"
+                      },
+                      {
+                        "const": "avatar.expression.vrm.v1",
+                        "type": "string"
+                      },
+                      {
+                        "const": "avatar.action.semantic.v1",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  {
+                    "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)+/[a-z0-9][a-z0-9._-]*\\.v[1-9][0-9]*$",
+                    "maxLength": 128,
+                    "type": "string"
+                  }
+                ]
+              }
+            },
+            "rejectedProfiles": {
+              "type": "array",
+              "items": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "id",
+                  "reason"
+                ],
+                "properties": {
+                  "id": {
+                    "anyOf": [
+                      {
+                        "anyOf": [
+                          {
+                            "const": "avatar.speech.lifecycle.v1",
+                            "type": "string"
+                          },
+                          {
+                            "const": "avatar.mouth.amplitude.v1",
+                            "type": "string"
+                          },
+                          {
+                            "const": "avatar.mouth.viseme-15.v1",
+                            "type": "string"
+                          },
+                          {
+                            "const": "avatar.mouth.arkit-speech.v1",
+                            "type": "string"
+                          },
+                          {
+                            "const": "avatar.expression.vrm.v1",
+                            "type": "string"
+                          },
+                          {
+                            "const": "avatar.action.semantic.v1",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      {
+                        "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)+/[a-z0-9][a-z0-9._-]*\\.v[1-9][0-9]*$",
+                        "maxLength": 128,
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "reason": {
+                    "anyOf": [
+                      {
+                        "const": "unsupported",
+                        "type": "string"
+                      },
+                      {
+                        "const": "temporarily_unavailable",
+                        "type": "string"
+                      },
+                      {
+                        "const": "not_authorized",
+                        "type": "string"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "avatar.subscription_error",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "requestId",
+            "code",
+            "message"
+          ],
+          "properties": {
+            "requestId": {
+              "minLength": 1,
+              "maxLength": 64,
+              "type": "string"
+            },
+            "code": {
+              "anyOf": [
+                {
+                  "const": "not_authorized",
+                  "type": "string"
+                },
+                {
+                  "const": "invalid_request",
+                  "type": "string"
+                },
+                {
+                  "const": "unsupported_protocol_version",
+                  "type": "string"
+                },
+                {
+                  "const": "required_profile_unsupported",
+                  "type": "string"
+                },
+                {
+                  "const": "internal_error",
+                  "type": "string"
+                }
+              ]
+            },
+            "message": {
+              "minLength": 1,
+              "maxLength": 512,
+              "type": "string"
+            },
+            "profileId": {
+              "anyOf": [
+                {
+                  "anyOf": [
+                    {
+                      "const": "avatar.speech.lifecycle.v1",
+                      "type": "string"
+                    },
+                    {
+                      "const": "avatar.mouth.amplitude.v1",
+                      "type": "string"
+                    },
+                    {
+                      "const": "avatar.mouth.viseme-15.v1",
+                      "type": "string"
+                    },
+                    {
+                      "const": "avatar.mouth.arkit-speech.v1",
+                      "type": "string"
+                    },
+                    {
+                      "const": "avatar.expression.vrm.v1",
+                      "type": "string"
+                    },
+                    {
+                      "const": "avatar.action.semantic.v1",
+                      "type": "string"
+                    }
+                  ]
+                },
+                {
+                  "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)+/[a-z0-9][a-z0-9._-]*\\.v[1-9][0-9]*$",
+                  "maxLength": 128,
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "avatar.get_state",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "requestId",
+            "subscriptionId"
+          ],
+          "properties": {
+            "requestId": {
+              "minLength": 1,
+              "maxLength": 64,
+              "type": "string"
+            },
+            "subscriptionId": {
+              "minLength": 1,
+              "maxLength": 128,
+              "type": "string"
+            },
+            "lastDeliverySequence": {
+              "minimum": 1,
+              "maximum": 9007199254740991,
+              "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "event",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "name",
+            "data"
+          ],
+          "properties": {
+            "name": {
+              "const": "avatar.speech.prepared",
+              "type": "string"
+            },
+            "data": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "schemaVersion",
+                "avatarSessionId",
+                "subscriptionId",
+                "deliverySequence",
+                "emittedAtMs",
+                "utteranceId",
+                "activeSpeechDriver",
+                "availableProfiles"
+              ],
+              "properties": {
+                "schemaVersion": {
+                  "const": 1,
+                  "type": "number"
+                },
+                "avatarSessionId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "subscriptionId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "deliverySequence": {
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "emittedAtMs": {
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "utteranceId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "sourceMessageId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "audioItemId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "durationMs": {
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "toneId": {
+                  "anyOf": [
+                    {
+                      "anyOf": [
+                        {
+                          "const": "neutral",
+                          "type": "string"
+                        },
+                        {
+                          "const": "affectionate",
+                          "type": "string"
+                        },
+                        {
+                          "const": "angry",
+                          "type": "string"
+                        },
+                        {
+                          "const": "calm",
+                          "type": "string"
+                        },
+                        {
+                          "const": "chat",
+                          "type": "string"
+                        },
+                        {
+                          "const": "cheerful",
+                          "type": "string"
+                        },
+                        {
+                          "const": "depressed",
+                          "type": "string"
+                        },
+                        {
+                          "const": "disgruntled",
+                          "type": "string"
+                        },
+                        {
+                          "const": "embarrassed",
+                          "type": "string"
+                        },
+                        {
+                          "const": "empathetic",
+                          "type": "string"
+                        },
+                        {
+                          "const": "envious",
+                          "type": "string"
+                        },
+                        {
+                          "const": "excited",
+                          "type": "string"
+                        },
+                        {
+                          "const": "fearful",
+                          "type": "string"
+                        },
+                        {
+                          "const": "friendly",
+                          "type": "string"
+                        },
+                        {
+                          "const": "gentle",
+                          "type": "string"
+                        },
+                        {
+                          "const": "hopeful",
+                          "type": "string"
+                        },
+                        {
+                          "const": "lyrical",
+                          "type": "string"
+                        },
+                        {
+                          "const": "newscast-casual",
+                          "type": "string"
+                        },
+                        {
+                          "const": "newscast-formal",
+                          "type": "string"
+                        },
+                        {
+                          "const": "sad",
+                          "type": "string"
+                        },
+                        {
+                          "const": "poetry-reading",
+                          "type": "string"
+                        },
+                        {
+                          "const": "serious",
+                          "type": "string"
+                        },
+                        {
+                          "const": "shouting",
+                          "type": "string"
+                        },
+                        {
+                          "const": "sports_commentary",
+                          "type": "string"
+                        },
+                        {
+                          "const": "sports_commentary_excited",
+                          "type": "string"
+                        },
+                        {
+                          "const": "whispering",
+                          "type": "string"
+                        },
+                        {
+                          "const": "terrified",
+                          "type": "string"
+                        },
+                        {
+                          "const": "unfriendly",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    {
+                      "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)+/[a-z0-9][a-z0-9._-]*$",
+                      "maxLength": 128,
+                      "type": "string"
+                    }
+                  ]
+                },
+                "characterId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "activeSpeechDriver": {
+                  "anyOf": [
+                    {
+                      "const": "avatar.mouth.arkit-speech.v1",
+                      "type": "string"
+                    },
+                    {
+                      "const": "avatar.mouth.viseme-15.v1",
+                      "type": "string"
+                    },
+                    {
+                      "const": "avatar.mouth.amplitude.v1",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "availableProfiles": {
+                  "uniqueItems": true,
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "anyOf": [
+                          {
+                            "const": "avatar.speech.lifecycle.v1",
+                            "type": "string"
+                          },
+                          {
+                            "const": "avatar.mouth.amplitude.v1",
+                            "type": "string"
+                          },
+                          {
+                            "const": "avatar.mouth.viseme-15.v1",
+                            "type": "string"
+                          },
+                          {
+                            "const": "avatar.mouth.arkit-speech.v1",
+                            "type": "string"
+                          },
+                          {
+                            "const": "avatar.expression.vrm.v1",
+                            "type": "string"
+                          },
+                          {
+                            "const": "avatar.action.semantic.v1",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      {
+                        "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)+/[a-z0-9][a-z0-9._-]*\\.v[1-9][0-9]*$",
+                        "maxLength": 128,
+                        "type": "string"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "event",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "name",
+            "data"
+          ],
+          "properties": {
+            "name": {
+              "const": "avatar.speech.started",
+              "type": "string"
+            },
+            "data": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "schemaVersion",
+                "avatarSessionId",
+                "subscriptionId",
+                "deliverySequence",
+                "emittedAtMs",
+                "utteranceId",
+                "playbackOffsetMs"
+              ],
+              "properties": {
+                "schemaVersion": {
+                  "const": 1,
+                  "type": "number"
+                },
+                "avatarSessionId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "subscriptionId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "deliverySequence": {
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "emittedAtMs": {
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "utteranceId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "playbackOffsetMs": {
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "event",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "name",
+            "data"
+          ],
+          "properties": {
+            "name": {
+              "const": "avatar.speech.paused",
+              "type": "string"
+            },
+            "data": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "schemaVersion",
+                "avatarSessionId",
+                "subscriptionId",
+                "deliverySequence",
+                "emittedAtMs",
+                "utteranceId",
+                "playbackOffsetMs",
+                "reason"
+              ],
+              "properties": {
+                "schemaVersion": {
+                  "const": 1,
+                  "type": "number"
+                },
+                "avatarSessionId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "subscriptionId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "deliverySequence": {
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "emittedAtMs": {
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "utteranceId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "playbackOffsetMs": {
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "reason": {
+                  "anyOf": [
+                    {
+                      "const": "speaker_interruption",
+                      "type": "string"
+                    },
+                    {
+                      "const": "user_pause",
+                      "type": "string"
+                    },
+                    {
+                      "const": "system_pause",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "event",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "name",
+            "data"
+          ],
+          "properties": {
+            "name": {
+              "const": "avatar.speech.resumed",
+              "type": "string"
+            },
+            "data": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "schemaVersion",
+                "avatarSessionId",
+                "subscriptionId",
+                "deliverySequence",
+                "emittedAtMs",
+                "utteranceId",
+                "playbackOffsetMs"
+              ],
+              "properties": {
+                "schemaVersion": {
+                  "const": 1,
+                  "type": "number"
+                },
+                "avatarSessionId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "subscriptionId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "deliverySequence": {
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "emittedAtMs": {
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "utteranceId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "playbackOffsetMs": {
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "event",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "name",
+            "data"
+          ],
+          "properties": {
+            "name": {
+              "const": "avatar.speech.ended",
+              "type": "string"
+            },
+            "data": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "schemaVersion",
+                "avatarSessionId",
+                "subscriptionId",
+                "deliverySequence",
+                "emittedAtMs",
+                "utteranceId",
+                "playbackOffsetMs",
+                "reason"
+              ],
+              "properties": {
+                "schemaVersion": {
+                  "const": 1,
+                  "type": "number"
+                },
+                "avatarSessionId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "subscriptionId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "deliverySequence": {
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "emittedAtMs": {
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "utteranceId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "playbackOffsetMs": {
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "reason": {
+                  "anyOf": [
+                    {
+                      "const": "completed",
+                      "type": "string"
+                    },
+                    {
+                      "const": "discarded",
+                      "type": "string"
+                    },
+                    {
+                      "const": "interrupted",
+                      "type": "string"
+                    },
+                    {
+                      "const": "playback_error",
+                      "type": "string"
+                    },
+                    {
+                      "const": "account_changed",
+                      "type": "string"
+                    },
+                    {
+                      "const": "shutdown",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "event",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "name",
+            "data"
+          ],
+          "properties": {
+            "name": {
+              "const": "avatar.mouth.amplitude",
+              "type": "string"
+            },
+            "data": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "schemaVersion",
+                "avatarSessionId",
+                "subscriptionId",
+                "deliverySequence",
+                "emittedAtMs",
+                "utteranceId",
+                "offsetMs",
+                "value"
+              ],
+              "properties": {
+                "schemaVersion": {
+                  "const": 1,
+                  "type": "number"
+                },
+                "avatarSessionId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "subscriptionId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "deliverySequence": {
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "emittedAtMs": {
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "utteranceId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "offsetMs": {
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "value": {
+                  "minimum": 0,
+                  "maximum": 1,
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "event",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "name",
+            "data"
+          ],
+          "properties": {
+            "name": {
+              "const": "avatar.mouth.visemes",
+              "type": "string"
+            },
+            "data": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "schemaVersion",
+                "avatarSessionId",
+                "subscriptionId",
+                "deliverySequence",
+                "emittedAtMs",
+                "utteranceId",
+                "revision",
+                "chunkIndex",
+                "finalChunk",
+                "cues"
+              ],
+              "properties": {
+                "schemaVersion": {
+                  "const": 1,
+                  "type": "number"
+                },
+                "avatarSessionId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "subscriptionId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "deliverySequence": {
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "emittedAtMs": {
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "utteranceId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "revision": {
+                  "minimum": 1,
+                  "maximum": 2147483647,
+                  "type": "integer"
+                },
+                "chunkIndex": {
+                  "minimum": 0,
+                  "maximum": 2147483647,
+                  "type": "integer"
+                },
+                "finalChunk": {
+                  "type": "boolean"
+                },
+                "cues": {
+                  "minItems": 1,
+                  "maxItems": 4096,
+                  "type": "array",
+                  "items": {
+                    "additionalProperties": false,
+                    "type": "object",
+                    "required": [
+                      "offsetMs",
+                      "viseme"
+                    ],
+                    "properties": {
+                      "offsetMs": {
+                        "minimum": 0,
+                        "maximum": 9007199254740991,
+                        "type": "integer"
+                      },
+                      "durationMs": {
+                        "minimum": 0,
+                        "maximum": 9007199254740991,
+                        "type": "integer"
+                      },
+                      "viseme": {
+                        "anyOf": [
+                          {
+                            "const": "sil",
+                            "type": "string"
+                          },
+                          {
+                            "const": "PP",
+                            "type": "string"
+                          },
+                          {
+                            "const": "FF",
+                            "type": "string"
+                          },
+                          {
+                            "const": "TH",
+                            "type": "string"
+                          },
+                          {
+                            "const": "DD",
+                            "type": "string"
+                          },
+                          {
+                            "const": "kk",
+                            "type": "string"
+                          },
+                          {
+                            "const": "CH",
+                            "type": "string"
+                          },
+                          {
+                            "const": "SS",
+                            "type": "string"
+                          },
+                          {
+                            "const": "nn",
+                            "type": "string"
+                          },
+                          {
+                            "const": "RR",
+                            "type": "string"
+                          },
+                          {
+                            "const": "aa",
+                            "type": "string"
+                          },
+                          {
+                            "const": "E",
+                            "type": "string"
+                          },
+                          {
+                            "const": "ih",
+                            "type": "string"
+                          },
+                          {
+                            "const": "oh",
+                            "type": "string"
+                          },
+                          {
+                            "const": "ou",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "weight": {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "event",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "name",
+            "data"
+          ],
+          "properties": {
+            "name": {
+              "const": "avatar.mouth.arkit_frames",
+              "type": "string"
+            },
+            "data": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "schemaVersion",
+                "avatarSessionId",
+                "subscriptionId",
+                "deliverySequence",
+                "emittedAtMs",
+                "utteranceId",
+                "revision",
+                "chunkIndex",
+                "finalChunk",
+                "frames"
+              ],
+              "properties": {
+                "schemaVersion": {
+                  "const": 1,
+                  "type": "number"
+                },
+                "avatarSessionId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "subscriptionId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "deliverySequence": {
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "emittedAtMs": {
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "utteranceId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "revision": {
+                  "minimum": 1,
+                  "maximum": 2147483647,
+                  "type": "integer"
+                },
+                "chunkIndex": {
+                  "minimum": 0,
+                  "maximum": 2147483647,
+                  "type": "integer"
+                },
+                "finalChunk": {
+                  "type": "boolean"
+                },
+                "frames": {
+                  "minItems": 1,
+                  "maxItems": 3600,
+                  "type": "array",
+                  "items": {
+                    "additionalProperties": false,
+                    "type": "object",
+                    "required": [
+                      "offsetMs",
+                      "weights"
+                    ],
+                    "properties": {
+                      "offsetMs": {
+                        "minimum": 0,
+                        "maximum": 9007199254740991,
+                        "type": "integer"
+                      },
+                      "weights": {
+                        "additionalProperties": false,
+                        "minProperties": 1,
+                        "type": "object",
+                        "properties": {
+                          "cheekPuff": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "jawForward": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "jawLeft": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "jawOpen": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "jawRight": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "mouthClose": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "mouthDimpleLeft": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "mouthDimpleRight": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "mouthFrownLeft": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "mouthFrownRight": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "mouthFunnel": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "mouthLeft": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "mouthLowerDownLeft": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "mouthLowerDownRight": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "mouthPressLeft": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "mouthPressRight": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "mouthPucker": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "mouthRight": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "mouthRollLower": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "mouthRollUpper": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "mouthShrugLower": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "mouthShrugUpper": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "mouthSmileLeft": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "mouthSmileRight": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "mouthStretchLeft": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "mouthStretchRight": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "mouthUpperUpLeft": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "mouthUpperUpRight": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          },
+                          "tongueOut": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "event",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "name",
+            "data"
+          ],
+          "properties": {
+            "name": {
+              "const": "avatar.expression.state",
+              "type": "string"
+            },
+            "data": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "schemaVersion",
+                "avatarSessionId",
+                "subscriptionId",
+                "deliverySequence",
+                "emittedAtMs",
+                "revision",
+                "transitionMs",
+                "values"
+              ],
+              "properties": {
+                "schemaVersion": {
+                  "const": 1,
+                  "type": "number"
+                },
+                "avatarSessionId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "subscriptionId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "deliverySequence": {
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "emittedAtMs": {
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "revision": {
+                  "minimum": 1,
+                  "maximum": 2147483647,
+                  "type": "integer"
+                },
+                "source": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": [
+                        "kind",
+                        "toneId",
+                        "utteranceId",
+                        "sourceMessageId",
+                        "audioItemId",
+                        "mappingVersion"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "const": "tone",
+                          "type": "string"
+                        },
+                        "toneId": {
+                          "anyOf": [
+                            {
+                              "anyOf": [
+                                {
+                                  "const": "neutral",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "affectionate",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "angry",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "calm",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "chat",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "cheerful",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "depressed",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "disgruntled",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "embarrassed",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "empathetic",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "envious",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "excited",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "fearful",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "friendly",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "gentle",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "hopeful",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "lyrical",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "newscast-casual",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "newscast-formal",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "sad",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "poetry-reading",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "serious",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "shouting",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "sports_commentary",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "sports_commentary_excited",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "whispering",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "terrified",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "unfriendly",
+                                  "type": "string"
+                                }
+                              ]
+                            },
+                            {
+                              "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)+/[a-z0-9][a-z0-9._-]*$",
+                              "maxLength": 128,
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "utteranceId": {
+                          "minLength": 1,
+                          "maxLength": 128,
+                          "type": "string"
+                        },
+                        "sourceMessageId": {
+                          "minLength": 1,
+                          "maxLength": 128,
+                          "type": "string"
+                        },
+                        "audioItemId": {
+                          "minLength": 1,
+                          "maxLength": 128,
+                          "type": "string"
+                        },
+                        "mappingVersion": {
+                          "minLength": 1,
+                          "maxLength": 128,
+                          "type": "string"
+                        }
+                      }
+                    },
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": [
+                        "kind"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "anyOf": [
+                            {
+                              "const": "system",
+                              "type": "string"
+                            },
+                            {
+                              "const": "action",
+                              "type": "string"
+                            },
+                            {
+                              "const": "user",
+                              "type": "string"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                },
+                "transitionMs": {
+                  "minimum": 0,
+                  "maximum": 5000,
+                  "type": "integer"
+                },
+                "values": {
+                  "maxItems": 6,
+                  "type": "array",
+                  "items": {
+                    "additionalProperties": false,
+                    "type": "object",
+                    "required": [
+                      "expression",
+                      "weight"
+                    ],
+                    "properties": {
+                      "expression": {
+                        "anyOf": [
+                          {
+                            "const": "neutral",
+                            "type": "string"
+                          },
+                          {
+                            "const": "happy",
+                            "type": "string"
+                          },
+                          {
+                            "const": "angry",
+                            "type": "string"
+                          },
+                          {
+                            "const": "sad",
+                            "type": "string"
+                          },
+                          {
+                            "const": "relaxed",
+                            "type": "string"
+                          },
+                          {
+                            "const": "surprised",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "weight": {
+                        "minimum": 0,
+                        "maximum": 1,
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "event",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "name",
+            "data"
+          ],
+          "properties": {
+            "name": {
+              "const": "avatar.action.triggered",
+              "type": "string"
+            },
+            "data": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "schemaVersion",
+                "avatarSessionId",
+                "subscriptionId",
+                "deliverySequence",
+                "emittedAtMs",
+                "actionInstanceId",
+                "actionId"
+              ],
+              "properties": {
+                "schemaVersion": {
+                  "const": 1,
+                  "type": "number"
+                },
+                "avatarSessionId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "subscriptionId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "deliverySequence": {
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "emittedAtMs": {
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "actionInstanceId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "actionId": {
+                  "anyOf": [
+                    {
+                      "anyOf": [
+                        {
+                          "const": "wave",
+                          "type": "string"
+                        },
+                        {
+                          "const": "nod",
+                          "type": "string"
+                        },
+                        {
+                          "const": "shake_head",
+                          "type": "string"
+                        },
+                        {
+                          "const": "celebrate",
+                          "type": "string"
+                        },
+                        {
+                          "const": "laugh",
+                          "type": "string"
+                        },
+                        {
+                          "const": "surprised_recoil",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    {
+                      "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)+/[a-z0-9][a-z0-9._-]*$",
+                      "maxLength": 128,
+                      "type": "string"
+                    }
+                  ]
+                },
+                "intensity": {
+                  "minimum": 0,
+                  "maximum": 1,
+                  "type": "number"
+                },
+                "durationMs": {
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "event",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "name",
+            "data"
+          ],
+          "properties": {
+            "name": {
+              "const": "avatar.state.snapshot",
+              "type": "string"
+            },
+            "data": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "schemaVersion",
+                "avatarSessionId",
+                "subscriptionId",
+                "deliverySequence",
+                "emittedAtMs",
+                "selectedProfiles",
+                "activeUtterance"
+              ],
+              "properties": {
+                "schemaVersion": {
+                  "const": 1,
+                  "type": "number"
+                },
+                "avatarSessionId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "subscriptionId": {
+                  "minLength": 1,
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "deliverySequence": {
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "emittedAtMs": {
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "requestId": {
+                  "minLength": 1,
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                "selectedProfiles": {
+                  "uniqueItems": true,
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "anyOf": [
+                          {
+                            "const": "avatar.speech.lifecycle.v1",
+                            "type": "string"
+                          },
+                          {
+                            "const": "avatar.mouth.amplitude.v1",
+                            "type": "string"
+                          },
+                          {
+                            "const": "avatar.mouth.viseme-15.v1",
+                            "type": "string"
+                          },
+                          {
+                            "const": "avatar.mouth.arkit-speech.v1",
+                            "type": "string"
+                          },
+                          {
+                            "const": "avatar.expression.vrm.v1",
+                            "type": "string"
+                          },
+                          {
+                            "const": "avatar.action.semantic.v1",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      {
+                        "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)+/[a-z0-9][a-z0-9._-]*\\.v[1-9][0-9]*$",
+                        "maxLength": 128,
+                        "type": "string"
+                      }
+                    ]
+                  }
+                },
+                "activeUtterance": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": [
+                        "utteranceId",
+                        "state",
+                        "playbackOffsetMs",
+                        "activeSpeechDriver",
+                        "availableProfiles"
+                      ],
+                      "properties": {
+                        "utteranceId": {
+                          "minLength": 1,
+                          "maxLength": 128,
+                          "type": "string"
+                        },
+                        "state": {
+                          "anyOf": [
+                            {
+                              "const": "playing",
+                              "type": "string"
+                            },
+                            {
+                              "const": "paused",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "playbackOffsetMs": {
+                          "minimum": 0,
+                          "maximum": 9007199254740991,
+                          "type": "integer"
+                        },
+                        "toneId": {
+                          "anyOf": [
+                            {
+                              "anyOf": [
+                                {
+                                  "const": "neutral",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "affectionate",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "angry",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "calm",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "chat",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "cheerful",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "depressed",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "disgruntled",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "embarrassed",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "empathetic",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "envious",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "excited",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "fearful",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "friendly",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "gentle",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "hopeful",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "lyrical",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "newscast-casual",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "newscast-formal",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "sad",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "poetry-reading",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "serious",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "shouting",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "sports_commentary",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "sports_commentary_excited",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "whispering",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "terrified",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "unfriendly",
+                                  "type": "string"
+                                }
+                              ]
+                            },
+                            {
+                              "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)+/[a-z0-9][a-z0-9._-]*$",
+                              "maxLength": 128,
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "sourceMessageId": {
+                          "minLength": 1,
+                          "maxLength": 128,
+                          "type": "string"
+                        },
+                        "audioItemId": {
+                          "minLength": 1,
+                          "maxLength": 128,
+                          "type": "string"
+                        },
+                        "activeSpeechDriver": {
+                          "anyOf": [
+                            {
+                              "const": "avatar.mouth.arkit-speech.v1",
+                              "type": "string"
+                            },
+                            {
+                              "const": "avatar.mouth.viseme-15.v1",
+                              "type": "string"
+                            },
+                            {
+                              "const": "avatar.mouth.amplitude.v1",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "availableProfiles": {
+                          "uniqueItems": true,
+                          "type": "array",
+                          "items": {
+                            "anyOf": [
+                              {
+                                "anyOf": [
+                                  {
+                                    "const": "avatar.speech.lifecycle.v1",
+                                    "type": "string"
+                                  },
+                                  {
+                                    "const": "avatar.mouth.amplitude.v1",
+                                    "type": "string"
+                                  },
+                                  {
+                                    "const": "avatar.mouth.viseme-15.v1",
+                                    "type": "string"
+                                  },
+                                  {
+                                    "const": "avatar.mouth.arkit-speech.v1",
+                                    "type": "string"
+                                  },
+                                  {
+                                    "const": "avatar.expression.vrm.v1",
+                                    "type": "string"
+                                  },
+                                  {
+                                    "const": "avatar.action.semantic.v1",
+                                    "type": "string"
+                                  }
+                                ]
+                              },
+                              {
+                                "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)+/[a-z0-9][a-z0-9._-]*\\.v[1-9][0-9]*$",
+                                "maxLength": 128,
+                                "type": "string"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "expression": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "revision",
+                    "transitionMs",
+                    "values"
+                  ],
+                  "properties": {
+                    "revision": {
+                      "minimum": 1,
+                      "maximum": 2147483647,
+                      "type": "integer"
+                    },
+                    "source": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": [
+                            "kind",
+                            "toneId",
+                            "utteranceId",
+                            "sourceMessageId",
+                            "audioItemId",
+                            "mappingVersion"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "const": "tone",
+                              "type": "string"
+                            },
+                            "toneId": {
+                              "anyOf": [
+                                {
+                                  "anyOf": [
+                                    {
+                                      "const": "neutral",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "affectionate",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "angry",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "calm",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "chat",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "cheerful",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "depressed",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "disgruntled",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "embarrassed",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "empathetic",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "envious",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "excited",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "fearful",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "friendly",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "gentle",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "hopeful",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "lyrical",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "newscast-casual",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "newscast-formal",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "sad",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "poetry-reading",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "serious",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "shouting",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "sports_commentary",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "sports_commentary_excited",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "whispering",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "terrified",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "unfriendly",
+                                      "type": "string"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)+/[a-z0-9][a-z0-9._-]*$",
+                                  "maxLength": 128,
+                                  "type": "string"
+                                }
+                              ]
+                            },
+                            "utteranceId": {
+                              "minLength": 1,
+                              "maxLength": 128,
+                              "type": "string"
+                            },
+                            "sourceMessageId": {
+                              "minLength": 1,
+                              "maxLength": 128,
+                              "type": "string"
+                            },
+                            "audioItemId": {
+                              "minLength": 1,
+                              "maxLength": 128,
+                              "type": "string"
+                            },
+                            "mappingVersion": {
+                              "minLength": 1,
+                              "maxLength": 128,
+                              "type": "string"
+                            }
+                          }
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": [
+                            "kind"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "anyOf": [
+                                {
+                                  "const": "system",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "action",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "user",
+                                  "type": "string"
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "transitionMs": {
+                      "minimum": 0,
+                      "maximum": 5000,
+                      "type": "integer"
+                    },
+                    "values": {
+                      "maxItems": 6,
+                      "type": "array",
+                      "items": {
+                        "additionalProperties": false,
+                        "type": "object",
+                        "required": [
+                          "expression",
+                          "weight"
+                        ],
+                        "properties": {
+                          "expression": {
+                            "anyOf": [
+                              {
+                                "const": "neutral",
+                                "type": "string"
+                              },
+                              {
+                                "const": "happy",
+                                "type": "string"
+                              },
+                              {
+                                "const": "angry",
+                                "type": "string"
+                              },
+                              {
+                                "const": "sad",
+                                "type": "string"
+                              },
+                              {
+                                "const": "relaxed",
+                                "type": "string"
+                              },
+                              {
+                                "const": "surprised",
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          "weight": {
+                            "minimum": 0,
+                            "maximum": 1,
+                            "type": "number"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

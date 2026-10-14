@@ -1,0 +1,304 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.getailicia.com/integrations/avatar-auth/v1/message.schema.json",
+  "title": "ai_licia local integration avatar authorization v1 message",
+  "description": "Authorization messages required to obtain and restore avatar.events.read.",
+  "anyOf": [
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "hello",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "clientType",
+            "clientId"
+          ],
+          "properties": {
+            "clientType": {
+              "const": "integration",
+              "type": "string"
+            },
+            "clientId": {
+              "minLength": 1,
+              "maxLength": 128,
+              "type": "string"
+            },
+            "displayName": {
+              "minLength": 1,
+              "maxLength": 128,
+              "type": "string"
+            },
+            "version": {
+              "minLength": 1,
+              "maxLength": 64,
+              "type": "string"
+            },
+            "reconnectCredential": {
+              "minLength": 1,
+              "maxLength": 256,
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "welcome",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": true,
+          "type": "object",
+          "required": [
+            "capabilities",
+            "authorizedScopes"
+          ],
+          "properties": {
+            "capabilities": {
+              "uniqueItems": true,
+              "type": "array",
+              "items": {
+                "minLength": 1,
+                "maxLength": 128,
+                "type": "string"
+              }
+            },
+            "authorizedScopes": {
+              "uniqueItems": true,
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "const": "rest.full",
+                    "type": "string"
+                  },
+                  {
+                    "const": "vision.rtmp.configure",
+                    "type": "string"
+                  },
+                  {
+                    "const": "vision.installation.register",
+                    "type": "string"
+                  },
+                  {
+                    "const": "avatar.events.read",
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "request_access",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": true,
+          "type": "object",
+          "required": [
+            "clientId",
+            "requestedScopes"
+          ],
+          "properties": {
+            "clientId": {
+              "minLength": 1,
+              "maxLength": 128,
+              "type": "string"
+            },
+            "displayName": {
+              "minLength": 1,
+              "maxLength": 128,
+              "type": "string"
+            },
+            "requestedScopes": {
+              "minItems": 1,
+              "uniqueItems": true,
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "const": "rest.full",
+                    "type": "string"
+                  },
+                  {
+                    "const": "vision.rtmp.configure",
+                    "type": "string"
+                  },
+                  {
+                    "const": "vision.installation.register",
+                    "type": "string"
+                  },
+                  {
+                    "const": "avatar.events.read",
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "access_pending",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "requestId"
+          ],
+          "properties": {
+            "requestId": {
+              "minLength": 1,
+              "maxLength": 64,
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "access_granted",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": true,
+          "type": "object",
+          "required": [
+            "requestId",
+            "scopes"
+          ],
+          "properties": {
+            "requestId": {
+              "minLength": 1,
+              "maxLength": 64,
+              "type": "string"
+            },
+            "scopes": {
+              "minItems": 1,
+              "uniqueItems": true,
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "const": "rest.full",
+                    "type": "string"
+                  },
+                  {
+                    "const": "vision.rtmp.configure",
+                    "type": "string"
+                  },
+                  {
+                    "const": "vision.installation.register",
+                    "type": "string"
+                  },
+                  {
+                    "const": "avatar.events.read",
+                    "type": "string"
+                  }
+                ]
+              }
+            },
+            "reconnectCredential": {
+              "minLength": 1,
+              "maxLength": 256,
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "access_denied",
+          "type": "string"
+        },
+        "payload": {
+          "additionalProperties": true,
+          "type": "object",
+          "required": [
+            "requestId",
+            "reason"
+          ],
+          "properties": {
+            "requestId": {
+              "minLength": 1,
+              "maxLength": 64,
+              "type": "string"
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "const": "user_denied",
+                  "type": "string"
+                },
+                {
+                  "const": "timeout",
+                  "type": "string"
+                },
+                {
+                  "const": "not_ready",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -5,7 +5,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "schema"
   ],
   "repository": {
     "type": "git",
@@ -30,6 +31,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@sinclair/typebox": "^0.34.52",
     "axios": "^1.12.2",
     "dotenv": "^17.2.2"
   },

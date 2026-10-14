@@ -1,0 +1,124 @@
+{
+  "documentRevision": "0.2",
+  "protocolCapability": "avatar.protocol.v1",
+  "validSequences": [
+    {
+      "name": "amplitude subscription uses contiguous delivered sequence numbers",
+      "messages": [
+        {
+          "type": "event",
+          "payload": {
+            "name": "avatar.state.snapshot",
+            "data": {
+              "schemaVersion": 1,
+              "avatarSessionId": "avs_fixture",
+              "subscriptionId": "asub_amplitude_only",
+              "deliverySequence": 1,
+              "emittedAtMs": 1,
+              "selectedProfiles": [
+                "avatar.speech.lifecycle.v1",
+                "avatar.mouth.amplitude.v1"
+              ],
+              "activeUtterance": null
+            }
+          }
+        },
+        {
+          "type": "event",
+          "payload": {
+            "name": "avatar.mouth.amplitude",
+            "data": {
+              "schemaVersion": 1,
+              "avatarSessionId": "avs_fixture",
+              "subscriptionId": "asub_amplitude_only",
+              "deliverySequence": 2,
+              "emittedAtMs": 2,
+              "utteranceId": "utt_fixture",
+              "offsetMs": 50,
+              "value": 0.5
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "invalidMessages": [
+    {
+      "name": "duplicate subscription profile",
+      "message": {
+        "type": "avatar.subscribe",
+        "payload": {
+          "requestId": "req_duplicate",
+          "protocolVersion": 1,
+          "profiles": [
+            {"id": "avatar.mouth.amplitude.v1", "required": true},
+            {"id": "avatar.mouth.amplitude.v1", "required": false}
+          ],
+          "speechDriverPreference": ["avatar.mouth.amplitude.v1"]
+        }
+      }
+    },
+    {
+      "name": "overlapping viseme cues",
+      "message": {
+        "type": "event",
+        "payload": {
+          "name": "avatar.mouth.visemes",
+          "data": {
+            "schemaVersion": 1,
+            "avatarSessionId": "avs_fixture",
+            "subscriptionId": "asub_viseme",
+            "deliverySequence": 1,
+            "emittedAtMs": 3,
+            "utteranceId": "utt_fixture",
+            "revision": 1,
+            "chunkIndex": 0,
+            "finalChunk": true,
+            "cues": [
+              {"offsetMs": 0, "durationMs": 100, "viseme": "sil"},
+              {"offsetMs": 90, "durationMs": 100, "viseme": "PP"}
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "invalidSequences": [
+    {
+      "name": "delivery sequence gap",
+      "messages": [
+        {
+          "type": "event",
+          "payload": {
+            "name": "avatar.state.snapshot",
+            "data": {
+              "schemaVersion": 1,
+              "avatarSessionId": "avs_fixture",
+              "subscriptionId": "asub_gap",
+              "deliverySequence": 1,
+              "emittedAtMs": 1,
+              "selectedProfiles": ["avatar.mouth.amplitude.v1"],
+              "activeUtterance": null
+            }
+          }
+        },
+        {
+          "type": "event",
+          "payload": {
+            "name": "avatar.mouth.amplitude",
+            "data": {
+              "schemaVersion": 1,
+              "avatarSessionId": "avs_fixture",
+              "subscriptionId": "asub_gap",
+              "deliverySequence": 3,
+              "emittedAtMs": 2,
+              "utteranceId": "utt_fixture",
+              "offsetMs": 50,
+              "value": 0.5
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
