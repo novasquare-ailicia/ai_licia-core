@@ -12,6 +12,7 @@ const wait = (milliseconds: number) => new Promise((resolve) => setTimeout(resol
 export class StackChanController {
   private actionGeneration = 0;
   private lastMouthSentAt = 0;
+  private expressionState?: AvatarExpressionStateEvent["payload"]["data"];
 
   constructor(private readonly transport: StackChanTransport) {}
 
@@ -23,6 +24,7 @@ export class StackChanController {
   }
 
   async setExpression(data: AvatarExpressionStateEvent["payload"]["data"]): Promise<void> {
+    this.expressionState = data;
     for (const command of expressionCommands(data)) await this.transport.send(command);
   }
 
@@ -35,6 +37,9 @@ export class StackChanController {
       if (step.delayMs > 0) await wait(step.delayMs);
       if (generation !== this.actionGeneration) return;
       await this.transport.send(motionCommand(step));
+    }
+    if (generation === this.actionGeneration && this.expressionState) {
+      for (const command of expressionCommands(this.expressionState)) await this.transport.send(command);
     }
   }
 
