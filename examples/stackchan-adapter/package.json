@@ -1,0 +1,23 @@
+{
+  "name": "@ai-licia/stackchan-adapter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "start": "tsx src/index.ts",
+    "simulate": "tsx src/index.ts --simulate",
+    "test": "tsx --test src/*.test.ts"
+  },
+  "dependencies": {
+    "@stoprocent/noble": "^2.8.0",
+    "ai_licia-client": "file:../../packages/ai_licia-client",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.2"
+  }
+}

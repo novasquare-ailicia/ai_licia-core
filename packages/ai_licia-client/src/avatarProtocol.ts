@@ -66,6 +66,15 @@ export const AVATAR_EXPRESSION_IDS = [
   'neutral', 'happy', 'angry', 'sad', 'relaxed', 'surprised'
 ] as const;
 
+export const AVATAR_SPEECH_DELIVERY_IDS = [
+  'neutral', 'curious', 'warm', 'excited', 'playful', 'serious', 'whispering',
+  'sarcastic', 'sad', 'calm', 'crying', 'singing', 'angry', 'menacing', 'weak', 'bored'
+] as const;
+
+export const AVATAR_SPEECH_REACTION_IDS = [
+  'laugh', 'sigh', 'clear_throat', 'gasp', 'scoff', 'pant', 'sharp_exhale', 'yawn'
+] as const;
+
 export const AVATAR_STANDARD_ACTION_IDS = [
   'wave', 'nod', 'shake_head', 'celebrate', 'laugh', 'surprised_recoil'
 ] as const;
@@ -331,12 +340,23 @@ const ToneExpressionSourceSchema = Type.Object({
   mappingVersion: Type.String({ minLength: 1, maxLength: 128 })
 }, { additionalProperties: false });
 
+const SpeechDeliveryExpressionSourceSchema = Type.Object({
+  kind: Type.Literal('speech_delivery'),
+  deliveryId: enumSchema(AVATAR_SPEECH_DELIVERY_IDS),
+  utteranceId: IdentifierSchema,
+  sourceMessageId: IdentifierSchema,
+  audioItemId: IdentifierSchema,
+  segmentIndex: Type.Integer({ minimum: 0, maximum: 15 }),
+  mappingVersion: Type.String({ minLength: 1, maxLength: 128 })
+}, { additionalProperties: false });
+
 const NonToneExpressionSourceSchema = Type.Object({
   kind: enumSchema(['system', 'action', 'user'] as const)
 }, { additionalProperties: false });
 
 const ExpressionSourceSchema = Type.Union([
   ToneExpressionSourceSchema,
+  SpeechDeliveryExpressionSourceSchema,
   NonToneExpressionSourceSchema
 ]);
 
@@ -362,13 +382,24 @@ const ActionIdSchema = Type.Union([
   Type.String({ pattern: ExtensionIdentifierPattern, maxLength: 128 })
 ]);
 
+const SpeechReactionActionSourceSchema = Type.Object({
+  kind: Type.Literal('speech_reaction'),
+  reactionId: enumSchema(AVATAR_SPEECH_REACTION_IDS),
+  utteranceId: IdentifierSchema,
+  sourceMessageId: IdentifierSchema,
+  audioItemId: IdentifierSchema,
+  segmentIndex: Type.Integer({ minimum: 0, maximum: 15 }),
+  mappingVersion: Type.String({ minLength: 1, maxLength: 128 })
+}, { additionalProperties: false });
+
 const ActionTriggeredDataSchema = Type.Composite([
   EventMetadataSchema,
   Type.Object({
     actionInstanceId: IdentifierSchema,
     actionId: ActionIdSchema,
     intensity: Type.Optional(NormalizedWeightSchema),
-    durationMs: Type.Optional(SafeIntegerSchema)
+    durationMs: Type.Optional(SafeIntegerSchema),
+    source: Type.Optional(SpeechReactionActionSourceSchema)
   })
 ], { additionalProperties: false });
 

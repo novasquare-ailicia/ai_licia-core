@@ -1794,6 +1794,118 @@
                       "additionalProperties": false,
                       "type": "object",
                       "required": [
+                        "kind",
+                        "deliveryId",
+                        "utteranceId",
+                        "sourceMessageId",
+                        "audioItemId",
+                        "segmentIndex",
+                        "mappingVersion"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "const": "speech_delivery",
+                          "type": "string"
+                        },
+                        "deliveryId": {
+                          "anyOf": [
+                            {
+                              "const": "neutral",
+                              "type": "string"
+                            },
+                            {
+                              "const": "curious",
+                              "type": "string"
+                            },
+                            {
+                              "const": "warm",
+                              "type": "string"
+                            },
+                            {
+                              "const": "excited",
+                              "type": "string"
+                            },
+                            {
+                              "const": "playful",
+                              "type": "string"
+                            },
+                            {
+                              "const": "serious",
+                              "type": "string"
+                            },
+                            {
+                              "const": "whispering",
+                              "type": "string"
+                            },
+                            {
+                              "const": "sarcastic",
+                              "type": "string"
+                            },
+                            {
+                              "const": "sad",
+                              "type": "string"
+                            },
+                            {
+                              "const": "calm",
+                              "type": "string"
+                            },
+                            {
+                              "const": "crying",
+                              "type": "string"
+                            },
+                            {
+                              "const": "singing",
+                              "type": "string"
+                            },
+                            {
+                              "const": "angry",
+                              "type": "string"
+                            },
+                            {
+                              "const": "menacing",
+                              "type": "string"
+                            },
+                            {
+                              "const": "weak",
+                              "type": "string"
+                            },
+                            {
+                              "const": "bored",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "utteranceId": {
+                          "minLength": 1,
+                          "maxLength": 128,
+                          "type": "string"
+                        },
+                        "sourceMessageId": {
+                          "minLength": 1,
+                          "maxLength": 128,
+                          "type": "string"
+                        },
+                        "audioItemId": {
+                          "minLength": 1,
+                          "maxLength": 128,
+                          "type": "string"
+                        },
+                        "segmentIndex": {
+                          "minimum": 0,
+                          "maximum": 15,
+                          "type": "integer"
+                        },
+                        "mappingVersion": {
+                          "minLength": 1,
+                          "maxLength": 128,
+                          "type": "string"
+                        }
+                      }
+                    },
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": [
                         "kind"
                       ],
                       "properties": {
@@ -1987,6 +2099,86 @@
                   "minimum": 0,
                   "maximum": 9007199254740991,
                   "type": "integer"
+                },
+                "source": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "kind",
+                    "reactionId",
+                    "utteranceId",
+                    "sourceMessageId",
+                    "audioItemId",
+                    "segmentIndex",
+                    "mappingVersion"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "speech_reaction",
+                      "type": "string"
+                    },
+                    "reactionId": {
+                      "anyOf": [
+                        {
+                          "const": "laugh",
+                          "type": "string"
+                        },
+                        {
+                          "const": "sigh",
+                          "type": "string"
+                        },
+                        {
+                          "const": "clear_throat",
+                          "type": "string"
+                        },
+                        {
+                          "const": "gasp",
+                          "type": "string"
+                        },
+                        {
+                          "const": "scoff",
+                          "type": "string"
+                        },
+                        {
+                          "const": "pant",
+                          "type": "string"
+                        },
+                        {
+                          "const": "sharp_exhale",
+                          "type": "string"
+                        },
+                        {
+                          "const": "yawn",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "utteranceId": {
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "type": "string"
+                    },
+                    "sourceMessageId": {
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "type": "string"
+                    },
+                    "audioItemId": {
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "type": "string"
+                    },
+                    "segmentIndex": {
+                      "minimum": 0,
+                      "maximum": 15,
+                      "type": "integer"
+                    },
+                    "mappingVersion": {
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "type": "string"
+                    }
+                  }
                 }
               }
             }
@@ -2506,6 +2698,118 @@
                               "minLength": 1,
                               "maxLength": 128,
                               "type": "string"
+                            },
+                            "mappingVersion": {
+                              "minLength": 1,
+                              "maxLength": 128,
+                              "type": "string"
+                            }
+                          }
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": [
+                            "kind",
+                            "deliveryId",
+                            "utteranceId",
+                            "sourceMessageId",
+                            "audioItemId",
+                            "segmentIndex",
+                            "mappingVersion"
+                          ],
+                          "properties": {
+                            "kind": {
+                              "const": "speech_delivery",
+                              "type": "string"
+                            },
+                            "deliveryId": {
+                              "anyOf": [
+                                {
+                                  "const": "neutral",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "curious",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "warm",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "excited",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "playful",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "serious",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "whispering",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "sarcastic",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "sad",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "calm",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "crying",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "singing",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "angry",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "menacing",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "weak",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "bored",
+                                  "type": "string"
+                                }
+                              ]
+                            },
+                            "utteranceId": {
+                              "minLength": 1,
+                              "maxLength": 128,
+                              "type": "string"
+                            },
+                            "sourceMessageId": {
+                              "minLength": 1,
+                              "maxLength": 128,
+                              "type": "string"
+                            },
+                            "audioItemId": {
+                              "minLength": 1,
+                              "maxLength": 128,
+                              "type": "string"
+                            },
+                            "segmentIndex": {
+                              "minimum": 0,
+                              "maximum": 15,
+                              "type": "integer"
                             },
                             "mappingVersion": {
                               "minLength": 1,
