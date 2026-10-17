@@ -1,6 +1,6 @@
 # ai_licia StackChan adapter
 
-This adapter drives the factory StackChan firmware from `avatar.protocol.v1`. It supports mouth amplitude, semantic expressions, side LEDs, head movement, and reaction actions. It does not flash or modify the robot.
+This adapter drives the factory StackChan firmware from `avatar.protocol.v1`. It supports mouth amplitude, semantic expressions, side LEDs, head movement, reactions, and the Wink, Nod, Shake Head, and Rage gestures. It does not flash or modify the robot.
 
 ## First hardware test
 
@@ -14,7 +14,7 @@ This adapter drives the factory StackChan firmware from `avatar.protocol.v1`. It
    ```
 
 4. Approve the `ai_licia StackChan` access request in Desktop the first time.
-5. Start an ai_licia conversation. Speech should animate the mouth, expressions, side LEDs, and head.
+5. Start an ai_licia conversation. Speech should animate the mouth, expression-specific side lighting, and expression-specific head movement. Semantic reactions temporarily coordinate the face, lights, and head before restoring the latest expression.
 
 The approval credential is stored in `~/.ai_licia/stackchan-adapter.json` with user-only permissions, so normal restarts do not require another approval.
 
@@ -32,6 +32,18 @@ The preview cycles through all six factory eye presets: Neutral, Happy, Angry, S
 
 During normal avatar playback, semantic expressions use complete eye presets instead of blending their geometry with Neutral. This keeps Happy, Angry, Sad, and Sleepy visually recognizable on the small geometric display. The protocol's expression weight still controls the accompanying head pose.
 
+## Preview complete performances
+
+With StackChan open in **Dance**, run:
+
+```bash
+npm run hardware:performance
+```
+
+The preview cycles through Neutral, Happy, Angry, Sad, Relaxed, and Surprised with their complete face, lighting, mouth, posture, and speaking movement. It then previews every supported semantic action and reaction. This is intentionally a hardware calibration tool, not a protocol extension.
+
+Expression weight controls light brightness and movement magnitude. Very weak expressions remain visually neutral to avoid flicker. Actions temporarily own the face, lights, and servos, while mouth amplitude remains independent; the latest expression is restored when the action finishes.
+
 ## Test without hardware
 
 Run `npm run simulate`. The adapter connects to Desktop but prints every StackChan command instead of using Bluetooth.
@@ -39,6 +51,7 @@ Run `npm run simulate`. The adapter connects to Desktop but prints every StackCh
 ## Limitations of the factory firmware
 
 - Angry mode uses angled eyes and red side LEDs. Changing the actual eye fill colour requires custom firmware.
+- The factory mouth is a rounded rectangle whose opening, position, and rotation can change. It cannot draw a curved smile. Happy therefore uses happy eyes, warm lighting, and raised posture instead of exposing a misleading Smile action.
 - The firmware also contains Heart, Angry, Sweat, Shy, and Dizzy decorative overlays, but Dance mode does not expose decorators through its BLE JSON controls. Those overlays require a custom firmware extension.
-- Only reactions at the beginning of an utterance trigger a precisely timed action in this initial version. Later segment timing requires aligned TTS cue timestamps.
+- Only reactions and gestures at the beginning of an utterance trigger a precisely timed action in this initial version. Later segment timing requires aligned TTS cue timestamps.
 - Keep StackChan in Dance mode while the adapter is running.

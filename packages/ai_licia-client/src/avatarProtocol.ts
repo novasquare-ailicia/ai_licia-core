@@ -75,6 +75,10 @@ export const AVATAR_SPEECH_REACTION_IDS = [
   'laugh', 'sigh', 'clear_throat', 'gasp', 'scoff', 'pant', 'sharp_exhale', 'yawn'
 ] as const;
 
+export const AVATAR_SPEECH_GESTURE_IDS = [
+  'wink', 'nod', 'shake_head', 'rage'
+] as const;
+
 export const AVATAR_STANDARD_ACTION_IDS = [
   'wave', 'nod', 'shake_head', 'celebrate', 'laugh', 'surprised_recoil'
 ] as const;
@@ -392,6 +396,16 @@ const SpeechReactionActionSourceSchema = Type.Object({
   mappingVersion: Type.String({ minLength: 1, maxLength: 128 })
 }, { additionalProperties: false });
 
+const SpeechGestureActionSourceSchema = Type.Object({
+  kind: Type.Literal('speech_gesture'),
+  gestureId: enumSchema(AVATAR_SPEECH_GESTURE_IDS),
+  utteranceId: IdentifierSchema,
+  sourceMessageId: IdentifierSchema,
+  audioItemId: IdentifierSchema,
+  segmentIndex: Type.Integer({ minimum: 0, maximum: 15 }),
+  mappingVersion: Type.String({ minLength: 1, maxLength: 128 })
+}, { additionalProperties: false });
+
 const ActionTriggeredDataSchema = Type.Composite([
   EventMetadataSchema,
   Type.Object({
@@ -399,7 +413,10 @@ const ActionTriggeredDataSchema = Type.Composite([
     actionId: ActionIdSchema,
     intensity: Type.Optional(NormalizedWeightSchema),
     durationMs: Type.Optional(SafeIntegerSchema),
-    source: Type.Optional(SpeechReactionActionSourceSchema)
+    source: Type.Optional(Type.Union([
+      SpeechReactionActionSourceSchema,
+      SpeechGestureActionSourceSchema
+    ]))
   })
 ], { additionalProperties: false });
 

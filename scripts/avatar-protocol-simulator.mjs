@@ -11,7 +11,9 @@ const server = new WebSocketServer({ host, port });
 const reconnectCredentials = new Set();
 const supportedProfiles = new Set([
   'avatar.speech.lifecycle.v1',
-  'avatar.mouth.amplitude.v1'
+  'avatar.mouth.amplitude.v1',
+  'avatar.expression.vrm.v1',
+  'avatar.action.semantic.v1'
 ]);
 
 const send = (socket, message) => socket.send(JSON.stringify(message));
@@ -159,6 +161,8 @@ server.on('connection', (socket) => {
       }));
 
       const utteranceId = `utt_${randomUUID()}`;
+      const sourceMessageId = `msg_${randomUUID()}`;
+      const audioItemId = `audio_${randomUUID()}`;
       const availableProfiles = acceptedProfiles.filter((profile) => profile.startsWith('avatar.mouth.'));
       const activeSpeechDriver = availableProfiles.includes('avatar.mouth.amplitude.v1')
         ? 'avatar.mouth.amplitude.v1'
@@ -166,11 +170,46 @@ server.on('connection', (socket) => {
       if (!activeSpeechDriver) return;
       send(socket, event('avatar.speech.prepared', {
         utteranceId,
+        sourceMessageId,
+        audioItemId,
         durationMs: 4000,
         activeSpeechDriver,
         availableProfiles
       }));
       send(socket, event('avatar.speech.started', { utteranceId, playbackOffsetMs: 0 }));
+      if (acceptedProfiles.includes('avatar.expression.vrm.v1')) {
+        send(socket, event('avatar.expression.state', {
+          revision: 1,
+          source: {
+            kind: 'speech_delivery',
+            deliveryId: 'playful',
+            utteranceId,
+            sourceMessageId,
+            audioItemId,
+            segmentIndex: 0,
+            mappingVersion: 'speech-plan.v1'
+          },
+          transitionMs: 120,
+          values: [{ expression: 'happy', weight: 0.65 }]
+        }));
+      }
+      if (acceptedProfiles.includes('avatar.action.semantic.v1')) {
+        send(socket, event('avatar.action.triggered', {
+          actionInstanceId: `action_${randomUUID()}`,
+          actionId: 'ai.licia/wink',
+          intensity: 0.75,
+          durationMs: 450,
+          source: {
+            kind: 'speech_gesture',
+            gestureId: 'wink',
+            utteranceId,
+            sourceMessageId,
+            audioItemId,
+            segmentIndex: 0,
+            mappingVersion: 'speech-plan.v1'
+          }
+        }));
+      }
       let offsetMs = 0;
       timer = setInterval(() => {
         offsetMs += 50;

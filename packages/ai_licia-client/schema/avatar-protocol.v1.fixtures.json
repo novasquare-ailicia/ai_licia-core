@@ -42,7 +42,7 @@
       ]
     },
     {
-      "name": "speech delivery expression and reaction action preserve exact utterance identity",
+      "name": "speech delivery expression, reaction and gesture actions preserve exact utterance identity",
       "messages": [
         {
           "type": "event",
@@ -86,6 +86,32 @@
               "source": {
                 "kind": "speech_reaction",
                 "reactionId": "gasp",
+                "utteranceId": "utt_fixture",
+                "sourceMessageId": "msg_fixture",
+                "audioItemId": "audio_fixture",
+                "segmentIndex": 0,
+                "mappingVersion": "speech-plan.v1"
+              }
+            }
+          }
+        },
+        {
+          "type": "event",
+          "payload": {
+            "name": "avatar.action.triggered",
+            "data": {
+              "schemaVersion": 1,
+              "avatarSessionId": "avs_fixture",
+              "subscriptionId": "asub_performance",
+              "deliverySequence": 3,
+              "emittedAtMs": 12,
+              "actionInstanceId": "gesture_fixture",
+              "actionId": "ai.licia/wink",
+              "intensity": 0.75,
+              "durationMs": 450,
+              "source": {
+                "kind": "speech_gesture",
+                "gestureId": "wink",
                 "utteranceId": "utt_fixture",
                 "sourceMessageId": "msg_fixture",
                 "audioItemId": "audio_fixture",
@@ -161,6 +187,32 @@
             },
             "transitionMs": 120,
             "values": [{"expression": "angry", "weight": 0.85}]
+          }
+        }
+      }
+    },
+    {
+      "name": "speech gesture source without exact audio identity",
+      "message": {
+        "type": "event",
+        "payload": {
+          "name": "avatar.action.triggered",
+          "data": {
+            "schemaVersion": 1,
+            "avatarSessionId": "avs_fixture",
+            "subscriptionId": "asub_performance",
+            "deliverySequence": 1,
+            "emittedAtMs": 10,
+            "actionInstanceId": "gesture_fixture",
+            "actionId": "nod",
+            "source": {
+              "kind": "speech_gesture",
+              "gestureId": "nod",
+              "utteranceId": "utt_fixture",
+              "sourceMessageId": "msg_fixture",
+              "segmentIndex": 0,
+              "mappingVersion": "speech-plan.v1"
+            }
           }
         }
       }

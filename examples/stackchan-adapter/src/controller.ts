@@ -1,8 +1,8 @@
 import type { AvatarActionTriggeredEvent, AvatarExpressionStateEvent } from "ai_licia-client";
 import {
-  actionMotion,
+  actionPerformance,
+  actionStepCommands,
   expressionCommands,
-  expressionHeadPitch,
   expressionPoseCommand,
   motionCommand,
   mouthCommand,
@@ -41,10 +41,10 @@ export class StackChanController {
 
   async setExpression(data: AvatarExpressionStateEvent["payload"]["data"]): Promise<void> {
     this.expressionState = data;
+    if (this.activeActionGeneration !== undefined) return;
     for (const command of expressionCommands(data)) {
-      if (command.channel !== "motion" || this.activeActionGeneration === undefined) {
-        await this.transport.send(command);
-      }
+      if (this.activeActionGeneration !== undefined) return;
+      await this.transport.send(command);
     }
   }
 
@@ -75,8 +75,8 @@ export class StackChanController {
   }
 
   async triggerAction(data: AvatarActionTriggeredEvent["payload"]["data"]): Promise<void> {
-    const steps = actionMotion(data.actionId);
-    if (steps.length === 0) return;
+    const steps = actionPerformance(data.actionId);
+    if (steps.length === 0 || data.intensity === 0) return;
     const generation = ++this.actionGeneration;
     this.activeActionGeneration = generation;
     try {
@@ -84,12 +84,15 @@ export class StackChanController {
         if (generation !== this.actionGeneration) return;
         if (step.delayMs > 0) await this.delay(step.delayMs);
         if (generation !== this.actionGeneration) return;
-        await this.transport.send(motionCommand(step));
+        for (const command of actionStepCommands(step, this.expressionState, data.intensity ?? 1)) {
+          if (generation !== this.actionGeneration) return;
+          await this.transport.send(command);
+        }
       }
     } finally {
       if (this.activeActionGeneration === generation) {
-        this.activeActionGeneration = undefined;
-        await this.transport.send(expressionPoseCommand(this.expressionState));
+        await this.restoreExpression(generation);
+        if (this.activeActionGeneration === generation) this.activeActionGeneration = undefined;
       }
     }
   }
@@ -101,7 +104,7 @@ export class StackChanController {
     this.actionGeneration += 1;
     this.activeActionGeneration = undefined;
     await this.setMouth(0);
-    await this.transport.send(expressionPoseCommand(this.expressionState));
+    await this.restoreExpression();
   }
 
   private async flushMouth(): Promise<void> {
@@ -115,14 +118,22 @@ export class StackChanController {
   private async runSpeakingMotion(generation: number): Promise<void> {
     let stepIndex = 0;
     while (this.speaking && generation === this.speakingGeneration) {
-      const step = speakingMotionStep(stepIndex, expressionHeadPitch(this.expressionState));
+      const step = speakingMotionStep(stepIndex, this.expressionState);
       stepIndex += 1;
       await this.delay(step.delayMs);
       if (!this.speaking || generation !== this.speakingGeneration) return;
       if (this.activeActionGeneration !== undefined) continue;
-      await this.transport.send(motionCommand(
-        speakingMotionStep(stepIndex - 1, expressionHeadPitch(this.expressionState)),
-      ));
+      await this.transport.send(motionCommand(speakingMotionStep(stepIndex - 1, this.expressionState)));
+    }
+  }
+
+  private async restoreExpression(ownerActionGeneration?: number): Promise<void> {
+    for (const command of expressionCommands(this.expressionState)) {
+      if (
+        ownerActionGeneration !== undefined &&
+        this.activeActionGeneration !== ownerActionGeneration
+      ) return;
+      await this.transport.send(command);
     }
   }
 }

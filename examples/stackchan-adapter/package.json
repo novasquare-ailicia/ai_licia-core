@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc --noEmit",
     "hardware:eyes": "tsx src/eyePreview.ts",
+    "hardware:performance": "tsx src/performancePreview.ts",
     "hardware:smoke": "tsx src/hardwareSmoke.ts",
     "start": "tsx src/index.ts",
     "simulate": "tsx src/index.ts --simulate",

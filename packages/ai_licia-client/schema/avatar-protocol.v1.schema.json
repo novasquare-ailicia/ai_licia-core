@@ -2101,84 +2101,152 @@
                   "type": "integer"
                 },
                 "source": {
-                  "additionalProperties": false,
-                  "type": "object",
-                  "required": [
-                    "kind",
-                    "reactionId",
-                    "utteranceId",
-                    "sourceMessageId",
-                    "audioItemId",
-                    "segmentIndex",
-                    "mappingVersion"
-                  ],
-                  "properties": {
-                    "kind": {
-                      "const": "speech_reaction",
-                      "type": "string"
-                    },
-                    "reactionId": {
-                      "anyOf": [
-                        {
-                          "const": "laugh",
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": [
+                        "kind",
+                        "reactionId",
+                        "utteranceId",
+                        "sourceMessageId",
+                        "audioItemId",
+                        "segmentIndex",
+                        "mappingVersion"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "const": "speech_reaction",
                           "type": "string"
                         },
-                        {
-                          "const": "sigh",
+                        "reactionId": {
+                          "anyOf": [
+                            {
+                              "const": "laugh",
+                              "type": "string"
+                            },
+                            {
+                              "const": "sigh",
+                              "type": "string"
+                            },
+                            {
+                              "const": "clear_throat",
+                              "type": "string"
+                            },
+                            {
+                              "const": "gasp",
+                              "type": "string"
+                            },
+                            {
+                              "const": "scoff",
+                              "type": "string"
+                            },
+                            {
+                              "const": "pant",
+                              "type": "string"
+                            },
+                            {
+                              "const": "sharp_exhale",
+                              "type": "string"
+                            },
+                            {
+                              "const": "yawn",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "utteranceId": {
+                          "minLength": 1,
+                          "maxLength": 128,
                           "type": "string"
                         },
-                        {
-                          "const": "clear_throat",
+                        "sourceMessageId": {
+                          "minLength": 1,
+                          "maxLength": 128,
                           "type": "string"
                         },
-                        {
-                          "const": "gasp",
+                        "audioItemId": {
+                          "minLength": 1,
+                          "maxLength": 128,
                           "type": "string"
                         },
-                        {
-                          "const": "scoff",
-                          "type": "string"
+                        "segmentIndex": {
+                          "minimum": 0,
+                          "maximum": 15,
+                          "type": "integer"
                         },
-                        {
-                          "const": "pant",
-                          "type": "string"
-                        },
-                        {
-                          "const": "sharp_exhale",
-                          "type": "string"
-                        },
-                        {
-                          "const": "yawn",
+                        "mappingVersion": {
+                          "minLength": 1,
+                          "maxLength": 128,
                           "type": "string"
                         }
-                      ]
+                      }
                     },
-                    "utteranceId": {
-                      "minLength": 1,
-                      "maxLength": 128,
-                      "type": "string"
-                    },
-                    "sourceMessageId": {
-                      "minLength": 1,
-                      "maxLength": 128,
-                      "type": "string"
-                    },
-                    "audioItemId": {
-                      "minLength": 1,
-                      "maxLength": 128,
-                      "type": "string"
-                    },
-                    "segmentIndex": {
-                      "minimum": 0,
-                      "maximum": 15,
-                      "type": "integer"
-                    },
-                    "mappingVersion": {
-                      "minLength": 1,
-                      "maxLength": 128,
-                      "type": "string"
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": [
+                        "kind",
+                        "gestureId",
+                        "utteranceId",
+                        "sourceMessageId",
+                        "audioItemId",
+                        "segmentIndex",
+                        "mappingVersion"
+                      ],
+                      "properties": {
+                        "kind": {
+                          "const": "speech_gesture",
+                          "type": "string"
+                        },
+                        "gestureId": {
+                          "anyOf": [
+                            {
+                              "const": "wink",
+                              "type": "string"
+                            },
+                            {
+                              "const": "nod",
+                              "type": "string"
+                            },
+                            {
+                              "const": "shake_head",
+                              "type": "string"
+                            },
+                            {
+                              "const": "rage",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "utteranceId": {
+                          "minLength": 1,
+                          "maxLength": 128,
+                          "type": "string"
+                        },
+                        "sourceMessageId": {
+                          "minLength": 1,
+                          "maxLength": 128,
+                          "type": "string"
+                        },
+                        "audioItemId": {
+                          "minLength": 1,
+                          "maxLength": 128,
+                          "type": "string"
+                        },
+                        "segmentIndex": {
+                          "minimum": 0,
+                          "maximum": 15,
+                          "type": "integer"
+                        },
+                        "mappingVersion": {
+                          "minLength": 1,
+                          "maxLength": 128,
+                          "type": "string"
+                        }
+                      }
                     }
-                  }
+                  ]
                 }
               }
             }
