@@ -1,4 +1,7 @@
-import type { AvatarExpressionStateEvent } from "ai_licia-client";
+import {
+  AVATAR_EXPRESSION_IDS,
+  type AvatarExpressionStateEvent,
+} from "ai_licia-client";
 
 export const STACKCHAN_SERVICE_UUIDS = [
   "e2e5e5e012345678123456789abcdef0",
@@ -24,14 +27,37 @@ interface EyeStyle {
   size: number;
 }
 
-const EYE_STYLES = {
+export const STACKCHAN_EYE_PRESETS = {
   neutral: { weight: 100, rotation: 0, size: 0 },
   happy: { weight: 72, rotation: 1550, size: 0 },
   angry: { weight: 70, rotation: 450, size: 0 },
   sad: { weight: 70, rotation: -400, size: 0 },
-  relaxed: { weight: 45, rotation: -50, size: 0 },
+  doubt: { weight: 75, rotation: 0, size: 0 },
+  sleepy: { weight: 35, rotation: -50, size: 0 },
   surprised: { weight: 100, rotation: 0, size: 70 },
 } satisfies Record<string, EyeStyle>;
+
+export type StackChanEyePresetId = keyof typeof STACKCHAN_EYE_PRESETS;
+
+export const STACKCHAN_FACTORY_EYE_PRESET_IDS = [
+  "neutral",
+  "happy",
+  "angry",
+  "sad",
+  "doubt",
+  "sleepy",
+] as const satisfies readonly StackChanEyePresetId[];
+
+type AvatarExpressionId = (typeof AVATAR_EXPRESSION_IDS)[number];
+
+const AVATAR_EXPRESSION_EYE_PRESETS = {
+  neutral: "neutral",
+  happy: "happy",
+  angry: "angry",
+  sad: "sad",
+  relaxed: "sleepy",
+  surprised: "surprised",
+} as const satisfies Record<AvatarExpressionId, StackChanEyePresetId>;
 
 const LED_COLORS = {
   neutral: "#000000",
@@ -40,7 +66,7 @@ const LED_COLORS = {
   sad: "#3366ff",
   relaxed: "#66ccff",
   surprised: "#ffaa00",
-} satisfies Record<keyof typeof EYE_STYLES, string>;
+} satisfies Record<AvatarExpressionId, string>;
 
 const HEAD_PITCH = {
   neutral: 30,
@@ -49,13 +75,16 @@ const HEAD_PITCH = {
   sad: 240,
   relaxed: 100,
   surprised: 55,
-} satisfies Record<keyof typeof EYE_STYLES, number>;
+} satisfies Record<AvatarExpressionId, number>;
+
+const isAvatarExpressionId = (value: string | undefined): value is AvatarExpressionId =>
+  value !== undefined && (AVATAR_EXPRESSION_IDS as readonly string[]).includes(value);
 
 const selectExpression = (event?: AvatarExpressionStateEvent["payload"]["data"]) => {
   const strongest = event ? [...event.values].sort((left, right) => right.weight - left.weight)[0] : undefined;
   const candidate = strongest?.expression;
-  const expression: keyof typeof EYE_STYLES = candidate && candidate in EYE_STYLES
-    ? candidate as keyof typeof EYE_STYLES
+  const expression: AvatarExpressionId = isAvatarExpressionId(candidate)
+    ? candidate
     : "neutral";
   return { expression, intensity: strongest?.weight ?? 0 };
 };
@@ -72,25 +101,25 @@ export const mouthCommand = (value: number): StackChanCommand => ({
   payload: { mouth: { weight: Math.round(Math.max(0, Math.min(1, value)) * 100) } },
 });
 
+export const eyePresetCommand = (presetId: StackChanEyePresetId): StackChanCommand => {
+  const eye = STACKCHAN_EYE_PRESETS[presetId];
+  const mirroredRotation = eye.rotation === 0 ? 0 : -eye.rotation;
+  return {
+    channel: "avatar",
+    payload: {
+      leftEye: eye,
+      rightEye: { ...eye, rotation: mirroredRotation },
+    },
+  };
+};
+
 export const expressionCommands = (
   event: AvatarExpressionStateEvent["payload"]["data"],
 ): StackChanCommand[] => {
   const { expression, intensity } = selectExpression(event);
-  const target = EYE_STYLES[expression];
-  const blend = (neutral: number, value: number) => Math.round(neutral + (value - neutral) * intensity);
-  const eye = {
-    weight: blend(100, target.weight),
-    rotation: blend(0, target.rotation),
-    size: blend(0, target.size),
-  };
+  const presetId = intensity > 0 ? AVATAR_EXPRESSION_EYE_PRESETS[expression] : "neutral";
   return [
-    {
-      channel: "avatar",
-      payload: {
-        leftEye: eye,
-        rightEye: { ...eye, rotation: -eye.rotation },
-      },
-    },
+    eyePresetCommand(presetId),
     {
       channel: "rgb",
       payload: {

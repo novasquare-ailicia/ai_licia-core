@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc --noEmit",
+    "hardware:eyes": "tsx src/eyePreview.ts",
     "hardware:smoke": "tsx src/hardwareSmoke.ts",
     "start": "tsx src/index.ts",
     "simulate": "tsx src/index.ts --simulate",

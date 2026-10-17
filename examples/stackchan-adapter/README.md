@@ -20,6 +20,18 @@ The approval credential is stored in `~/.ai_licia/stackchan-adapter.json` with u
 
 The adapter automatically reconnects when Desktop restarts or Bluetooth briefly drops. If Bluetooth disconnects, its Desktop presence is also closed, so the integration card and header never report a stale robot connection.
 
+## Preview every eye style
+
+With StackChan open in **Dance**, run:
+
+```bash
+npm run hardware:eyes
+```
+
+The preview cycles through all six factory eye presets: Neutral, Happy, Angry, Sad, Doubt, and Sleepy. It then shows the adapter's custom Surprised preset and restores Neutral.
+
+During normal avatar playback, semantic expressions use complete eye presets instead of blending their geometry with Neutral. This keeps Happy, Angry, Sad, and Sleepy visually recognizable on the small geometric display. The protocol's expression weight still controls the accompanying head pose.
+
 ## Test without hardware
 
 Run `npm run simulate`. The adapter connects to Desktop but prints every StackChan command instead of using Bluetooth.
@@ -27,5 +39,6 @@ Run `npm run simulate`. The adapter connects to Desktop but prints every StackCh
 ## Limitations of the factory firmware
 
 - Angry mode uses angled eyes and red side LEDs. Changing the actual eye fill colour requires custom firmware.
+- The firmware also contains Heart, Angry, Sweat, Shy, and Dizzy decorative overlays, but Dance mode does not expose decorators through its BLE JSON controls. Those overlays require a custom firmware extension.
 - Only reactions at the beginning of an utterance trigger a precisely timed action in this initial version. Later segment timing requires aligned TTS cue timestamps.
 - Keep StackChan in Dance mode while the adapter is running.

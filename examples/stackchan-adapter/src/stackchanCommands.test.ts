@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  STACKCHAN_FACTORY_EYE_PRESET_IDS,
   blePayloadLengthFromMtu,
+  eyePresetCommand,
   expressionCommands,
   expressionHeadPitch,
   fragmentStackChanPayload,
@@ -41,6 +43,53 @@ test("maps angry expression to angled eyes, red LEDs and a conservative head pos
     pitchServo: { angle: 170, speed: 180 },
   });
   assert.equal(expressionHeadPitch(undefined), 30);
+});
+
+test("uses the full factory happy preset for a weighted semantic expression", () => {
+  const commands = expressionCommands({
+    schemaVersion: 1,
+    avatarSessionId: "session",
+    subscriptionId: "subscription",
+    deliverySequence: 1,
+    emittedAtMs: 1,
+    revision: 1,
+    transitionMs: 180,
+    values: [{ expression: "happy", weight: 0.45 }],
+  });
+  assert.deepEqual(commands[0]?.payload, {
+    leftEye: { weight: 72, rotation: 1550, size: 0 },
+    rightEye: { weight: 72, rotation: -1550, size: 0 },
+  });
+});
+
+test("exposes every factory eye preset and maps relaxed to sleepy", () => {
+  assert.deepEqual(STACKCHAN_FACTORY_EYE_PRESET_IDS, [
+    "neutral",
+    "happy",
+    "angry",
+    "sad",
+    "doubt",
+    "sleepy",
+  ]);
+  assert.deepEqual(eyePresetCommand("doubt").payload, {
+    leftEye: { weight: 75, rotation: 0, size: 0 },
+    rightEye: { weight: 75, rotation: 0, size: 0 },
+  });
+
+  const commands = expressionCommands({
+    schemaVersion: 1,
+    avatarSessionId: "session",
+    subscriptionId: "subscription",
+    deliverySequence: 1,
+    emittedAtMs: 1,
+    revision: 1,
+    transitionMs: 220,
+    values: [{ expression: "relaxed", weight: 0.3 }],
+  });
+  assert.deepEqual(commands[0]?.payload, {
+    leftEye: { weight: 35, rotation: -50, size: 0 },
+    rightEye: { weight: 35, rotation: 50, size: 0 },
+  });
 });
 
 test("keeps procedural speaking motion inside conservative servo bounds", () => {
