@@ -4,7 +4,7 @@ This adapter drives the factory StackChan firmware from `avatar.protocol.v1`. It
 
 ## First hardware test
 
-1. Install the current ai_licia Desktop development build and sign in.
+1. Open ai_licia Desktop, sign in, and select **Integrations > StackChan** for the live setup status.
 2. On StackChan, open the **Dance** app. This enables the factory BLE avatar controls.
 3. From this directory, run:
 
@@ -17,6 +17,8 @@ This adapter drives the factory StackChan firmware from `avatar.protocol.v1`. It
 5. Start an ai_licia conversation. Speech should animate the mouth, expressions, side LEDs, and head.
 
 The approval credential is stored in `~/.ai_licia/stackchan-adapter.json` with user-only permissions, so normal restarts do not require another approval.
+
+The adapter automatically reconnects when Desktop restarts or Bluetooth briefly drops. If Bluetooth disconnects, its Desktop presence is also closed, so the integration card and header never report a stale robot connection.
 
 ## Test without hardware
 

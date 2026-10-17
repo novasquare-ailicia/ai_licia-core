@@ -1,7 +1,79 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { StackChanController } from "./controller.js";
-import { SimulatedStackChanTransport } from "./transport.js";
+import { StackChanController, type Delay } from "./controller.js";
+import type { StackChanCommand } from "./stackchanCommands.js";
+import { SimulatedStackChanTransport, type StackChanTransport } from "./transport.js";
+
+class DeferredTransport implements StackChanTransport {
+  readonly commands: StackChanCommand[] = [];
+  private releaseCurrent: (() => void) | undefined;
+
+  async connect(): Promise<void> {}
+
+  async send(command: StackChanCommand): Promise<void> {
+    this.commands.push(command);
+    await new Promise<void>((resolve) => {
+      this.releaseCurrent = resolve;
+    });
+  }
+
+  async waitForDisconnect(): Promise<void> {
+    await new Promise<void>(() => undefined);
+  }
+
+  async close(): Promise<void> {}
+
+  release(): void {
+    const release = this.releaseCurrent;
+    this.releaseCurrent = undefined;
+    release?.();
+  }
+}
+
+const nextTurn = () => new Promise<void>((resolve) => setImmediate(resolve));
+
+class ManualDelay {
+  private releases: Array<() => void> = [];
+
+  readonly wait: Delay = async () => new Promise<void>((resolve) => {
+    this.releases.push(resolve);
+  });
+
+  release(): void {
+    this.releases.shift()?.();
+  }
+}
+
+test("mouth animation drops stale BLE frames and preserves the final value", async () => {
+  const transport = new DeferredTransport();
+  const controller = new StackChanController(transport);
+
+  const first = controller.setMouth(0.1);
+  void controller.setMouth(0.3);
+  void controller.setMouth(0.8);
+  assert.deepEqual(transport.commands.map(({ payload }) => payload), [
+    { mouth: { weight: 10 } },
+  ]);
+
+  transport.release();
+  await nextTurn();
+  assert.deepEqual(transport.commands.map(({ payload }) => payload), [
+    { mouth: { weight: 10 } },
+    { mouth: { weight: 80 } },
+  ]);
+
+  void controller.setMouth(0.4);
+  const final = controller.setMouth(0);
+  transport.release();
+  await nextTurn();
+  assert.deepEqual(transport.commands.map(({ payload }) => payload), [
+    { mouth: { weight: 10 } },
+    { mouth: { weight: 80 } },
+    { mouth: { weight: 0 } },
+  ]);
+  transport.release();
+  await Promise.all([first, final]);
+});
 
 test("semantic action restores the latest expression pose", async () => {
   const transport = new SimulatedStackChanTransport();
@@ -27,5 +99,31 @@ test("semantic action restores the latest expression pose", async () => {
   });
   const last = transport.commands.at(-1);
   assert.equal(last?.channel, "motion");
-  assert.deepEqual(last?.payload, { pitchServo: { angle: -50, speed: 80 } });
+  assert.deepEqual(last?.payload, {
+    yawServo: { angle: 0, speed: 180 },
+    pitchServo: { angle: 170, speed: 180 },
+  });
+});
+
+test("speech lifecycle drives local servo motion and restores the expression pose", async () => {
+  const transport = new SimulatedStackChanTransport();
+  const delay = new ManualDelay();
+  const controller = new StackChanController(transport, delay.wait);
+
+  const speaking = controller.startSpeaking();
+  delay.release();
+  await nextTurn();
+
+  assert.deepEqual(transport.commands.at(-1)?.payload, {
+    yawServo: { angle: -100, speed: 180 },
+    pitchServo: { angle: 65, speed: 180 },
+  });
+
+  const reset = controller.reset();
+  delay.release();
+  await Promise.all([speaking, reset]);
+  assert.deepEqual(transport.commands.at(-1)?.payload, {
+    yawServo: { angle: 0, speed: 180 },
+    pitchServo: { angle: 30, speed: 180 },
+  });
 });

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc --noEmit",
+    "hardware:smoke": "tsx src/hardwareSmoke.ts",
     "start": "tsx src/index.ts",
     "simulate": "tsx src/index.ts --simulate",
     "test": "tsx --test src/*.test.ts"

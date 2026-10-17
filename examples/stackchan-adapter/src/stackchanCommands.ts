@@ -43,13 +43,29 @@ const LED_COLORS = {
 } satisfies Record<keyof typeof EYE_STYLES, string>;
 
 const HEAD_PITCH = {
-  neutral: 0,
-  happy: -20,
-  angry: -50,
-  sad: 55,
-  relaxed: 20,
-  surprised: -70,
+  neutral: 30,
+  happy: 75,
+  angry: 170,
+  sad: 240,
+  relaxed: 100,
+  surprised: 55,
 } satisfies Record<keyof typeof EYE_STYLES, number>;
+
+const selectExpression = (event?: AvatarExpressionStateEvent["payload"]["data"]) => {
+  const strongest = event ? [...event.values].sort((left, right) => right.weight - left.weight)[0] : undefined;
+  const candidate = strongest?.expression;
+  const expression: keyof typeof EYE_STYLES = candidate && candidate in EYE_STYLES
+    ? candidate as keyof typeof EYE_STYLES
+    : "neutral";
+  return { expression, intensity: strongest?.weight ?? 0 };
+};
+
+export const expressionHeadPitch = (
+  event?: AvatarExpressionStateEvent["payload"]["data"],
+): number => {
+  const { expression, intensity } = selectExpression(event);
+  return Math.round(HEAD_PITCH.neutral + (HEAD_PITCH[expression] - HEAD_PITCH.neutral) * intensity);
+};
 
 export const mouthCommand = (value: number): StackChanCommand => ({
   channel: "avatar",
@@ -59,12 +75,7 @@ export const mouthCommand = (value: number): StackChanCommand => ({
 export const expressionCommands = (
   event: AvatarExpressionStateEvent["payload"]["data"],
 ): StackChanCommand[] => {
-  const strongest = [...event.values].sort((left, right) => right.weight - left.weight)[0];
-  const candidate = strongest?.expression;
-  const expression: keyof typeof EYE_STYLES = candidate && candidate in EYE_STYLES
-    ? candidate as keyof typeof EYE_STYLES
-    : "neutral";
-  const intensity = strongest?.weight ?? 0;
+  const { expression, intensity } = selectExpression(event);
   const target = EYE_STYLES[expression];
   const blend = (neutral: number, value: number) => Math.round(neutral + (value - neutral) * intensity);
   const eye = {
@@ -89,14 +100,45 @@ export const expressionCommands = (
         rightRgbDuration: 0.15,
       },
     },
-    {
-      channel: "motion",
-      payload: { pitchServo: { angle: Math.round(HEAD_PITCH[expression] * intensity), speed: 80 } },
-    },
+    expressionPoseCommand(event),
   ];
 };
 
-type MotionStep = { delayMs: number; yaw?: number; pitch?: number };
+export const expressionPoseCommand = (
+  event?: AvatarExpressionStateEvent["payload"]["data"],
+): StackChanCommand => motionCommand({
+  delayMs: 0,
+  yaw: 0,
+  pitch: expressionHeadPitch(event),
+  speed: 180,
+});
+
+export type MotionStep = { delayMs: number; yaw?: number; pitch?: number; speed?: number };
+
+interface SpeakingMotionOffset {
+  delayMs: number;
+  yaw: number;
+  pitch: number;
+  speed: number;
+}
+
+const SPEAKING_MOTION_OFFSETS: readonly SpeakingMotionOffset[] = [
+  { delayMs: 800, yaw: -100, pitch: 35, speed: 180 },
+  { delayMs: 1_200, yaw: 80, pitch: 5, speed: 160 },
+  { delayMs: 1_000, yaw: 20, pitch: 55, speed: 190 },
+  { delayMs: 1_300, yaw: -60, pitch: 15, speed: 150 },
+  { delayMs: 900, yaw: 0, pitch: 30, speed: 170 },
+];
+
+export const speakingMotionStep = (index: number, basePitch: number): MotionStep => {
+  const offset = SPEAKING_MOTION_OFFSETS[index % SPEAKING_MOTION_OFFSETS.length]!;
+  return {
+    delayMs: offset.delayMs,
+    yaw: offset.yaw,
+    pitch: Math.max(30, Math.min(320, basePitch + offset.pitch)),
+    speed: offset.speed,
+  };
+};
 
 const ACTION_MOTIONS: Record<string, readonly MotionStep[]> = {
   nod: [
@@ -128,8 +170,12 @@ export const actionMotion = (actionId: string): readonly MotionStep[] =>
 export const motionCommand = (step: MotionStep): StackChanCommand => ({
   channel: "motion",
   payload: {
-    ...(step.yaw === undefined ? {} : { yawServo: { angle: step.yaw, speed: 100 } }),
-    ...(step.pitch === undefined ? {} : { pitchServo: { angle: step.pitch, speed: 100 } }),
+    ...(step.yaw === undefined ? {} : {
+      yawServo: { angle: Math.max(-1_280, Math.min(1_280, step.yaw)), speed: step.speed ?? 100 },
+    }),
+    ...(step.pitch === undefined ? {} : {
+      pitchServo: { angle: Math.max(30, Math.min(870, step.pitch)), speed: step.speed ?? 100 },
+    }),
   },
 });
 
@@ -152,3 +198,6 @@ export const fragmentStackChanPayload = (json: string, mtuPayload = 20): Buffer[
     return Buffer.concat([header, chunk]);
   });
 };
+
+export const blePayloadLengthFromMtu = (mtu: number | null): number =>
+  Math.max(20, (mtu ?? 23) - 3);
