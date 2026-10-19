@@ -36,6 +36,18 @@ idf.py flash monitor
 
 Flashing replaces the installed firmware image, but this build retains the factory applications in source. A factory backup or M5Stack's official flasher remains the recovery path until the guided Desktop flasher is shipped.
 
+## Build a Desktop flash bundle
+
+After a successful ESP-IDF build, create the immutable sparse flash bundle used by ai_licia Desktop:
+
+```bash
+node bundle.mjs build/StackChan/firmware/build
+```
+
+Pass a second argument to choose another output directory. The bundle contains a typed manifest, SHA-256 hashes and the five binaries at their exact ESP-IDF offsets. It deliberately does not create one merged 16 MB image: writing the sparse segments preserves the existing NVS, PHY calibration, inactive OTA slot and coredump regions.
+
+Before installing, Desktop must verify an ESP32-S3 with 16 MB flash, confirm that Secure Boot and flash encryption are disabled, and save a verified full 16 MB backup. It must never erase the device before that backup exists. The chip identity cannot prove that the connected ESP32-S3 is physically a StackChan, so the setup flow must also require explicit device selection and confirmation.
+
 ## First connection
 
 1. In ai_licia Desktop, open **Integrations > StackChan** and enable local-network avatar devices.
