@@ -339,16 +339,23 @@ client.onEvent('avatar.mouth.amplitude', (sample) => {
   console.log(sample.utteranceId, sample.offsetMs, sample.value);
 });
 
+client.onEvent('avatar.audio.chunk', (chunk) => {
+  playPcmS16LeChunk(chunk.dataBase64);
+});
+
 await client.subscribeAvatar({
   requestId: crypto.randomUUID(),
   protocolVersion: 1,
   profiles: [
     { id: 'avatar.speech.lifecycle.v1', required: true },
-    { id: 'avatar.mouth.amplitude.v1', required: true }
+    { id: 'avatar.mouth.amplitude.v1', required: true },
+    { id: 'avatar.audio.pcm-s16le.v1', required: false }
   ],
   speechDriverPreference: ['avatar.mouth.amplitude.v1']
 });
 ```
+
+`avatar.audio.pcm-s16le.v1` is optional. It carries ordered base64-encoded, mono signed 16-bit little-endian PCM chunks on the same authorized WebSocket and subscription as the avatar animation events. Clients that do not request the profile receive no audio chunks.
 
 The generated JSON Schema is shipped at `schema/avatar-protocol.v1.schema.json`. The package also exports `validateAvatarProtocolMessage` and `validateAvatarProtocolSequence` for adapters that need runtime validation.
 

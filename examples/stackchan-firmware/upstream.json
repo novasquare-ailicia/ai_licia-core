@@ -1,0 +1,7 @@
+{
+  "repository": "https://github.com/m5stack/StackChan.git",
+  "commit": "edfb00d39b4c95918226c70885ee2239a5685e49",
+  "firmwareVersion": "1.5.1",
+  "espIdfVersion": "5.5.4"
+}
+

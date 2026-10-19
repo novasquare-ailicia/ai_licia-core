@@ -13,7 +13,8 @@ const supportedProfiles = new Set([
   'avatar.speech.lifecycle.v1',
   'avatar.mouth.amplitude.v1',
   'avatar.expression.vrm.v1',
-  'avatar.action.semantic.v1'
+  'avatar.action.semantic.v1',
+  'avatar.audio.pcm-s16le.v1'
 ]);
 
 const send = (socket, message) => socket.send(JSON.stringify(message));
@@ -176,6 +177,16 @@ server.on('connection', (socket) => {
         activeSpeechDriver,
         availableProfiles
       }));
+      if (acceptedProfiles.includes('avatar.audio.pcm-s16le.v1')) {
+        send(socket, event('avatar.audio.prepared', {
+          utteranceId,
+          audioItemId,
+          encoding: 'PCM_S16_LE',
+          sampleRateHz: 44100,
+          channels: 1,
+          durationMs: 4000
+        }));
+      }
       send(socket, event('avatar.speech.started', { utteranceId, playbackOffsetMs: 0 }));
       if (acceptedProfiles.includes('avatar.expression.vrm.v1')) {
         send(socket, event('avatar.expression.state', {
@@ -211,10 +222,31 @@ server.on('connection', (socket) => {
         }));
       }
       let offsetMs = 0;
+      let pcmChunkIndex = 0;
+      const samplesPerChunk = 2205;
+      const silentPcmChunk = Buffer.alloc(samplesPerChunk * 2).toString('base64');
       timer = setInterval(() => {
+        if (acceptedProfiles.includes('avatar.audio.pcm-s16le.v1')) {
+          send(socket, event('avatar.audio.chunk', {
+            utteranceId,
+            audioItemId,
+            chunkIndex: pcmChunkIndex,
+            sampleOffset: pcmChunkIndex * samplesPerChunk,
+            dataBase64: silentPcmChunk
+          }));
+          pcmChunkIndex += 1;
+        }
         offsetMs += 50;
         if (offsetMs >= 4000) {
           stopPlayback();
+          if (acceptedProfiles.includes('avatar.audio.pcm-s16le.v1')) {
+            send(socket, event('avatar.audio.completed', {
+              utteranceId,
+              audioItemId,
+              chunkCount: pcmChunkIndex,
+              totalSamples: pcmChunkIndex * samplesPerChunk
+            }));
+          }
           send(socket, event('avatar.mouth.amplitude', { utteranceId, offsetMs: 4000, value: 0 }));
           send(socket, event('avatar.speech.ended', {
             utteranceId,

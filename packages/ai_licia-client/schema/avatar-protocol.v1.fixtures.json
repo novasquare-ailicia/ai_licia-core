@@ -122,6 +122,83 @@
           }
         }
       ]
+    },
+    {
+      "name": "PCM audio shares the avatar subscription sequence and exact utterance identity",
+      "messages": [
+        {
+          "type": "event",
+          "payload": {
+            "name": "avatar.audio.prepared",
+            "data": {
+              "schemaVersion": 1,
+              "avatarSessionId": "avs_fixture",
+              "subscriptionId": "asub_audio",
+              "deliverySequence": 1,
+              "emittedAtMs": 20,
+              "utteranceId": "utt_audio_fixture",
+              "audioItemId": "audio_fixture",
+              "encoding": "PCM_S16_LE",
+              "sampleRateHz": 44100,
+              "channels": 1,
+              "durationMs": 40
+            }
+          }
+        },
+        {
+          "type": "event",
+          "payload": {
+            "name": "avatar.audio.chunk",
+            "data": {
+              "schemaVersion": 1,
+              "avatarSessionId": "avs_fixture",
+              "subscriptionId": "asub_audio",
+              "deliverySequence": 2,
+              "emittedAtMs": 21,
+              "utteranceId": "utt_audio_fixture",
+              "audioItemId": "audio_fixture",
+              "chunkIndex": 0,
+              "sampleOffset": 0,
+              "dataBase64": "AAAAAA=="
+            }
+          }
+        },
+        {
+          "type": "event",
+          "payload": {
+            "name": "avatar.audio.chunk",
+            "data": {
+              "schemaVersion": 1,
+              "avatarSessionId": "avs_fixture",
+              "subscriptionId": "asub_audio",
+              "deliverySequence": 3,
+              "emittedAtMs": 22,
+              "utteranceId": "utt_audio_fixture",
+              "audioItemId": "audio_fixture",
+              "chunkIndex": 1,
+              "sampleOffset": 2,
+              "dataBase64": "AAAAAA=="
+            }
+          }
+        },
+        {
+          "type": "event",
+          "payload": {
+            "name": "avatar.audio.completed",
+            "data": {
+              "schemaVersion": 1,
+              "avatarSessionId": "avs_fixture",
+              "subscriptionId": "asub_audio",
+              "deliverySequence": 4,
+              "emittedAtMs": 23,
+              "utteranceId": "utt_audio_fixture",
+              "audioItemId": "audio_fixture",
+              "chunkCount": 2,
+              "totalSamples": 4
+            }
+          }
+        }
+      ]
     }
   ],
   "invalidMessages": [
@@ -250,6 +327,29 @@
               "utteranceId": "utt_fixture",
               "offsetMs": 50,
               "value": 0.5
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PCM chunk arrives without stream preparation",
+      "messages": [
+        {
+          "type": "event",
+          "payload": {
+            "name": "avatar.audio.chunk",
+            "data": {
+              "schemaVersion": 1,
+              "avatarSessionId": "avs_fixture",
+              "subscriptionId": "asub_audio_missing_prepared",
+              "deliverySequence": 1,
+              "emittedAtMs": 30,
+              "utteranceId": "utt_audio_fixture",
+              "audioItemId": "audio_fixture",
+              "chunkIndex": 0,
+              "sampleOffset": 0,
+              "dataBase64": "AAAAAA=="
             }
           }
         }

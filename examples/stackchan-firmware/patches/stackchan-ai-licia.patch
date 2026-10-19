@@ -1,0 +1,48 @@
+diff --git a/firmware/main/apps/apps.h b/firmware/main/apps/apps.h
+index b54b548..8931d75 100644
+--- a/firmware/main/apps/apps.h
++++ b/firmware/main/apps/apps.h
+@@ -5,6 +5,7 @@
+  */
+ #pragma once
+ #include "app_launcher/app_launcher.h"
++#include "app_ai_licia/app_ai_licia.h"
+ #include "app_ai_agent/app_ai_agent.h"
+ #include "app_avatar/app_avatar.h"
+ #include "app_setup/app_setup.h"
+diff --git a/firmware/main/main.cpp b/firmware/main/main.cpp
+index 7739fb6..a7c63fa 100644
+--- a/firmware/main/main.cpp
++++ b/firmware/main/main.cpp
+@@ -31,6 +31,7 @@ extern "C" void app_main(void)
+     if (!skip_mooncake) {
+         // Install apps
+         GetMooncake().installApp(std::make_unique<AppLauncher>());
++        GetMooncake().installApp(std::make_unique<AppAiLicia>());
+         GetMooncake().installApp(std::make_unique<AppAiAgent>());
+         GetMooncake().installApp(std::make_unique<AppAvatar>());
+         GetMooncake().installApp(std::make_unique<AppEspnowControl>());
+diff --git a/firmware/main/CMakeLists.txt b/firmware/main/CMakeLists.txt
+index 34ece08..c1d89e8 100644
+--- a/firmware/main/CMakeLists.txt
++++ b/firmware/main/CMakeLists.txt
+@@ -307,6 +307,7 @@ idf_component_register(SRCS ${SOURCES}
+                         esp_driver_ppa
+                         esp_app_format
+                         app_update
++                        mbedtls
+                         spi_flash
+                         console
+                         efuse
+diff --git a/firmware/main/idf_component.yml b/firmware/main/idf_component.yml
+index 89dcb74..13d05c2 100644
+--- a/firmware/main/idf_component.yml
++++ b/firmware/main/idf_component.yml
+@@ -2,6 +2,7 @@
+ dependencies:
++  espressif/mdns: "1.14.0"
+   waveshare/esp_lcd_sh8601: 1.0.2
+   espressif/esp_lcd_co5300: ^2.0.3
+   espressif/esp_lcd_ili9341: ==1.2.0
+   espressif/esp_lcd_gc9a01: ==2.0.1
+   espressif/esp_lcd_st77916: ^1.0.1

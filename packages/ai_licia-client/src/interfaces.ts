@@ -362,6 +362,9 @@ export const LOCAL_WEBSOCKET_EVENT_NAMES = [
   'avatar.mouth.arkit_frames',
   'avatar.expression.state',
   'avatar.action.triggered',
+  'avatar.audio.prepared',
+  'avatar.audio.chunk',
+  'avatar.audio.completed',
   'avatar.state.snapshot'
 ] as const;
 export type LocalWebSocketEventName = typeof LOCAL_WEBSOCKET_EVENT_NAMES[number];
