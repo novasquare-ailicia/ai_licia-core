@@ -34,6 +34,22 @@ index 34ece08..c1d89e8 100644
                          spi_flash
                          console
                          efuse
+@@ -400,3 +401,7 @@ set(DEFAULT_ASSETS_EXTRA_FILES "${CMAKE_CURRENT_SOURCE_DIR}/assets/assets_bin")
++file(GLOB DEFAULT_ASSETS_EXTRA_FILE_DEPS CONFIGURE_DEPENDS
++    "${DEFAULT_ASSETS_EXTRA_FILES}/*"
++)
++
+ # Function to build default assets based on configuration
+ function(build_default_assets_bin)
+     # Set output path for generated assets.bin
+@@ -430,6 +435,7 @@ function(build_default_assets_bin)
+         DEPENDS
+             ${SDKCONFIG}
+             ${XIAOZHI_MAIN_DIR}/../scripts/build_default_assets.py
++            ${DEFAULT_ASSETS_EXTRA_FILE_DEPS}
+         COMMENT "Building default assets.bin based on configuration"
+         VERBATIM
+     )
 diff --git a/firmware/main/idf_component.yml b/firmware/main/idf_component.yml
 index 89dcb74..13d05c2 100644
 --- a/firmware/main/idf_component.yml
@@ -46,3 +62,14 @@ index 89dcb74..13d05c2 100644
    espressif/esp_lcd_ili9341: ==1.2.0
    espressif/esp_lcd_gc9a01: ==2.0.1
    espressif/esp_lcd_st77916: ^1.0.1
+@@ -23,7 +24,9 @@ dependencies:
+   78/esp-wifi-connect: ~3.1.1
+   espressif/esp_audio_effects: ~1.2.1
+   espressif/esp_audio_codec: ~2.4.1
+-  78/esp-ml307: ~3.6.4
++  78/esp-ml307:
++    version: ~3.6.4
++    override_path: ../components/esp-ml307
+   78/uart-eth-modem:
+     version: ~0.3.3
+     rules:

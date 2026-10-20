@@ -1,6 +1,6 @@
 # ai_licia mode for StackChan
 
-This is a narrow extension of M5Stack's open-source factory firmware. It adds an **AI_LICIA** app while retaining Launcher, AI Agent, Avatar, ESP-NOW, App Center, Ezdata, Dance, and Setup.
+This is a narrow extension of M5Stack's open-source factory firmware. It adds an **ai_licia** app while retaining Launcher, AI Agent, Avatar, ESP-NOW, App Center, Ezdata, Dance, and Setup.
 
 The app is a direct `avatar.protocol.v1` renderer. It discovers ai_licia Desktop through `_ailicia-avatar._tcp.local`, requests `avatar.events.read`, stores the approved reconnect credential in the robot's application settings, and reconnects after Desktop, Wi-Fi, or IP address changes. There is no StackChan-specific network protocol and no bridge process.
 
@@ -51,7 +51,7 @@ Before installing, Desktop must verify an ESP32-S3 with 16 MB flash, confirm tha
 ## First connection
 
 1. In ai_licia Desktop, open **Integrations > StackChan** and enable local-network avatar devices.
-2. Open **AI_LICIA** on StackChan.
+2. Open **ai_licia** on StackChan.
 3. If more than one Desktop is found, select the intended Desktop on the robot.
 4. Approve the avatar access request in Desktop.
 5. Start a conversation. The face, mouth, lights, servos, and speaker should react from the same protocol stream.

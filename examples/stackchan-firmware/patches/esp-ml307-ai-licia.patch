@@ -1,0 +1,155 @@
+diff --git a/include/tcp.h b/include/tcp.h
+--- a/include/tcp.h
++++ b/include/tcp.h
+@@ -4,6 +4,7 @@
+ 
+ #include <string>
+ #include <functional>
++#include <cstdint>
+ 
+ class Tcp {
+ public:
+@@ -12,6 +13,10 @@ public:
+     virtual void Disconnect() = 0;
+     virtual int Send(const std::string& data) = 0;
+ 
++    virtual void SetReceiveTaskPriority(uint32_t priority) {
++        (void)priority;
++    }
++
+     virtual void OnStream(std::function<void(const std::string& data)> callback) {
+         stream_callback_ = callback;
+     }
+diff --git a/include/web_socket.h b/include/web_socket.h
+--- a/include/web_socket.h
++++ b/include/web_socket.h
+@@ -21,6 +21,7 @@ public:
+ 
+     void SetHeader(const char* key, const char* value);
+     void SetReceiveBufferSize(size_t size);
++    void SetReceiveTaskPriority(uint32_t priority);
+     bool IsConnected() const;
+     bool Connect(const char* uri);
+     bool Send(const std::string& data);
+@@ -42,6 +43,7 @@ private:
+     std::unique_ptr<Tcp> tcp_;
+     bool continuation_ = false;
+     size_t receive_buffer_size_ = 2048;
++    uint32_t receive_task_priority_ = 1;
+     std::string receive_buffer_;
+     bool handshake_completed_ = false;
+     bool connected_ = false;
+diff --git a/src/esp/esp_tcp.cc b/src/esp/esp_tcp.cc
+--- a/src/esp/esp_tcp.cc
++++ b/src/esp/esp_tcp.cc
+@@ -24,8 +24,10 @@ EspTcp::~EspTcp() {
+ }
+ 
+ bool EspTcp::Connect(const std::string& host, int port) {
+-    // 确保先断开已有连接
+-    if (connected_) {
++    // Ensure the previous receive task has fully exited before reusing this
++    // transport. A passive disconnect clears connected_ before the task has
++    // finished unwinding.
++    if (connected_ || receive_task_handle_ != nullptr) {
+         Disconnect();
+     }
+ 
+@@ -66,21 +68,37 @@ bool EspTcp::Connect(const std::string& host, int port) {
+         tcp->ReceiveTask();
+         xEventGroupSetBits(tcp->event_group_, ESP_TCP_EVENT_RECEIVE_TASK_EXIT);
+         vTaskDelete(NULL);
+-    }, "tcp_receive", 4096, this, 1, &receive_task_handle_);
++    }, "tcp_receive", 4096, this, receive_task_priority_, &receive_task_handle_);
+     return true;
+ }
+ 
++void EspTcp::SetReceiveTaskPriority(uint32_t priority) {
++    receive_task_priority_ = static_cast<UBaseType_t>(priority);
++}
++
+ void EspTcp::Disconnect() {
+-    // 如果已经断开，直接返回
+-    if (!connected_) {
++    if (connected_) {
++        // Active disconnect: close the socket and wait for the receive task.
++        DoDisconnect(true);
+         return;
+     }
+ 
+-    // 主动断开，需要等待接收任务退出
+-    DoDisconnect(true);
++    // A passive disconnect sets connected_ to false from the receive task
++    // before that task signals its exit. Destruction must still wait for the
++    // signal or the task can access a deleted event group.
++    if (receive_task_handle_ != nullptr &&
++        xTaskGetCurrentTaskHandle() != receive_task_handle_) {
++        auto bits = xEventGroupWaitBits(event_group_, ESP_TCP_EVENT_RECEIVE_TASK_EXIT,
++                                        pdFALSE, pdFALSE, pdMS_TO_TICKS(10000));
++        if (!(bits & ESP_TCP_EVENT_RECEIVE_TASK_EXIT)) {
++            ESP_LOGE(TAG, "Failed to wait for receive task exit");
++        }
++        receive_task_handle_ = nullptr;
++    }
+ }
+ 
+ void EspTcp::DoDisconnect(bool wait_for_task) {
++    const bool was_connected = connected_;
+     connected_ = false;
+ 
+     if (tcp_fd_ != -1) {
+@@ -94,11 +112,12 @@ void EspTcp::DoDisconnect(bool wait_for_task) {
+             if (!(bits & ESP_TCP_EVENT_RECEIVE_TASK_EXIT)) {
+                 ESP_LOGE(TAG, "Failed to wait for receive task exit");
+             }
++            receive_task_handle_ = nullptr;
+         }
+     }
+ 
+     // 断开连接时触发断开回调
+-    if (disconnect_callback_) {
++    if (was_connected && disconnect_callback_) {
+         disconnect_callback_();
+     }
+ }
+diff --git a/src/esp/esp_tcp.h b/src/esp/esp_tcp.h
+--- a/src/esp/esp_tcp.h
++++ b/src/esp/esp_tcp.h
+@@ -17,6 +17,7 @@ public:
+     bool Connect(const std::string& host, int port) override;
+     void Disconnect() override;
+     int Send(const std::string& data) override;
++    void SetReceiveTaskPriority(uint32_t priority) override;
+ 
+     int GetLastError() override;
+ 
+@@ -25,6 +26,7 @@ private:
+     EventGroupHandle_t event_group_ = nullptr;
+     TaskHandle_t receive_task_handle_ = nullptr;
+     int last_error_ = 0;
++    UBaseType_t receive_task_priority_ = 1;
+ 
+     void ReceiveTask();
+     // 内部断开处理函数
+diff --git a/src/web_socket.cc b/src/web_socket.cc
+--- a/src/web_socket.cc
++++ b/src/web_socket.cc
+@@ -62,6 +62,10 @@ void WebSocket::SetReceiveBufferSize(size_t size) {
+     receive_buffer_size_ = size;
+ }
+ 
++void WebSocket::SetReceiveTaskPriority(uint32_t priority) {
++    receive_task_priority_ = priority;
++}
++
+ bool WebSocket::IsConnected() const {
+     return connected_;
+ }
+@@ -128,6 +132,7 @@ bool WebSocket::Connect(const char* uri) {
+     } else {
+         tcp_ = network_->CreateTcp(connect_id_);
+     }
++    tcp_->SetReceiveTaskPriority(receive_task_priority_);
+ 
+     connected_ = false;
+     // 使用 tcp 建立连接

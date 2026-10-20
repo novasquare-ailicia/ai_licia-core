@@ -1,6 +1,8 @@
 {
   "repository": "https://github.com/m5stack/StackChan.git",
   "commit": "edfb00d39b4c95918226c70885ee2239a5685e49",
+  "espMl307Repository": "https://github.com/78/esp-ml307.git",
+  "espMl307Commit": "ab4de7c28c8b8f809eba2f56f38090d57fce984d",
   "firmwareVersion": "1.5.1",
   "aiLiciaBundleVersion": "0.1.0-staging.1",
   "espIdfVersion": "5.5.4"

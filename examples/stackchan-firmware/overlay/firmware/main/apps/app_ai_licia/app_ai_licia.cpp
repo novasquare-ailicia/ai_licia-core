@@ -7,6 +7,7 @@
 
 #include <assets/assets.h>
 #include <apps/common/common.h>
+#include <board.h>
 #include <hal/hal.h>
 #include <mooncake_log.h>
 #include <stackchan/stackchan.h>
@@ -18,7 +19,7 @@ using namespace stackchan;
 
 AppAiLicia::AppAiLicia()
 {
-    setAppInfo().name = "AI_LICIA";
+    setAppInfo().name = "ai_licia";
     static auto icon = assets::get_image("icon_ai_licia.png");
     setAppInfo().icon = static_cast<void*>(&icon);
     static uint32_t themeColor = 0x7A5AF8;
@@ -43,6 +44,11 @@ void AppAiLicia::onOpen()
         LvglLockGuard lock;
         loadingPage->setMessage(message);
     });
+    // Avatar audio, mouth cues, and motion events are real-time streams. The
+    // default modem sleep interval can hold TCP packets for close to a second,
+    // so keep Wi-Fi awake while this app is active. Leaving the app performs a
+    // warm reboot and restores the firmware's normal power policy.
+    Board::GetInstance().SetPowerSaveLevel(PowerSaveLevel::PERFORMANCE);
 
     {
         LvglLockGuard lock;

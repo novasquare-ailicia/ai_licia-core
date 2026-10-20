@@ -19,12 +19,10 @@ export const AVATAR_STANDARD_PROFILES = [
   'avatar.mouth.arkit-speech.v1',
   'avatar.expression.vrm.v1',
   'avatar.action.semantic.v1',
-  'avatar.audio.pcm-s16le.v1'
+  'avatar.audio.opus.v1'
 ] as const;
 
-export const AVATAR_AUDIO_PROFILES = [
-  'avatar.audio.pcm-s16le.v1'
-] as const;
+export const AVATAR_AUDIO_PROFILES = ['avatar.audio.opus.v1'] as const;
 
 export const AVATAR_MOUTH_PROFILES = [
   'avatar.mouth.arkit-speech.v1',

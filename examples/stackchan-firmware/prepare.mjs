@@ -6,6 +6,7 @@ import {spawnSync} from "node:child_process";
 const root = dirname(fileURLToPath(import.meta.url));
 const upstream = JSON.parse(readFileSync(join(root, "upstream.json"), "utf8"));
 const target = resolve(process.argv[2] ?? join(root, "build", "StackChan"));
+const espMl307Target = join(target, "firmware", "components", "esp-ml307");
 
 const run = (command, args, cwd = root) => {
   const result = spawnSync(command, args, {cwd, stdio: "inherit"});
@@ -34,6 +35,20 @@ const hasPinnedCommit = spawnSync(
 ).status === 0;
 if (!hasPinnedCommit) run("git", ["fetch", "origin", upstream.commit], target);
 run("git", ["checkout", "--detach", upstream.commit], target);
+
+mkdirSync(dirname(espMl307Target), {recursive: true});
+run("git", ["clone", upstream.espMl307Repository, espMl307Target]);
+const hasPinnedEspMl307Commit = spawnSync(
+  "git",
+  ["cat-file", "-e", `${upstream.espMl307Commit}^{commit}`],
+  {cwd: espMl307Target, stdio: "ignore"},
+).status === 0;
+if (!hasPinnedEspMl307Commit) {
+  run("git", ["fetch", "origin", upstream.espMl307Commit], espMl307Target);
+}
+run("git", ["checkout", "--detach", upstream.espMl307Commit], espMl307Target);
+run("git", ["apply", "--check", join(root, "patches", "esp-ml307-ai-licia.patch")], espMl307Target);
+run("git", ["apply", join(root, "patches", "esp-ml307-ai-licia.patch")], espMl307Target);
 
 cpSync(join(root, "overlay"), target, {recursive: true, force: true});
 run("git", ["apply", "--check", join(root, "patches", "stackchan-ai-licia.patch")], target);
