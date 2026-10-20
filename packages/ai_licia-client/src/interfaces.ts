@@ -324,6 +324,7 @@ export interface EventSubStream {
 }
 
 import type {
+  AvatarBinaryAudioFrame,
   AvatarGetStateMessage,
   AvatarProfileId,
   AvatarProtocolEvent,
@@ -471,6 +472,7 @@ export interface WebSocketCloseEvent {
 
 export interface WebSocketLike {
   readyState: number;
+  binaryType?: 'arraybuffer' | 'blob';
   send(data: string): void;
   close(code?: number, reason?: string): void;
   onopen?: ((event: unknown) => void) | null;
@@ -517,6 +519,8 @@ export interface LocalWebSocketAvatarSubscription {
   subscriptionId: string;
   acceptedProfiles: AvatarProfileId[];
   rejectedProfiles: AvatarSubscribedMessage['payload']['rejectedProfiles'];
+  audioTransport?: AvatarSubscribedMessage['payload']['audioTransport'];
+  audioFormat?: AvatarSubscribedMessage['payload']['audioFormat'];
 }
 
 export interface LocalWebSocketStream {
@@ -527,4 +531,6 @@ export interface LocalWebSocketStream {
   offAny(handler: (message: LocalWebSocketMessage) => void): LocalWebSocketStream;
   onEvent<T extends LocalWebSocketEventName>(name: T, handler: (payload: LocalWebSocketEventMap[T]) => void): LocalWebSocketStream;
   offEvent<T extends LocalWebSocketEventName>(name: T, handler: (payload: LocalWebSocketEventMap[T]) => void): LocalWebSocketStream;
+  onBinaryAudio(handler: (frame: AvatarBinaryAudioFrame) => void): LocalWebSocketStream;
+  offBinaryAudio(handler: (frame: AvatarBinaryAudioFrame) => void): LocalWebSocketStream;
 }

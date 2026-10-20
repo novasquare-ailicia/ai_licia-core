@@ -28,14 +28,17 @@ import {
   WebSocketLike
 } from './interfaces';
 import {
+  AvatarBinaryAudioFrame,
   AvatarSubscribedMessage,
   AvatarSubscriptionErrorMessage,
+  decodeAvatarBinaryAudioFrame,
   validateAvatarProtocolMessage
 } from './avatarProtocol';
 
 type MessageHandler<T extends LocalWebSocketMessageType> = (payload: LocalWebSocketMessageMap[T]) => void;
 type AnyMessageHandler = (message: LocalWebSocketMessage) => void;
 type EventHandler<T extends LocalWebSocketEventName> = (payload: LocalWebSocketEventMap[T]) => void;
+type BinaryAudioHandler = (frame: AvatarBinaryAudioFrame) => void;
 
 type MessageHandlerMap = {
   [K in LocalWebSocketMessageType]?: Set<MessageHandler<K>>;
@@ -144,6 +147,7 @@ export class LocalWebSocketClient implements LocalWebSocketStream {
   private readonly messageHandlers: MessageHandlerMap = {};
   private readonly anyHandlers = new Set<AnyMessageHandler>();
   private readonly eventHandlers: EventHandlerMap = {};
+  private readonly binaryAudioHandlers = new Set<BinaryAudioHandler>();
 
   constructor(options: LocalWebSocketClientOptions) {
     this.clientId = options.clientId;
@@ -382,7 +386,18 @@ export class LocalWebSocketClient implements LocalWebSocketStream {
     return this;
   }
 
+  public onBinaryAudio(handler: BinaryAudioHandler): LocalWebSocketClient {
+    this.binaryAudioHandlers.add(handler);
+    return this;
+  }
+
+  public offBinaryAudio(handler: BinaryAudioHandler): LocalWebSocketClient {
+    this.binaryAudioHandlers.delete(handler);
+    return this;
+  }
+
   private bindSocketEvents(socket: WebSocketLike, onOpen: () => void, onError: () => void): void {
+    if ('binaryType' in socket) socket.binaryType = 'arraybuffer';
     const handleOpen = () => onOpen();
     const handleError = () => {
       this.socket = null;
@@ -454,6 +469,11 @@ export class LocalWebSocketClient implements LocalWebSocketStream {
   }
 
   private handleMessage(raw: unknown): void {
+    const binaryAudioFrame = decodeAvatarBinaryAudioFrame(raw);
+    if (binaryAudioFrame) {
+      this.binaryAudioHandlers.forEach((handler) => handler(binaryAudioFrame));
+      return;
+    }
     const decoded = decodeMessageData(raw);
     if (!decoded) {
       return;

@@ -75,6 +75,10 @@
                             "type": "string"
                           },
                           {
+                            "const": "avatar.audio.pcm-s16le.v1",
+                            "type": "string"
+                          },
+                          {
                             "const": "avatar.audio.opus.v1",
                             "type": "string"
                           }
@@ -111,6 +115,123 @@
                   {
                     "const": "avatar.mouth.amplitude.v1",
                     "type": "string"
+                  }
+                ]
+              }
+            },
+            "audioTransportPreference": {
+              "minItems": 1,
+              "maxItems": 2,
+              "uniqueItems": true,
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "const": "binary-v1",
+                    "type": "string"
+                  },
+                  {
+                    "const": "json-base64",
+                    "type": "string"
+                  }
+                ]
+              }
+            },
+            "audioFormatPreference": {
+              "minItems": 1,
+              "maxItems": 16,
+              "uniqueItems": true,
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "type": "object",
+                    "required": [
+                      "profile",
+                      "sampleRateHz",
+                      "channels"
+                    ],
+                    "properties": {
+                      "profile": {
+                        "const": "avatar.audio.pcm-s16le.v1",
+                        "type": "string"
+                      },
+                      "sampleRateHz": {
+                        "anyOf": [
+                          {
+                            "const": 24000,
+                            "type": "number"
+                          },
+                          {
+                            "const": 44100,
+                            "type": "number"
+                          },
+                          {
+                            "const": 48000,
+                            "type": "number"
+                          }
+                        ]
+                      },
+                      "channels": {
+                        "const": 1,
+                        "type": "number"
+                      }
+                    }
+                  },
+                  {
+                    "additionalProperties": false,
+                    "type": "object",
+                    "required": [
+                      "profile",
+                      "sampleRateHz",
+                      "channels",
+                      "frameDurationMs",
+                      "bitrateBps"
+                    ],
+                    "properties": {
+                      "profile": {
+                        "const": "avatar.audio.opus.v1",
+                        "type": "string"
+                      },
+                      "sampleRateHz": {
+                        "anyOf": [
+                          {
+                            "const": 24000,
+                            "type": "number"
+                          },
+                          {
+                            "const": 48000,
+                            "type": "number"
+                          }
+                        ]
+                      },
+                      "channels": {
+                        "const": 1,
+                        "type": "number"
+                      },
+                      "frameDurationMs": {
+                        "anyOf": [
+                          {
+                            "const": 20,
+                            "type": "number"
+                          },
+                          {
+                            "const": 40,
+                            "type": "number"
+                          },
+                          {
+                            "const": 60,
+                            "type": "number"
+                          }
+                        ]
+                      },
+                      "bitrateBps": {
+                        "minimum": 6000,
+                        "maximum": 128000,
+                        "type": "integer"
+                      }
+                    }
                   }
                 ]
               }
@@ -194,6 +315,10 @@
                         "type": "string"
                       },
                       {
+                        "const": "avatar.audio.pcm-s16le.v1",
+                        "type": "string"
+                      },
+                      {
                         "const": "avatar.audio.opus.v1",
                         "type": "string"
                       }
@@ -246,6 +371,10 @@
                             "type": "string"
                           },
                           {
+                            "const": "avatar.audio.pcm-s16le.v1",
+                            "type": "string"
+                          },
+                          {
                             "const": "avatar.audio.opus.v1",
                             "type": "string"
                           }
@@ -276,6 +405,111 @@
                   }
                 }
               }
+            },
+            "audioTransport": {
+              "anyOf": [
+                {
+                  "const": "binary-v1",
+                  "type": "string"
+                },
+                {
+                  "const": "json-base64",
+                  "type": "string"
+                }
+              ]
+            },
+            "audioFormat": {
+              "anyOf": [
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "profile",
+                    "sampleRateHz",
+                    "channels"
+                  ],
+                  "properties": {
+                    "profile": {
+                      "const": "avatar.audio.pcm-s16le.v1",
+                      "type": "string"
+                    },
+                    "sampleRateHz": {
+                      "anyOf": [
+                        {
+                          "const": 24000,
+                          "type": "number"
+                        },
+                        {
+                          "const": 44100,
+                          "type": "number"
+                        },
+                        {
+                          "const": 48000,
+                          "type": "number"
+                        }
+                      ]
+                    },
+                    "channels": {
+                      "const": 1,
+                      "type": "number"
+                    }
+                  }
+                },
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "profile",
+                    "sampleRateHz",
+                    "channels",
+                    "frameDurationMs",
+                    "bitrateBps"
+                  ],
+                  "properties": {
+                    "profile": {
+                      "const": "avatar.audio.opus.v1",
+                      "type": "string"
+                    },
+                    "sampleRateHz": {
+                      "anyOf": [
+                        {
+                          "const": 24000,
+                          "type": "number"
+                        },
+                        {
+                          "const": 48000,
+                          "type": "number"
+                        }
+                      ]
+                    },
+                    "channels": {
+                      "const": 1,
+                      "type": "number"
+                    },
+                    "frameDurationMs": {
+                      "anyOf": [
+                        {
+                          "const": 20,
+                          "type": "number"
+                        },
+                        {
+                          "const": 40,
+                          "type": "number"
+                        },
+                        {
+                          "const": 60,
+                          "type": "number"
+                        }
+                      ]
+                    },
+                    "bitrateBps": {
+                      "minimum": 6000,
+                      "maximum": 128000,
+                      "type": "integer"
+                    }
+                  }
+                }
+              ]
             }
           }
         }
@@ -362,6 +596,10 @@
                     },
                     {
                       "const": "avatar.action.semantic.v1",
+                      "type": "string"
+                    },
+                    {
+                      "const": "avatar.audio.pcm-s16le.v1",
                       "type": "string"
                     },
                     {
@@ -677,6 +915,10 @@
                           },
                           {
                             "const": "avatar.action.semantic.v1",
+                            "type": "string"
+                          },
+                          {
+                            "const": "avatar.audio.pcm-s16le.v1",
                             "type": "string"
                           },
                           {
@@ -2275,6 +2517,247 @@
       }
     },
     {
+      "anyOf": [
+        {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "type",
+            "payload"
+          ],
+          "properties": {
+            "type": {
+              "const": "event",
+              "type": "string"
+            },
+            "payload": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "name",
+                "data"
+              ],
+              "properties": {
+                "name": {
+                  "const": "avatar.audio.prepared",
+                  "type": "string"
+                },
+                "data": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "schemaVersion",
+                    "avatarSessionId",
+                    "subscriptionId",
+                    "deliverySequence",
+                    "emittedAtMs",
+                    "utteranceId",
+                    "audioItemId",
+                    "encoding",
+                    "sampleRateHz",
+                    "channels"
+                  ],
+                  "properties": {
+                    "schemaVersion": {
+                      "const": 1,
+                      "type": "number"
+                    },
+                    "avatarSessionId": {
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "type": "string"
+                    },
+                    "subscriptionId": {
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "type": "string"
+                    },
+                    "deliverySequence": {
+                      "minimum": 1,
+                      "maximum": 9007199254740991,
+                      "type": "integer"
+                    },
+                    "emittedAtMs": {
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "type": "integer"
+                    },
+                    "utteranceId": {
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "type": "string"
+                    },
+                    "audioItemId": {
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "type": "string"
+                    },
+                    "encoding": {
+                      "const": "PCM_S16_LE",
+                      "type": "string"
+                    },
+                    "sampleRateHz": {
+                      "anyOf": [
+                        {
+                          "const": 24000,
+                          "type": "number"
+                        },
+                        {
+                          "const": 44100,
+                          "type": "number"
+                        },
+                        {
+                          "const": 48000,
+                          "type": "number"
+                        }
+                      ]
+                    },
+                    "channels": {
+                      "const": 1,
+                      "type": "number"
+                    },
+                    "durationMs": {
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "type": "object",
+          "required": [
+            "type",
+            "payload"
+          ],
+          "properties": {
+            "type": {
+              "const": "event",
+              "type": "string"
+            },
+            "payload": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "name",
+                "data"
+              ],
+              "properties": {
+                "name": {
+                  "const": "avatar.audio.prepared",
+                  "type": "string"
+                },
+                "data": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "schemaVersion",
+                    "avatarSessionId",
+                    "subscriptionId",
+                    "deliverySequence",
+                    "emittedAtMs",
+                    "utteranceId",
+                    "audioItemId",
+                    "encoding",
+                    "sampleRateHz",
+                    "channels",
+                    "frameDurationMs",
+                    "bitrateBps"
+                  ],
+                  "properties": {
+                    "schemaVersion": {
+                      "const": 1,
+                      "type": "number"
+                    },
+                    "avatarSessionId": {
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "type": "string"
+                    },
+                    "subscriptionId": {
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "type": "string"
+                    },
+                    "deliverySequence": {
+                      "minimum": 1,
+                      "maximum": 9007199254740991,
+                      "type": "integer"
+                    },
+                    "emittedAtMs": {
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "type": "integer"
+                    },
+                    "utteranceId": {
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "type": "string"
+                    },
+                    "audioItemId": {
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "type": "string"
+                    },
+                    "encoding": {
+                      "const": "OPUS",
+                      "type": "string"
+                    },
+                    "sampleRateHz": {
+                      "anyOf": [
+                        {
+                          "const": 24000,
+                          "type": "number"
+                        },
+                        {
+                          "const": 48000,
+                          "type": "number"
+                        }
+                      ]
+                    },
+                    "channels": {
+                      "const": 1,
+                      "type": "number"
+                    },
+                    "frameDurationMs": {
+                      "anyOf": [
+                        {
+                          "const": 20,
+                          "type": "number"
+                        },
+                        {
+                          "const": 40,
+                          "type": "number"
+                        },
+                        {
+                          "const": 60,
+                          "type": "number"
+                        }
+                      ]
+                    },
+                    "bitrateBps": {
+                      "minimum": 6000,
+                      "maximum": 128000,
+                      "type": "integer"
+                    },
+                    "durationMs": {
+                      "minimum": 0,
+                      "maximum": 9007199254740991,
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
       "additionalProperties": false,
       "type": "object",
       "required": [
@@ -2295,7 +2778,7 @@
           ],
           "properties": {
             "name": {
-              "const": "avatar.audio.opus.prepared",
+              "const": "avatar.audio.chunk",
               "type": "string"
             },
             "data": {
@@ -2309,8 +2792,9 @@
                 "emittedAtMs",
                 "utteranceId",
                 "audioItemId",
-                "sampleRateHz",
-                "channels"
+                "chunkIndex",
+                "sampleOffset",
+                "dataBase64"
               ],
               "properties": {
                 "schemaVersion": {
@@ -2347,46 +2831,21 @@
                   "maxLength": 128,
                   "type": "string"
                 },
-                "sampleRateHz": {
-                  "anyOf": [
-                    {
-                      "const": 8000,
-                      "type": "number"
-                    },
-                    {
-                      "const": 12000,
-                      "type": "number"
-                    },
-                    {
-                      "const": 16000,
-                      "type": "number"
-                    },
-                    {
-                      "const": 24000,
-                      "type": "number"
-                    },
-                    {
-                      "const": 48000,
-                      "type": "number"
-                    }
-                  ]
+                "chunkIndex": {
+                  "minimum": 0,
+                  "maximum": 2147483647,
+                  "type": "integer"
                 },
-                "channels": {
-                  "anyOf": [
-                    {
-                      "const": 1,
-                      "type": "number"
-                    },
-                    {
-                      "const": 2,
-                      "type": "number"
-                    }
-                  ]
-                },
-                "durationMs": {
+                "sampleOffset": {
                   "minimum": 0,
                   "maximum": 9007199254740991,
                   "type": "integer"
+                },
+                "dataBase64": {
+                  "minLength": 4,
+                  "maxLength": 131072,
+                  "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
+                  "type": "string"
                 }
               }
             }
@@ -2415,7 +2874,7 @@
           ],
           "properties": {
             "name": {
-              "const": "avatar.audio.opus.packet",
+              "const": "avatar.audio.completed",
               "type": "string"
             },
             "data": {
@@ -2429,11 +2888,8 @@
                 "emittedAtMs",
                 "utteranceId",
                 "audioItemId",
-                "packetIndex",
-                "offsetMs",
-                "durationMs",
-                "dataBase64",
-                "finalPacket"
+                "chunkCount",
+                "totalSamples"
               ],
               "properties": {
                 "schemaVersion": {
@@ -2470,29 +2926,15 @@
                   "maxLength": 128,
                   "type": "string"
                 },
-                "packetIndex": {
+                "chunkCount": {
                   "minimum": 0,
                   "maximum": 2147483647,
                   "type": "integer"
                 },
-                "offsetMs": {
+                "totalSamples": {
                   "minimum": 0,
                   "maximum": 9007199254740991,
                   "type": "integer"
-                },
-                "durationMs": {
-                  "minimum": 1,
-                  "maximum": 120,
-                  "type": "integer"
-                },
-                "dataBase64": {
-                  "minLength": 4,
-                  "maxLength": 8192,
-                  "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
-                  "type": "string"
-                },
-                "finalPacket": {
-                  "type": "boolean"
                 }
               }
             }
@@ -2595,6 +3037,10 @@
                           },
                           {
                             "const": "avatar.action.semantic.v1",
+                            "type": "string"
+                          },
+                          {
+                            "const": "avatar.audio.pcm-s16le.v1",
                             "type": "string"
                           },
                           {
@@ -2829,6 +3275,10 @@
                                   },
                                   {
                                     "const": "avatar.action.semantic.v1",
+                                    "type": "string"
+                                  },
+                                  {
+                                    "const": "avatar.audio.pcm-s16le.v1",
                                     "type": "string"
                                   },
                                   {

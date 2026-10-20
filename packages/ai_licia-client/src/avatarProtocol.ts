@@ -19,10 +19,23 @@ export const AVATAR_STANDARD_PROFILES = [
   'avatar.mouth.arkit-speech.v1',
   'avatar.expression.vrm.v1',
   'avatar.action.semantic.v1',
+  'avatar.audio.pcm-s16le.v1',
   'avatar.audio.opus.v1'
 ] as const;
 
-export const AVATAR_AUDIO_PROFILES = ['avatar.audio.opus.v1'] as const;
+export const AVATAR_AUDIO_PROFILES = [
+  'avatar.audio.pcm-s16le.v1',
+  'avatar.audio.opus.v1'
+] as const;
+
+export const AVATAR_AUDIO_TRANSPORTS = [
+  'binary-v1',
+  'json-base64'
+] as const;
+
+export const AVATAR_PCM_SAMPLE_RATES = [24000, 44100, 48000] as const;
+export const AVATAR_OPUS_SAMPLE_RATES = [24000, 48000] as const;
+export const AVATAR_OPUS_FRAME_DURATIONS_MS = [20, 40, 60] as const;
 
 export const AVATAR_MOUTH_PROFILES = [
   'avatar.mouth.arkit-speech.v1',
@@ -123,6 +136,8 @@ const ExtensionIdentifierPattern = '^[a-z0-9]+(?:[.-][a-z0-9]+)+/[a-z0-9][a-z0-9
 
 export const AvatarStandardProfileIdSchema = enumSchema(AVATAR_STANDARD_PROFILES);
 export const AvatarMouthProfileIdSchema = enumSchema(AVATAR_MOUTH_PROFILES);
+export const AvatarAudioProfileIdSchema = enumSchema(AVATAR_AUDIO_PROFILES);
+export const AvatarAudioTransportSchema = enumSchema(AVATAR_AUDIO_TRANSPORTS);
 export const AvatarProfileIdSchema = Type.Union([
   AvatarStandardProfileIdSchema,
   Type.String({ pattern: ExtensionProfilePattern, maxLength: 128 })
@@ -149,6 +164,25 @@ const RejectedProfileSchema = Type.Object({
   id: AvatarProfileIdSchema,
   reason: enumSchema(['unsupported', 'temporarily_unavailable', 'not_authorized'] as const)
 }, { additionalProperties: false });
+
+export const AvatarPcmAudioFormatSchema = Type.Object({
+  profile: Type.Literal('avatar.audio.pcm-s16le.v1'),
+  sampleRateHz: numericEnumSchema(AVATAR_PCM_SAMPLE_RATES),
+  channels: Type.Literal(1)
+}, { additionalProperties: false });
+
+export const AvatarOpusAudioFormatSchema = Type.Object({
+  profile: Type.Literal('avatar.audio.opus.v1'),
+  sampleRateHz: numericEnumSchema(AVATAR_OPUS_SAMPLE_RATES),
+  channels: Type.Literal(1),
+  frameDurationMs: numericEnumSchema(AVATAR_OPUS_FRAME_DURATIONS_MS),
+  bitrateBps: Type.Integer({ minimum: 6000, maximum: 128000 })
+}, { additionalProperties: false });
+
+export const AvatarAudioFormatSchema = Type.Union([
+  AvatarPcmAudioFormatSchema,
+  AvatarOpusAudioFormatSchema
+]);
 
 const LocalIntegrationScopeSchema = enumSchema(LOCAL_INTEGRATION_SCOPES);
 
@@ -209,7 +243,9 @@ export const AvatarSubscribeMessageSchema = Type.Object({
     requestId: RequestIdSchema,
     protocolVersion: Type.Literal(1),
     profiles: Type.Array(ProfileRequestSchema, { minItems: 1, maxItems: 32 }),
-    speechDriverPreference: Type.Optional(Type.Array(AvatarMouthProfileIdSchema, { minItems: 1, maxItems: 3, uniqueItems: true }))
+    speechDriverPreference: Type.Optional(Type.Array(AvatarMouthProfileIdSchema, { minItems: 1, maxItems: 3, uniqueItems: true })),
+    audioTransportPreference: Type.Optional(Type.Array(AvatarAudioTransportSchema, { minItems: 1, maxItems: 2, uniqueItems: true })),
+    audioFormatPreference: Type.Optional(Type.Array(AvatarAudioFormatSchema, { minItems: 1, maxItems: 16, uniqueItems: true }))
   }, { additionalProperties: false })
 }, { additionalProperties: false });
 
@@ -221,7 +257,9 @@ export const AvatarSubscribedMessageSchema = Type.Object({
     avatarSessionId: IdentifierSchema,
     subscriptionId: IdentifierSchema,
     acceptedProfiles: Type.Array(AvatarProfileIdSchema, { uniqueItems: true }),
-    rejectedProfiles: Type.Array(RejectedProfileSchema)
+    rejectedProfiles: Type.Array(RejectedProfileSchema),
+    audioTransport: Type.Optional(AvatarAudioTransportSchema),
+    audioFormat: Type.Optional(AvatarAudioFormatSchema)
   }, { additionalProperties: false })
 }, { additionalProperties: false });
 
@@ -439,13 +477,27 @@ const PcmAudioPreparedDataSchema = Type.Composite([
     utteranceId: IdentifierSchema,
     audioItemId: IdentifierSchema,
     encoding: Type.Literal('PCM_S16_LE'),
-    sampleRateHz: numericEnumSchema([44100, 48000] as const),
+    sampleRateHz: numericEnumSchema(AVATAR_PCM_SAMPLE_RATES),
     channels: Type.Literal(1),
     durationMs: Type.Optional(SafeIntegerSchema)
   })
 ], { additionalProperties: false });
 
-const PcmAudioChunkDataSchema = Type.Composite([
+const OpusAudioPreparedDataSchema = Type.Composite([
+  EventMetadataSchema,
+  Type.Object({
+    utteranceId: IdentifierSchema,
+    audioItemId: IdentifierSchema,
+    encoding: Type.Literal('OPUS'),
+    sampleRateHz: numericEnumSchema(AVATAR_OPUS_SAMPLE_RATES),
+    channels: Type.Literal(1),
+    frameDurationMs: numericEnumSchema(AVATAR_OPUS_FRAME_DURATIONS_MS),
+    bitrateBps: Type.Integer({ minimum: 6000, maximum: 128000 }),
+    durationMs: Type.Optional(SafeIntegerSchema)
+  })
+], { additionalProperties: false });
+
+const AudioChunkDataSchema = Type.Composite([
   EventMetadataSchema,
   Type.Object({
     utteranceId: IdentifierSchema,
@@ -456,7 +508,7 @@ const PcmAudioChunkDataSchema = Type.Composite([
   })
 ], { additionalProperties: false });
 
-const PcmAudioCompletedDataSchema = Type.Composite([
+const AudioCompletedDataSchema = Type.Composite([
   EventMetadataSchema,
   Type.Object({
     utteranceId: IdentifierSchema,
@@ -507,8 +559,15 @@ export const AvatarArkitSpeechFramesEventSchema = eventEnvelope('avatar.mouth.ar
 export const AvatarExpressionStateEventSchema = eventEnvelope('avatar.expression.state', ExpressionStateDataSchema);
 export const AvatarActionTriggeredEventSchema = eventEnvelope('avatar.action.triggered', ActionTriggeredDataSchema);
 export const AvatarPcmAudioPreparedEventSchema = eventEnvelope('avatar.audio.prepared', PcmAudioPreparedDataSchema);
-export const AvatarPcmAudioChunkEventSchema = eventEnvelope('avatar.audio.chunk', PcmAudioChunkDataSchema);
-export const AvatarPcmAudioCompletedEventSchema = eventEnvelope('avatar.audio.completed', PcmAudioCompletedDataSchema);
+export const AvatarOpusAudioPreparedEventSchema = eventEnvelope('avatar.audio.prepared', OpusAudioPreparedDataSchema);
+export const AvatarAudioPreparedEventSchema = Type.Union([
+  AvatarPcmAudioPreparedEventSchema,
+  AvatarOpusAudioPreparedEventSchema
+]);
+export const AvatarAudioChunkEventSchema = eventEnvelope('avatar.audio.chunk', AudioChunkDataSchema);
+export const AvatarAudioCompletedEventSchema = eventEnvelope('avatar.audio.completed', AudioCompletedDataSchema);
+export const AvatarPcmAudioChunkEventSchema = AvatarAudioChunkEventSchema;
+export const AvatarPcmAudioCompletedEventSchema = AvatarAudioCompletedEventSchema;
 export const AvatarStateSnapshotEventSchema = eventEnvelope('avatar.state.snapshot', StateSnapshotDataSchema);
 
 export const AvatarProtocolMessageSchema = Type.Union([
@@ -526,9 +585,9 @@ export const AvatarProtocolMessageSchema = Type.Union([
   AvatarArkitSpeechFramesEventSchema,
   AvatarExpressionStateEventSchema,
   AvatarActionTriggeredEventSchema,
-  AvatarPcmAudioPreparedEventSchema,
-  AvatarPcmAudioChunkEventSchema,
-  AvatarPcmAudioCompletedEventSchema,
+  AvatarAudioPreparedEventSchema,
+  AvatarAudioChunkEventSchema,
+  AvatarAudioCompletedEventSchema,
   AvatarStateSnapshotEventSchema
 ], {
   $id: 'https://schemas.getailicia.com/avatar/protocol/v1/message.schema.json',
@@ -538,6 +597,11 @@ export const AvatarProtocolMessageSchema = Type.Union([
 
 export type AvatarStandardProfileId = Static<typeof AvatarStandardProfileIdSchema>;
 export type AvatarMouthProfileId = Static<typeof AvatarMouthProfileIdSchema>;
+export type AvatarAudioProfileId = Static<typeof AvatarAudioProfileIdSchema>;
+export type AvatarAudioTransport = Static<typeof AvatarAudioTransportSchema>;
+export type AvatarPcmAudioFormat = Static<typeof AvatarPcmAudioFormatSchema>;
+export type AvatarOpusAudioFormat = Static<typeof AvatarOpusAudioFormatSchema>;
+export type AvatarAudioFormat = Static<typeof AvatarAudioFormatSchema>;
 export type AvatarProfileId = Static<typeof AvatarProfileIdSchema>;
 export type AvatarToneId = Static<typeof AvatarToneIdSchema>;
 export type AvatarSubscribeMessage = Static<typeof AvatarSubscribeMessageSchema>;
@@ -555,12 +619,81 @@ export type AvatarArkitSpeechFramesEvent = Static<typeof AvatarArkitSpeechFrames
 export type AvatarExpressionStateEvent = Static<typeof AvatarExpressionStateEventSchema>;
 export type AvatarActionTriggeredEvent = Static<typeof AvatarActionTriggeredEventSchema>;
 export type AvatarPcmAudioPreparedEvent = Static<typeof AvatarPcmAudioPreparedEventSchema>;
+export type AvatarOpusAudioPreparedEvent = Static<typeof AvatarOpusAudioPreparedEventSchema>;
+export type AvatarAudioPreparedEvent = Static<typeof AvatarAudioPreparedEventSchema>;
+export type AvatarAudioChunkEvent = Static<typeof AvatarAudioChunkEventSchema>;
+export type AvatarAudioCompletedEvent = Static<typeof AvatarAudioCompletedEventSchema>;
 export type AvatarPcmAudioChunkEvent = Static<typeof AvatarPcmAudioChunkEventSchema>;
 export type AvatarPcmAudioCompletedEvent = Static<typeof AvatarPcmAudioCompletedEventSchema>;
 export type AvatarStateSnapshotEvent = Static<typeof AvatarStateSnapshotEventSchema>;
 export type AvatarProtocolMessage = Static<typeof AvatarProtocolMessageSchema>;
 export type AvatarProtocolEvent = Extract<AvatarProtocolMessage, { type: 'event' }>;
 export type LocalIntegrationAvatarAuthMessage = Static<typeof LocalIntegrationAvatarAuthMessageSchema>;
+
+export const AVATAR_BINARY_AUDIO_MAGIC = 'AVP1' as const;
+export const AVATAR_BINARY_AUDIO_FRAME_VERSION = 1 as const;
+export const AVATAR_BINARY_AUDIO_CHUNK_TYPE = 1 as const;
+export const AVATAR_BINARY_AUDIO_HEADER_BYTES = 30 as const;
+
+export interface AvatarBinaryAudioFrame {
+  deliverySequence: number;
+  chunkIndex: number;
+  sampleOffset: number;
+  audioItemId: string;
+  data: Uint8Array;
+}
+
+const binaryBytes = (input: unknown): Uint8Array | undefined => {
+  if (input instanceof ArrayBuffer) return new Uint8Array(input);
+  if (ArrayBuffer.isView(input)) {
+    return new Uint8Array(input.buffer, input.byteOffset, input.byteLength);
+  }
+  return undefined;
+};
+
+const readSafeUInt64BE = (view: DataView, offset: number): number | undefined => {
+  const value = view.getUint32(offset) * 0x100000000 + view.getUint32(offset + 4);
+  return Number.isSafeInteger(value) ? value : undefined;
+};
+
+export const decodeAvatarBinaryAudioFrame = (input: unknown): AvatarBinaryAudioFrame | undefined => {
+  const bytes = binaryBytes(input);
+  if (!bytes || bytes.byteLength <= AVATAR_BINARY_AUDIO_HEADER_BYTES) return undefined;
+  if (
+    bytes[0] !== 0x41 || bytes[1] !== 0x56 || bytes[2] !== 0x50 || bytes[3] !== 0x31
+  ) return undefined;
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  if (
+    view.getUint8(4) !== AVATAR_BINARY_AUDIO_CHUNK_TYPE ||
+    view.getUint8(5) !== AVATAR_BINARY_AUDIO_FRAME_VERSION ||
+    view.getUint16(6) !== 0
+  ) return undefined;
+  const deliverySequence = readSafeUInt64BE(view, 8);
+  const chunkIndex = view.getUint32(16);
+  const sampleOffset = readSafeUInt64BE(view, 20);
+  const audioItemIdLength = view.getUint16(28);
+  const payloadOffset = AVATAR_BINARY_AUDIO_HEADER_BYTES + audioItemIdLength;
+  if (
+    deliverySequence === undefined || deliverySequence < 1 ||
+    sampleOffset === undefined || audioItemIdLength < 1 || audioItemIdLength > 128 ||
+    payloadOffset >= bytes.byteLength
+  ) return undefined;
+  let audioItemId: string;
+  try {
+    audioItemId = new TextDecoder('utf-8', { fatal: true })
+      .decode(bytes.subarray(AVATAR_BINARY_AUDIO_HEADER_BYTES, payloadOffset));
+  } catch {
+    return undefined;
+  }
+  if (!audioItemId.trim()) return undefined;
+  return {
+    deliverySequence,
+    chunkIndex,
+    sampleOffset,
+    audioItemId,
+    data: bytes.slice(payloadOffset)
+  };
+};
 
 export interface AvatarProtocolValidationIssue {
   path: string;
@@ -594,6 +727,55 @@ const semanticIssuesFor = (message: AvatarProtocolMessage): AvatarProtocolValida
           'Speech driver preference must list each requested mouth profile exactly once.'
         ));
       }
+    }
+    const requestedAudioProfiles = ids.filter((id): id is AvatarAudioProfileId =>
+      (AVATAR_AUDIO_PROFILES as readonly string[]).includes(id)
+    );
+    if (message.payload.audioTransportPreference && requestedAudioProfiles.length === 0) {
+      issues.push(semanticIssue(
+        '/payload/audioTransportPreference',
+        'Audio transport preference requires a requested audio profile.'
+      ));
+    }
+    if (message.payload.audioFormatPreference) {
+      const keys = message.payload.audioFormatPreference.map((format) =>
+        format.profile === 'avatar.audio.opus.v1'
+          ? `${format.profile}:${format.sampleRateHz}:${format.channels}:${format.frameDurationMs}:${format.bitrateBps}`
+          : `${format.profile}:${format.sampleRateHz}:${format.channels}`
+      );
+      if (new Set(keys).size !== keys.length) {
+        issues.push(semanticIssue(
+          '/payload/audioFormatPreference',
+          'Audio format preference entries must be unique.'
+        ));
+      }
+      if (message.payload.audioFormatPreference.some((format) => !ids.includes(format.profile))) {
+        issues.push(semanticIssue(
+          '/payload/audioFormatPreference',
+          'Every audio format preference must use a requested audio profile.'
+        ));
+      }
+    }
+  }
+
+  if (message.type === 'avatar.subscribed') {
+    const acceptedAudioProfiles = message.payload.acceptedProfiles.filter((id): id is AvatarAudioProfileId =>
+      (AVATAR_AUDIO_PROFILES as readonly string[]).includes(id)
+    );
+    if (message.payload.audioTransport && acceptedAudioProfiles.length === 0) {
+      issues.push(semanticIssue(
+        '/payload/audioTransport',
+        'Negotiated audio transport requires an accepted audio profile.'
+      ));
+    }
+    if (
+      message.payload.audioFormat &&
+      !message.payload.acceptedProfiles.includes(message.payload.audioFormat.profile)
+    ) {
+      issues.push(semanticIssue(
+        '/payload/audioFormat',
+        'Negotiated audio format must use an accepted audio profile.'
+      ));
     }
   }
 
@@ -669,7 +851,11 @@ export const validateAvatarProtocolSequence = (
 ): AvatarProtocolValidationIssue[] => {
   const issues: AvatarProtocolValidationIssue[] = [];
   const lastSequenceBySubscription = new Map<string, number>();
-  const preparedAudioStreams = new Set<string>();
+  const preparedAudioStreams = new Map<string, {
+    encoding: 'PCM_S16_LE' | 'OPUS';
+    sampleRateHz: number;
+    frameDurationMs?: number;
+  }>();
   const lastAudioChunkByStream = new Map<string, { index: number; sampleOffset: number; sampleCount: number }>();
   inputs.forEach((input, index) => {
     const result = validateAvatarProtocolMessage(input);
@@ -695,16 +881,23 @@ export const validateAvatarProtocolSequence = (
       ? `${metadata.subscriptionId}\u0000${metadata.utteranceId}\u0000${metadata.audioItemId}`
       : undefined;
     if (result.value.payload.name === 'avatar.audio.prepared' && audioStreamKey) {
-      preparedAudioStreams.add(audioStreamKey);
+      preparedAudioStreams.set(audioStreamKey, {
+        encoding: result.value.payload.data.encoding,
+        sampleRateHz: result.value.payload.data.sampleRateHz,
+        ...(result.value.payload.data.encoding === 'OPUS'
+          ? { frameDurationMs: result.value.payload.data.frameDurationMs }
+          : {})
+      });
       lastAudioChunkByStream.delete(audioStreamKey);
     }
     if (result.value.payload.name === 'avatar.audio.chunk' && audioStreamKey) {
       const chunk = result.value.payload.data;
       const previous = lastAudioChunkByStream.get(audioStreamKey);
-      if (!preparedAudioStreams.has(audioStreamKey)) {
+      const prepared = preparedAudioStreams.get(audioStreamKey);
+      if (!prepared) {
         issues.push(semanticIssue(
           `/${index}/payload/data/audioItemId`,
-          'A PCM stream must be prepared before chunks are delivered.'
+          'An audio stream must be prepared before chunks are delivered.'
         ));
       }
       const expectedIndex = previous ? previous.index + 1 : 0;
@@ -716,8 +909,10 @@ export const validateAvatarProtocolSequence = (
       }
       const paddingBytes = chunk.dataBase64.endsWith('==') ? 2 : chunk.dataBase64.endsWith('=') ? 1 : 0;
       const decodedBytes = (chunk.dataBase64.length * 3) / 4 - paddingBytes;
-      const sampleCount = decodedBytes / 2;
-      if (!Number.isInteger(sampleCount)) {
+      const sampleCount = prepared?.encoding === 'OPUS'
+        ? prepared.sampleRateHz * (prepared.frameDurationMs ?? 0) / 1000
+        : decodedBytes / 2;
+      if (prepared?.encoding === 'PCM_S16_LE' && !Number.isInteger(sampleCount)) {
         issues.push(semanticIssue(
           `/${index}/payload/data/dataBase64`,
           'PCM_S16_LE chunks must contain a whole number of 16-bit samples.'
@@ -744,7 +939,7 @@ export const validateAvatarProtocolSequence = (
       if (!preparedAudioStreams.has(audioStreamKey)) {
         issues.push(semanticIssue(
           `/${index}/payload/data/audioItemId`,
-          'A PCM stream must be prepared before it is completed.'
+          'An audio stream must be prepared before it is completed.'
         ));
       }
       const expectedChunkCount = previous ? previous.index + 1 : 0;

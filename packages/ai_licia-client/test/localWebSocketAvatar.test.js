@@ -33,6 +33,10 @@ class FakeSocket {
     this.emit('message', { data: JSON.stringify(message) });
   }
 
+  receiveBinary(data) {
+    this.emit('message', { data });
+  }
+
   emit(type, event) {
     for (const listener of this.listeners.get(type) || []) listener(event);
   }
@@ -158,4 +162,32 @@ test('subscribes to avatar profiles and dispatches validated snapshots', async (
     }
   });
   assert.equal(snapshot.deliverySequence, 1);
+});
+
+test('dispatches negotiated binary-v1 audio frames to typed handlers', async () => {
+  const { client, socket } = await connectClient();
+  let received;
+  client.onBinaryAudio((frame) => {
+    received = frame;
+  });
+
+  const audioItemId = Buffer.from('audio-1', 'utf8');
+  const payload = Buffer.from([0xf8, 0xff, 0xfe]);
+  const frame = Buffer.alloc(30 + audioItemId.length + payload.length);
+  frame.write('AVP1', 0, 'ascii');
+  frame.writeUInt8(1, 4);
+  frame.writeUInt8(1, 5);
+  frame.writeUInt16BE(0, 6);
+  frame.writeBigUInt64BE(5n, 8);
+  frame.writeUInt32BE(2, 16);
+  frame.writeBigUInt64BE(1920n, 20);
+  frame.writeUInt16BE(audioItemId.length, 28);
+  audioItemId.copy(frame, 30);
+  payload.copy(frame, 30 + audioItemId.length);
+
+  socket.receiveBinary(frame);
+  assert.ok(received);
+  assert.equal(received.deliverySequence, 5);
+  assert.equal(received.audioItemId, 'audio-1');
+  assert.deepEqual([...received.data], [...payload]);
 });

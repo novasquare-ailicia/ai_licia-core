@@ -339,8 +339,8 @@ client.onEvent('avatar.mouth.amplitude', (sample) => {
   console.log(sample.utteranceId, sample.offsetMs, sample.value);
 });
 
-client.onEvent('avatar.audio.chunk', (chunk) => {
-  playPcmS16LeChunk(chunk.dataBase64);
+client.onBinaryAudio((frame) => {
+  playNegotiatedAudioFrame(frame.audioItemId, frame.data);
 });
 
 await client.subscribeAvatar({
@@ -349,13 +349,31 @@ await client.subscribeAvatar({
   profiles: [
     { id: 'avatar.speech.lifecycle.v1', required: true },
     { id: 'avatar.mouth.amplitude.v1', required: true },
+    { id: 'avatar.audio.opus.v1', required: false },
     { id: 'avatar.audio.pcm-s16le.v1', required: false }
   ],
-  speechDriverPreference: ['avatar.mouth.amplitude.v1']
+  speechDriverPreference: ['avatar.mouth.amplitude.v1'],
+  audioTransportPreference: ['binary-v1', 'json-base64'],
+  audioFormatPreference: [
+    {
+      profile: 'avatar.audio.opus.v1',
+      sampleRateHz: 48000,
+      channels: 1,
+      frameDurationMs: 20,
+      bitrateBps: 24000
+    },
+    {
+      profile: 'avatar.audio.pcm-s16le.v1',
+      sampleRateHz: 24000,
+      channels: 1
+    }
+  ]
 });
 ```
 
-`avatar.audio.pcm-s16le.v1` is optional. It carries ordered base64-encoded, mono signed 16-bit little-endian PCM chunks on the same authorized WebSocket and subscription as the avatar animation events. Clients that do not request the profile receive no audio chunks.
+Audio is optional and uses the same authorized WebSocket and subscription as the avatar events. Desktop currently offers mono PCM S16LE at 24, 44.1, or 48 kHz and mono Opus at 24 or 48 kHz with 20, 40, or 60 ms frames. Format preference and transport preference are separate: `binary-v1` avoids Base64 overhead, while `json-base64` delivers `avatar.audio.chunk` events. Read the selected `audioTransport` and `audioFormat` from `avatar.subscribed` and the final stream metadata from `avatar.audio.prepared`.
+
+The SDK dispatches `binary-v1` chunks through `onBinaryAudio`. JSON audio uses the normal `avatar.audio.chunk` event handler. Clients that do not request an audio profile receive no audio data.
 
 The generated JSON Schema is shipped at `schema/avatar-protocol.v1.schema.json`. The package also exports `validateAvatarProtocolMessage` and `validateAvatarProtocolSequence` for adapters that need runtime validation.
 
@@ -365,7 +383,7 @@ For integration development without Desktop, run the local simulator from the re
 npm run simulator:avatar
 ```
 
-It listens on `ws://127.0.0.1:51744`, grants only the avatar scope, and emits a deterministic lifecycle and amplitude stream.
+It listens on `ws://127.0.0.1:51744`, grants only the avatar scope, and emits a deterministic lifecycle, amplitude, and optional PCM stream. The simulator currently selects `json-base64`; use Desktop to test negotiated Opus and binary delivery.
 
 ## Official Integrations & Partnerships
 

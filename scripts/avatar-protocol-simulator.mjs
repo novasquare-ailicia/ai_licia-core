@@ -125,6 +125,43 @@ server.on('connection', (socket) => {
       const rejectedProfiles = validation.value.payload.profiles
         .filter((profile) => !supportedProfiles.has(profile.id))
         .map((profile) => ({ id: profile.id, reason: 'unsupported' }));
+      const hasAudio = acceptedProfiles.includes('avatar.audio.pcm-s16le.v1');
+      const audioTransport = hasAudio
+        ? (validation.value.payload.audioTransportPreference ?? ['json-base64'])
+          .find((transport) => transport === 'json-base64')
+        : undefined;
+      if (hasAudio && !audioTransport) {
+        send(socket, {
+          type: 'avatar.subscription_error',
+          payload: {
+            requestId: validation.value.payload.requestId,
+            code: 'invalid_request',
+            message: 'The simulator supports json-base64 audio transport only.'
+          }
+        });
+        return;
+      }
+      const requestedAudioFormat = validation.value.payload.audioFormatPreference?.find(
+        (format) => format.profile === 'avatar.audio.pcm-s16le.v1'
+      );
+      if (hasAudio && validation.value.payload.audioFormatPreference && !requestedAudioFormat) {
+        send(socket, {
+          type: 'avatar.subscription_error',
+          payload: {
+            requestId: validation.value.payload.requestId,
+            code: 'invalid_request',
+            message: 'The simulator supports PCM S16LE audio only.'
+          }
+        });
+        return;
+      }
+      const audioFormat = hasAudio
+        ? requestedAudioFormat ?? {
+          profile: 'avatar.audio.pcm-s16le.v1',
+          sampleRateHz: 44100,
+          channels: 1
+        }
+        : undefined;
       subscription = {
         id: `asub_${randomUUID()}`,
         sessionId: `avs_${randomUUID()}`,
@@ -139,7 +176,9 @@ server.on('connection', (socket) => {
           avatarSessionId: subscription.sessionId,
           subscriptionId: subscription.id,
           acceptedProfiles,
-          rejectedProfiles
+          rejectedProfiles,
+          ...(audioTransport ? { audioTransport } : {}),
+          ...(audioFormat ? { audioFormat } : {})
         }
       });
       const event = (name, data) => ({
@@ -177,12 +216,12 @@ server.on('connection', (socket) => {
         activeSpeechDriver,
         availableProfiles
       }));
-      if (acceptedProfiles.includes('avatar.audio.pcm-s16le.v1')) {
+      if (audioFormat) {
         send(socket, event('avatar.audio.prepared', {
           utteranceId,
           audioItemId,
           encoding: 'PCM_S16_LE',
-          sampleRateHz: 44100,
+          sampleRateHz: audioFormat.sampleRateHz,
           channels: 1,
           durationMs: 4000
         }));
@@ -223,10 +262,10 @@ server.on('connection', (socket) => {
       }
       let offsetMs = 0;
       let pcmChunkIndex = 0;
-      const samplesPerChunk = 2205;
+      const samplesPerChunk = (audioFormat?.sampleRateHz ?? 44100) / 20;
       const silentPcmChunk = Buffer.alloc(samplesPerChunk * 2).toString('base64');
       timer = setInterval(() => {
-        if (acceptedProfiles.includes('avatar.audio.pcm-s16le.v1')) {
+        if (audioFormat) {
           send(socket, event('avatar.audio.chunk', {
             utteranceId,
             audioItemId,
@@ -239,7 +278,7 @@ server.on('connection', (socket) => {
         offsetMs += 50;
         if (offsetMs >= 4000) {
           stopPlayback();
-          if (acceptedProfiles.includes('avatar.audio.pcm-s16le.v1')) {
+          if (audioFormat) {
             send(socket, event('avatar.audio.completed', {
               utteranceId,
               audioItemId,

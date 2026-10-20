@@ -1,5 +1,5 @@
 {
-  "documentRevision": "0.2",
+  "documentRevision": "0.3",
   "protocolCapability": "avatar.protocol.v1",
   "validSequences": [
     {
@@ -139,7 +139,7 @@
               "utteranceId": "utt_audio_fixture",
               "audioItemId": "audio_fixture",
               "encoding": "PCM_S16_LE",
-              "sampleRateHz": 44100,
+              "sampleRateHz": 24000,
               "channels": 1,
               "durationMs": 40
             }
@@ -195,6 +195,113 @@
               "audioItemId": "audio_fixture",
               "chunkCount": 2,
               "totalSamples": 4
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Opus negotiation and packets use the shared audio lifecycle",
+      "messages": [
+        {
+          "type": "avatar.subscribe",
+          "payload": {
+            "requestId": "req_opus",
+            "protocolVersion": 1,
+            "profiles": [
+              {"id": "avatar.speech.lifecycle.v1", "required": true},
+              {"id": "avatar.mouth.amplitude.v1", "required": true},
+              {"id": "avatar.audio.opus.v1", "required": false}
+            ],
+            "speechDriverPreference": ["avatar.mouth.amplitude.v1"],
+            "audioTransportPreference": ["binary-v1", "json-base64"],
+            "audioFormatPreference": [
+              {
+                "profile": "avatar.audio.opus.v1",
+                "sampleRateHz": 48000,
+                "channels": 1,
+                "frameDurationMs": 20,
+                "bitrateBps": 24000
+              }
+            ]
+          }
+        },
+        {
+          "type": "avatar.subscribed",
+          "payload": {
+            "requestId": "req_opus",
+            "protocolVersion": 1,
+            "avatarSessionId": "avs_opus",
+            "subscriptionId": "asub_opus",
+            "acceptedProfiles": [
+              "avatar.speech.lifecycle.v1",
+              "avatar.mouth.amplitude.v1",
+              "avatar.audio.opus.v1"
+            ],
+            "rejectedProfiles": [],
+            "audioTransport": "binary-v1",
+            "audioFormat": {
+              "profile": "avatar.audio.opus.v1",
+              "sampleRateHz": 48000,
+              "channels": 1,
+              "frameDurationMs": 20,
+              "bitrateBps": 24000
+            }
+          }
+        },
+        {
+          "type": "event",
+          "payload": {
+            "name": "avatar.audio.prepared",
+            "data": {
+              "schemaVersion": 1,
+              "avatarSessionId": "avs_opus",
+              "subscriptionId": "asub_opus",
+              "deliverySequence": 1,
+              "emittedAtMs": 30,
+              "utteranceId": "utt_opus",
+              "audioItemId": "audio_opus",
+              "encoding": "OPUS",
+              "sampleRateHz": 48000,
+              "channels": 1,
+              "frameDurationMs": 20,
+              "bitrateBps": 24000,
+              "durationMs": 20
+            }
+          }
+        },
+        {
+          "type": "event",
+          "payload": {
+            "name": "avatar.audio.chunk",
+            "data": {
+              "schemaVersion": 1,
+              "avatarSessionId": "avs_opus",
+              "subscriptionId": "asub_opus",
+              "deliverySequence": 2,
+              "emittedAtMs": 31,
+              "utteranceId": "utt_opus",
+              "audioItemId": "audio_opus",
+              "chunkIndex": 0,
+              "sampleOffset": 0,
+              "dataBase64": "AQIDBA=="
+            }
+          }
+        },
+        {
+          "type": "event",
+          "payload": {
+            "name": "avatar.audio.completed",
+            "data": {
+              "schemaVersion": 1,
+              "avatarSessionId": "avs_opus",
+              "subscriptionId": "asub_opus",
+              "deliverySequence": 3,
+              "emittedAtMs": 32,
+              "utteranceId": "utt_opus",
+              "audioItemId": "audio_opus",
+              "chunkCount": 1,
+              "totalSamples": 960
             }
           }
         }
@@ -291,6 +398,29 @@
               "mappingVersion": "speech-plan.v1"
             }
           }
+        }
+      }
+    },
+    {
+      "name": "audio format references a profile that was not requested",
+      "message": {
+        "type": "avatar.subscribe",
+        "payload": {
+          "requestId": "req_bad_audio_profile",
+          "protocolVersion": 1,
+          "profiles": [
+            {"id": "avatar.mouth.amplitude.v1", "required": true}
+          ],
+          "speechDriverPreference": ["avatar.mouth.amplitude.v1"],
+          "audioFormatPreference": [
+            {
+              "profile": "avatar.audio.opus.v1",
+              "sampleRateHz": 48000,
+              "channels": 1,
+              "frameDurationMs": 20,
+              "bitrateBps": 24000
+            }
+          ]
         }
       }
     }
