@@ -92,35 +92,30 @@ new AiliciaClient(apiKey?: string, channelName?: string, baseUrl?: string)
 
 ##### `sendEvent(content: string, ttl?: number): Promise<void>`
 
-Sends contextual information to ai_licia that will be stored in her memory and used for future interactions. This doesn't trigger an immediate response but enriches ai_licia's understanding of what's happening in your stream.
-
-**Use cases:**
-- Stream game state (health, position, inventory)
-- Current music playing
-- Chess board state in ASCII
-- Player statistics, progress, or achievements
-- Stream milestones
-- Your setup state (lights colour, fan active or off, etc)
-
-**Parameters:**
-- `content`: The information to send (max 1,000 characters)
-- `ttl`: (Optional) Time-to-live in seconds - how long this information stays relevant
+Replaces the single current game snapshot (max 1,000 characters) without forcing a response. Use one active game integration. `ttl` is optional; omitting it preserves the existing non-expiring game context behaviour. Send empty content to clear the game block.
 
 ```typescript
-// Examples
-await client.sendEvent('Current song: "Never Gonna Give You Up" by Rick Astley');
-await client.sendEvent(`Chess board: 
-♜♞♝♛♚♝♞♜
-♟♟♟♟♟♟♟♟
-□■□■□■□■
-■□■□■□■□
-□■□■□■□■
-■□■□■□■□
-♙♙♙♙♙♙♙♙
-♖♘♗♕♔♗♘♖
-White turn
-`);
-await client.sendEvent('Player stats: Health: 75/100, Mana: 30/100, Position: Forest of Doom');
+await client.sendEvent('Day 12, raining. Player at the farm.', 60);
+```
+
+##### `sendIntegrationState(sourceId: string, content: string, ttl?: number): Promise<void>`
+
+**Upcoming:** requires the new backend rollout and the next published SDK release.
+
+Replaces only this source's complete snapshot in the separate integration context block. Other integrations and game state remain available. Source IDs match `[a-z0-9][a-z0-9._-]{0,63}` and are scoped to the authenticated channel. Content is at most 1,000 characters. TTL defaults to 60 seconds and accepts integers from 1 to 86,400. Refresh before expiry while connected. Eight active sources are retained; adding a ninth removes the least recently updated. State belongs to the active AI session, survives worker relocation, and should be resent after a new session starts.
+
+```typescript
+await client.sendIntegrationState('obs', 'Streaming. Scene: Gameplay.', 60);
+await client.sendIntegrationState('lumia', 'Lights: purple.', 120);
+await client.sendIntegrationState('spotify', 'Current track: Example song.');
+```
+
+##### `clearIntegrationState(sourceId: string): Promise<void>`
+
+Removes only the named source. Equivalent to `sendIntegrationState(sourceId, '')`. Whitespace-only content also clears the entry.
+
+```typescript
+await client.clearIntegrationState('obs');
 ```
 
 ##### `triggerGeneration(content: string, options?: GenerationOptions): Promise<GenerationResponse>`

@@ -3,7 +3,8 @@
  */
 
 export enum EventType {
-  GAME_EVENT = 'GAME_EVENT'
+  GAME_EVENT = 'GAME_EVENT',
+  INTEGRATION_STATE = 'INTEGRATION_STATE'
 }
 
 export interface EventContent {
@@ -18,13 +19,17 @@ export interface EventContentGeneration {
   options?: GenerationOptions;
 }
 
-export interface Event {
-  eventType: EventType;
-  data: EventContent;
+export interface IntegrationStateContent extends EventContent {
+  sourceId: string;
 }
 
+/** State identity is required only for the aggregated integration block. */
+export type Event =
+  | { eventType: EventType.GAME_EVENT; data: EventContent }
+  | { eventType: EventType.INTEGRATION_STATE; data: IntegrationStateContent };
+
 export interface EventGeneration {
-  eventType: EventType;
+  eventType: EventType.GAME_EVENT;
   data: EventContentGeneration;
 }
 
@@ -267,6 +272,8 @@ export interface EventSubApiEventPayload {
   shouldGenerate: boolean;
   ttl?: number | null;
   expiresAt?: string | null;
+  /** Present for source-based integration context updates. */
+  sourceId?: string | null;
 }
 
 export interface EventSubSystemJoinPayload {

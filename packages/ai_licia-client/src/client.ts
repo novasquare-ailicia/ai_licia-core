@@ -116,6 +116,36 @@ export class AiliciaClient {
     return AiliciaClient.instance;
   }
 
+  /** Replace this source's integration state without changing game or other source context.
+   * sourceId: 1-64 lowercase letters, digits, dots, underscores or hyphens.
+   * ttl defaults to 60 seconds; accepted range is 1-86400 seconds.
+   */
+  public async sendIntegrationState(sourceId: string, content: string, ttl?: number): Promise<void> {
+    if (typeof sourceId !== 'string' || sourceId.trim() !== sourceId || !/^[a-z0-9][a-z0-9._-]{0,63}$/.test(sourceId)) {
+      throw new Error('sourceId must be 1-64 lowercase letters, digits, dots, underscores or hyphens, starting with a letter or digit');
+    }
+    if (content.length > AILICIA_EVENT_CONTENT_LIMITS.context) {
+      throw new Error(`Content exceeds the ${AILICIA_EVENT_CONTENT_LIMITS.context}-character limit`);
+    }
+    if (ttl !== undefined && (!Number.isInteger(ttl) || ttl < 1 || ttl > 86_400)) {
+      throw new Error('Integration state TTL must be an integer between 1 and 86400 seconds');
+    }
+    const event: Event = {
+      eventType: EventType.INTEGRATION_STATE,
+      data: { channelName: this.channelName, sourceId, content, ...(ttl === undefined ? {} : { ttl }) }
+    };
+    try {
+      await this.client.post('/events', event);
+    } catch (error) {
+      this.handlePublicEventError('send event', AILICIA_EVENT_CONTENT_LIMITS.context, error);
+    }
+  }
+
+  /** Remove only this source from the integration context block. */
+  public async clearIntegrationState(sourceId: string): Promise<void> {
+    await this.sendIntegrationState(sourceId, '');
+  }
+
   /**
    * Feeds data to ai_licia to be added to her context
    * 

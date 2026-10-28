@@ -135,3 +135,41 @@ test('triggerGeneration does not assume every 401 is a channel mismatch', async 
     }
   );
 });
+
+test('integration state uses a required source and clears only that source', async () => {
+  const client = new AiliciaClient('api-key', 'channel', 'https://example.test/v1');
+  const events = [];
+  client.client.post = async (path, event) => { events.push({path, event}); };
+  await client.sendIntegrationState('obs', 'Scene: Gameplay', 120);
+  await client.sendIntegrationState('lumia', 'Purple lights');
+  await client.clearIntegrationState('obs');
+  assert.deepEqual(events, [
+    {path: '/events', event: {eventType: 'INTEGRATION_STATE', data: {channelName: 'channel', sourceId: 'obs', content: 'Scene: Gameplay', ttl: 120}}},
+    {path: '/events', event: {eventType: 'INTEGRATION_STATE', data: {channelName: 'channel', sourceId: 'lumia', content: 'Purple lights'}}},
+    {path: '/events', event: {eventType: 'INTEGRATION_STATE', data: {channelName: 'channel', sourceId: 'obs', content: ''}}}
+  ]);
+});
+
+test('integration state validates identity content and expiry before posting', async () => {
+  const client = new AiliciaClient('api-key', 'channel', 'https://example.test/v1');
+  let posted = false;
+  client.client.post = async () => { posted = true; };
+  for (const source of [null, undefined, '', 'OBS', '../obs', 'obs\n', 'obs\nspoof', 'a'.repeat(65)]) {
+    await assert.rejects(client.sendIntegrationState(source, 'state'), /sourceId/);
+  }
+  for (const ttl of [0, -1, 86401, 1.5, Infinity, NaN]) {
+    await assert.rejects(client.sendIntegrationState('obs', 'state', ttl), /TTL/);
+  }
+  await assert.rejects(client.sendIntegrationState('obs', 'x'.repeat(1001)), /1000-character/);
+  assert.equal(posted, false);
+});
+
+test('integration state preserves typed API failures', async () => {
+  const client = new AiliciaClient('api-key', 'channel', 'https://example.test/v1');
+  client.client.post = async () => { throw {isAxiosError: true, message: 'Unauthorized', response: {status: 401, data: {message: 'Wrong key'}}}; };
+  await assert.rejects(client.sendIntegrationState('obs', 'state'), error => {
+    assert.ok(error instanceof AiliciaApiError);
+    assert.equal(error.status, 401);
+    return true;
+  });
+});
