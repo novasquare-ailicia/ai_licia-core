@@ -102,7 +102,7 @@ await client.sendEvent('Day 12, raining. Player at the farm.', 60);
 
 **Upcoming:** requires the new backend rollout and the next published SDK release.
 
-Replaces only this source's complete snapshot in the separate integration context block. Other integrations and game state remain available. Source IDs match `[a-z0-9][a-z0-9._-]{0,63}` and are scoped to the authenticated channel. Content is at most 1,000 characters. TTL defaults to 60 seconds and accepts integers from 1 to 86,400. Refresh before expiry while connected. Eight active sources are retained; adding a ninth removes the least recently updated. State belongs to the active AI session, survives worker relocation, and should be resent after a new session starts.
+Replaces only this source's complete snapshot in the separate integration context block. Other integrations and game state remain available. Source IDs match `[a-z0-9][a-z0-9._-]{0,63}` and are scoped to the authenticated channel. Content is at most 1,000 characters. TTL defaults to 60 seconds and accepts integers from 1 to 86,400. Refresh before expiry while connected. Sixteen active sources are retained; adding a seventeenth removes the least recently updated. State belongs to the active AI session, survives worker relocation, and should be resent after a new session starts.
 
 ```typescript
 await client.sendIntegrationState('obs', 'Streaming. Scene: Gameplay.', 60);
